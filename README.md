@@ -9,9 +9,9 @@ It gives one way sync of data and make changes using *ref* object like the origi
 
 In your app.js:
 
-```
-angular.module \app <[firebaseIO]>
-.constant FirebaseUrl: \https://{{ PLEASE_FILL_IN_YOUR_PROJECT_NAME }}.firebaseIO.com/
+```LiveScript
+angular.module 'app' <[firebaseIO]>
+.constant FirebaseUrl: 'https://{{ PLEASE_FILL_IN_YOUR_PROJECT_NAME }}.firebaseIO.com/'
 ```
 This will let angular-firebase know which *Firebase* you're using.
 
@@ -22,9 +22,8 @@ Provide *one* way sync only. And expose *ref* object in *Firebase* native JS lib
 
 Examples:
 
-```
-...
-module.controller LoginCtrl: <[$scope fireFrom]> ++ !($scope, fireFrom) ->
+```LiveScript
+LoginCtrl = !($scope, fireFrom) ->
   
   # First is the path from *root*
   # Second is the object to be extended and passed to argument in promise function(s).
@@ -41,7 +40,7 @@ module.controller LoginCtrl: <[$scope fireFrom]> ++ !($scope, fireFrom) ->
 
   # or you can use LiveScript backcalls:
   ($scope.user4) <-! fireFrom "/users/4", {}
-  # See the compiles JS code
+  # See the compiled JS code
 
 
   # to update model, simply assign return value:
@@ -49,8 +48,10 @@ module.controller LoginCtrl: <[$scope fireFrom]> ++ !($scope, fireFrom) ->
 
   # ... and use it:
   $scope.save = !->
-    $scope.user5Ref.child \facebook .set $scope.facebookId
+    $scope.user5Ref.child 'facebook' .set $scope.facebookId
     $scope.user5Ref.update coolThings: <[AngularJS Firebase angular-firebase]>
+
+module.controller LoginCtrl: <[$scope fireFrom]> ++ LoginCtrl
 
 ```
 
