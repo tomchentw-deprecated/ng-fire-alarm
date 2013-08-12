@@ -26,7 +26,7 @@ noopDefer = resolve: noop, reject: noop
     extendToChild dst, key, childSnap, prevKeysStore[key] ||= {}
 
   for prevKey in $$prevKeys when not newKeys[prevKey]
-    # console.log "deleting:#{ prevKey } from: #{ dst }"
+    # console.log "deleting:#{ prevKey } from: #{ JSON.stringify dst } with newKeys: #{ JSON.stringify newKeys }"
     delete dst[prevKey]
   prevKeysStore.$$prevKeys = Object.keys newKeys
 
@@ -63,7 +63,8 @@ angular.module \firebaseIO <[]>
 
     ref.on \child_changed, !(childSnap, prevChildName) ->
       <-! $timeout
-      extendToChild valueReference, childSnap.name!, childSnap, prevKeysStore
+      name = childSnap.name!
+      extendToChild valueReference, name, childSnap, prevKeysStore[name]
 
   !function typeMismatchError
     throw new TypeError \Mismatch
