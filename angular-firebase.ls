@@ -64,7 +64,7 @@ angular.module \firebaseIO <[]>
     ref.on \child_changed, !(childSnap, prevChildName) ->
       <-! $timeout
       name = childSnap.name!
-      extendToChild valueReference, name, childSnap, prevKeysStore[name]
+      extendToChild valueReference, name, childSnap, prevKeysStore[name] ||= {}
 
   !function typeMismatchError
     throw new TypeError \Mismatch
