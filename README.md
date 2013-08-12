@@ -1,12 +1,14 @@
 angular-firebase
 ================
 
+angular-firebase
+
 An AngularJS library to provide access to Firebase.  
 It gives one way sync of data and make changes using *ref* object like the original Firebase JS lib.  
 
 
-## Usage
-
+Usage
+----------
 In your app.js:
 
 ```LiveScript
@@ -15,13 +17,13 @@ angular.module 'app' <[firebaseIO]>
 ```
 This will let angular-firebase know which *Firebase* you're using.
 
-## APIs
-
+APIs
+----------
 We want to reduce the effort of using a external library. So we keep it simple:  
 Provide *one* way sync only. And expose *ref* object in *Firebase* native JS library.
 
-Examples:
-
+Examples
+----------
 ```LiveScript
 LoginCtrl = !($scope, fireFrom) ->
   
@@ -55,3 +57,12 @@ module.controller LoginCtrl: <[$scope fireFrom]> ++ LoginCtrl
 
 ```
 
+TODOs
+----------
+* Tests
+* Grunt
+
+
+License
+----------
+http://tomchentw.mit-license.org/
