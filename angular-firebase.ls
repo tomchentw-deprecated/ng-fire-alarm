@@ -71,8 +71,14 @@ angular.module \firebaseIO <[]>
 
   ServerValue = ^^Firebase.ServerValue
 
-  (path, valueReference, ...thenArgs) ->
-    ref = AllSpark.child path
+  (pathOrObject, valueReference, ...thenArgs) ->
+    if isObject pathOrObject
+      ref = AllSpark.child pathOrObject.path
+      for name in <[startAt endAt limit]> when isArray pathOrObject[name]
+        ref = ref[name].apply ref, pathOrObject[name]
+    else
+      ref = AllSpark.child pathOrObject
+
     deferred = $q.defer!
     {promise} = deferred
       
