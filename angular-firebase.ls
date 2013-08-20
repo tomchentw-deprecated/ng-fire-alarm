@@ -54,14 +54,17 @@ angular.module \firebaseIO <[]>
 .factory fireFrom: <[$log $q $timeout Firebase AllSpark]> ++ ($log, $q, $timeout, Firebase, AllSpark) ->
   !function setupChildEvents (ref, valueReference, prevKeysStore)
     ref.on \child_added, !(childSnap, prevChildName) -> 
+      $log.info \child_added
       <-! $timeout
       valueReference[childSnap.name!] = childSnap.val!
 
     ref.on \child_removed, !(oldChildSnap) ->
+      $log.info \child_removed
       <-! $timeout
       delete valueReference[oldChildSnap.name!]
 
     ref.on \child_changed, !(childSnap, prevChildName) ->
+      $log.info \child_changed
       <-! $timeout
       name = childSnap.name!
       extendToChild valueReference, name, childSnap, prevKeysStore[name] ||= {}
@@ -72,6 +75,7 @@ angular.module \firebaseIO <[]>
   ServerValue = ^^Firebase.ServerValue
 
   (pathOrObject, valueReference, ...thenArgs) ->
+    $log.info \fireFrom, pathOrObject
     if isObject pathOrObject
       ref = AllSpark.child pathOrObject.path
       for name in <[startAt endAt limit]> when isArray pathOrObject[name]
@@ -83,6 +87,7 @@ angular.module \firebaseIO <[]>
     {promise} = deferred
       
     ref.once \value, !(snap) ->
+      $log.info \value, pathOrObject
       prevKeysStore = {}
       if snap.val!
         typeMismatchError! if isArray that isnt isArray valueReference
