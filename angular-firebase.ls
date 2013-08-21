@@ -33,7 +33,7 @@ noopDefer = resolve: noop, reject: noop
 function bindPromise (target, promise)
   forEach promise, !(val, key) ->
     target[key] = ->
-      promise := val.apply val, arguments
+      promise := promise[key].apply promise, arguments
       target
   target
 
@@ -74,22 +74,44 @@ angular.module \firebaseIO <[]>
       $timeout !-> resolve valueReference
       setupChildEvents ref, valueReference, prevKeysStore
 
+  delayMs = 100
+  counter = 1
+
+  promise = null
+  lastTime = null
+  !function setDirty
+    if promise && lastTime
+      alpha = 2/(counter+1)
+      next = delayMs + alpha*(Date.now!-lastTime - delayMs)
+      
+      delayMs := (Math.min 100, Math.max(next, 30))
+      counter := counter + 1
+      canceled = $timeout.cancel promise
+      # $log.debug "delayMs changed to: #{ delayMs }"
+      # $log.debug "cancel old promise #{ if canceled then 'success' else 'failed' }"
+
+    lastTime := Date.now!
+    promise := $timeout !->
+      # $log.warn 'resolve dirty'
+    , delayMs
+
   !function setupChildEvents (ref, valueReference, prevKeysStore)
     ref.on \child_added, !(childSnap, prevChildName) -> 
-      $log.info \child_added
-      <-! $timeout
+      # $log.info \child_added ref.toString!
       valueReference[childSnap.name!] = childSnap.val!
+      setDirty!
 
     ref.on \child_removed, !(oldChildSnap) ->
-      $log.info \child_removed
-      <-! $timeout
+      # $log.info \child_removed
       delete valueReference[oldChildSnap.name!]
+      setDirty!
+
 
     ref.on \child_changed, !(childSnap, prevChildName) ->
-      $log.info \child_changed
-      <-! $timeout
+      # $log.info \child_changed
       name = childSnap.name!
       extendToChild valueReference, name, childSnap, prevKeysStore[name] ||= {}
+      setDirty!
 
   !function destroyChildEvents (ref)
     for name in <[child_added child_removed child_changed]>
