@@ -1,4 +1,4 @@
-{isObject, isArray, isFunction, forEach, bind, copy, noop} = angular
+{isObject, isArray, isString, isFunction, forEach, bind, copy, noop} = angular
 noopDefer = resolve: noop, reject: noop
 
 !function extendToChild (parent, childName, childSnap, prevKeysStore)
@@ -30,21 +30,18 @@ noopDefer = resolve: noop, reject: noop
     delete dst[prevKey]
   prevKeysStore.$$prevKeys = Object.keys newKeys
 
-function toPromiseThenFunc (promise)
-  func = ->
-    promise := promise.then ...
-    func
-  do
-    src <-! forEach arguments
-    return if src is promise
+function bindPromise (target, promise)
+  forEach promise, !(val, key) ->
+    target[key] = ->
+      promise := val.apply val, arguments
+      target
+  target
+
+function bindAll (target, ...srcs)
+  forEach srcs, !(src) ->
     for key, val of src when isFunction val
-      func[key] = bind src, val
-      # console.log "bind:#{key} with: #{val}"
-  func.then = func
-  func.always = ->
-    promise := promise.always ...
-    func
-  func
+      target[key] = bind src, val
+  target
 
 angular.module \firebaseIO <[]>
 .value Firebase: Firebase
@@ -52,6 +49,31 @@ angular.module \firebaseIO <[]>
 .factory AllSpark: <[Firebase FirebaseUrl]> ++ (Firebase, FirebaseUrl) ->
   new Firebase FirebaseUrl
 .factory fireFrom: <[$log $q $timeout Firebase AllSpark]> ++ ($log, $q, $timeout, Firebase, AllSpark) ->
+  function getRef (pathOrObject)
+    if isObject pathOrObject
+      ref = AllSpark.child pathOrObject.path
+      for name in <[startAt endAt limit]> when isArray pathOrObject[name]
+        ref = ref[name].apply ref, pathOrObject[name]
+    else if isString pathOrObject
+      ref = AllSpark.child pathOrObject
+    else
+      throw new Error "arguments[0] must be an object or a string"
+    ref
+
+  function initialValue (ref, valueReference, $timeout, resolve)
+    !function typeMismatchError
+      throw new TypeError \Mismatch
+
+    const prevKeysStore = {}
+    !(snap) ->
+      if snap.val!
+        typeMismatchError! if isArray that isnt isArray valueReference
+        typeMismatchError! if isObject that isnt isObject valueReference
+        extendSnap valueReference, snap, prevKeysStore
+
+      $timeout !-> resolve valueReference
+      setupChildEvents ref, valueReference, prevKeysStore
+
   !function setupChildEvents (ref, valueReference, prevKeysStore)
     ref.on \child_added, !(childSnap, prevChildName) -> 
       $log.info \child_added
@@ -69,55 +91,37 @@ angular.module \firebaseIO <[]>
       name = childSnap.name!
       extendToChild valueReference, name, childSnap, prevKeysStore[name] ||= {}
 
-  !function typeMismatchError
-    throw new TypeError \Mismatch
+  !function destroyChildEvents (ref)
+    for name in <[child_added child_removed child_changed]>
+      ref.off name
 
   ServerValue = ^^Firebase.ServerValue
 
-  (pathOrObject, valueReference, ...thenArgs) ->
-    $log.info \fireFrom, pathOrObject
-    if isObject pathOrObject
-      ref = AllSpark.child pathOrObject.path
-      for name in <[startAt endAt limit]> when isArray pathOrObject[name]
-        ref = ref[name].apply ref, pathOrObject[name]
-    else
-      ref = AllSpark.child pathOrObject
+  (pathOrObject, valueReference) ->
+    const ref = getRef pathOrObject
+    const deferred = $q.defer!
+    const destroyDeferred = $q.defer!
 
-    deferred = $q.defer!
-    {promise} = deferred
-      
-    ref.once \value, !(snap) ->
-      $log.info \value, pathOrObject
-      prevKeysStore = {}
-      if snap.val!
-        typeMismatchError! if isArray that isnt isArray valueReference
-        typeMismatchError! if isObject that isnt isObject valueReference
-        extendSnap valueReference, snap, prevKeysStore
+    ref.once \value, initialValue(ref, valueReference, $timeout, deferred.resolve)
+    destroyDeferred.promise.then !-> destroyChildEvents ref
 
-      {resolve} = deferred
-      deferred := null
-      $timeout !-> resolve valueReference
-      setupChildEvents ref, valueReference, prevKeysStore
-
-    promise = toPromiseThenFunc promise, ref
-    promise <<< {ServerValue}
-    promise ...thenArgs if thenArgs.length
-    promise
+    const resolve = bindPromise destroyDeferred.resolve, deferred.promise
+    resolve <<< {ServerValue}
+    bindAll resolve, ref
 
 .value FirebaseSimpleLogin: FirebaseSimpleLogin
 .factory fireEntry: <[$log $q $timeout FirebaseSimpleLogin AllSpark]> ++ ($log, $q, $timeout, FirebaseSimpleLogin, AllSpark) ->
-  (authReference, ...thenArgs) ->
+  (authReference) ->
     deferred = $q.defer!
-    promise = deferred.promise
-
-    ref = new FirebaseSimpleLogin AllSpark, !(error, auth) ->
+    const ref = new FirebaseSimpleLogin AllSpark, !(error, auth) ->
       {resolve, reject} = deferred
       deferred := noopDefer
       <-! $timeout
       return reject error if error
       copy auth || {}, authReference
       resolve authReference
-
-    promise = toPromiseThenFunc promise, ref
-    promise ...thenArgs if thenArgs.length
-    promise
+    const destroyDeferred = $q.defer!
+    
+    destroyDeferred.promise.then !-> console.log "fireEntry's scope destroyed!!"
+    const resolve = bindPromise destroyDeferred.resolve, deferred.promise
+    bindAll resolve, ref
