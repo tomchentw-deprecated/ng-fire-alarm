@@ -43,37 +43,13 @@ function bindAll (target, ...srcs)
       target[key] = bind src, val
   target
 
+
 angular.module \firebaseIO <[]>
 .value Firebase: Firebase
 .constant FirebaseUrl: \https://pleaseenteryourappnamehere.firebaseIO.com/
 .factory AllSpark: <[Firebase FirebaseUrl]> ++ (Firebase, FirebaseUrl) ->
   new Firebase FirebaseUrl
 .factory fireFrom: <[$log $q $timeout Firebase AllSpark]> ++ ($log, $q, $timeout, Firebase, AllSpark) ->
-  function getRef (pathOrObject)
-    if isObject pathOrObject
-      ref = AllSpark.child pathOrObject.path
-      for name in <[startAt endAt limit]> when isArray pathOrObject[name]
-        ref = ref[name].apply ref, pathOrObject[name]
-    else if isString pathOrObject
-      ref = AllSpark.child pathOrObject
-    else
-      throw new Error "arguments[0] must be an object or a string"
-    ref
-
-  function initialValue (ref, valueReference, $timeout, resolve)
-    !function typeMismatchError
-      throw new TypeError \Mismatch
-
-    const prevKeysStore = {}
-    !(snap) ->
-      if snap.val!
-        typeMismatchError! if isArray that isnt isArray valueReference
-        typeMismatchError! if isObject that isnt isObject valueReference
-        extendSnap valueReference, snap, prevKeysStore
-
-      $timeout !-> resolve valueReference
-      setupChildEvents ref, valueReference, prevKeysStore
-
   delayMs = 100
   counter = 1
 
@@ -81,55 +57,111 @@ angular.module \firebaseIO <[]>
   lastTime = null
   !function setDirty
     if promise && lastTime
-      alpha = 2/(counter+1)
-      next = delayMs + alpha*(Date.now!-lastTime - delayMs)
+      canceled = $timeout.cancel promise
+      next = delayMs + (2/(counter+1))*(Date.now!-lastTime - delayMs)
       
       delayMs := (Math.min 100, Math.max(next, 30))
       counter := counter + 1
-      canceled = $timeout.cancel promise
       # $log.debug "delayMs changed to: #{ delayMs }"
       # $log.debug "cancel old promise #{ if canceled then 'success' else 'failed' }"
-
     lastTime := Date.now!
-    promise := $timeout !->
-      # $log.warn 'resolve dirty'
-    , delayMs
+    promise := $timeout noop, delayMs
 
-  !function setupChildEvents (ref, valueReference, prevKeysStore)
+  !function setupChildEvents (ref, valueRef, prevKeysStore)
     ref.on \child_added, !(childSnap, prevChildName) -> 
       # $log.info \child_added ref.toString!
-      valueReference[childSnap.name!] = childSnap.val!
+      valueRef[childSnap.name!] = childSnap.val!
       setDirty!
 
     ref.on \child_removed, !(oldChildSnap) ->
       # $log.info \child_removed
-      delete valueReference[oldChildSnap.name!]
+      delete valueRef[oldChildSnap.name!]
       setDirty!
-
 
     ref.on \child_changed, !(childSnap, prevChildName) ->
       # $log.info \child_changed
       name = childSnap.name!
-      extendToChild valueReference, name, childSnap, prevKeysStore[name] ||= {}
+      extendToChild valueRef, name, childSnap, prevKeysStore[name] ||= {}
       setDirty!
 
   !function destroyChildEvents (ref)
     for name in <[child_added child_removed child_changed]>
       ref.off name
 
-  ServerValue = ^^Firebase.ServerValue
+  const ServerValue = ^^Firebase.ServerValue
+  const TYPE_MISMATCH_ERROR = !-> throw new TypeError \Mismatch
+  
+  !function readData (ref, query, valueRef, prevKeysStore, resolve)
+    (snap) <-! (query || ref)[if query then \on else \once] \value
+    if snap.val!
+      TYPE_MISMATCH_ERROR! if isArray that isnt isArray valueRef
+      TYPE_MISMATCH_ERROR! if isObject that isnt isObject valueRef
+      extendSnap valueRef, snap, prevKeysStore
 
-  (pathOrObject, valueReference) ->
-    const ref = getRef pathOrObject
-    const deferred = $q.defer!
-    const destroyDeferred = $q.defer!
+    if resolve
+      resolve := void
+      $timeout !-> that valueRef
+    if query
+      setDirty!
+    else
+      setupChildEvents ref, valueRef, prevKeysStore
+  
+  const QUERY_KEYS = <[startAt endAt limit]>
 
-    ref.once \value, initialValue(ref, valueReference, $timeout, deferred.resolve)
-    destroyDeferred.promise.then !-> destroyChildEvents ref
+  function createFireFrom (pathObject, valueRef)
+    if isObject pathObject
+      path = delete pathObject.path
+      queries = pathObject
+    else
+      path = pathObject
+    #
+    const onScopeDestroyed = $q.defer!
+    const onInitialValue = $q.defer!
+    # create bounded object
+    const fireFrom = {ServerValue}
 
-    const resolve = bindPromise destroyDeferred.resolve, deferred.promise
-    resolve <<< {ServerValue}
-    bindAll resolve, ref
+    onScopeDestroyed.promise.then !-> destroyChildEvents ref
+    fireFrom.resolve = onScopeDestroyed.resolve
+    #
+    promise = onInitialValue.promise
+    fireFrom.then = ->
+      promise := promise.then ...
+      fireFrom
+    fireFrom.always = ->
+      promise := promise.always ...
+      fireFrom
+    #
+    prevKeysStore = {}
+    query = null
+    const ref = AllSpark.child(path)
+    const context = -> query || ref
+    # 
+    QUERY_KEYS.forEach !(name) ->
+      if queries && isArray queries[name]
+        const ctx = context!
+        query := ctx[name].apply ctx, queries[name]
+      #
+      # https://www.firebase.com/docs/javascript/query/index.html
+      #
+      fireFrom[name] = ->
+        if query
+          query.off \value
+        else
+          destroyChildEvents ref
+        const ctx = context!
+        query := ctx[name].apply ctx, arguments
+
+        const deferred = $q.defer!
+        readData ref, query, valueRef, prevKeysStore, deferred.resolve
+        fireFrom.then -> deferred.promise
+    readData ref, query, valueRef, prevKeysStore, onInitialValue.resolve
+    #
+    # https://www.firebase.com/docs/javascript/firebase/index.html
+    #
+    for key, val of ref when key not in QUERY_KEYS
+      fireFrom[key] = val
+    #
+    fireFrom
 
 .value FirebaseSimpleLogin: FirebaseSimpleLogin
 .factory fireEntry: <[$log $q $timeout FirebaseSimpleLogin AllSpark]> ++ ($log, $q, $timeout, FirebaseSimpleLogin, AllSpark) ->
