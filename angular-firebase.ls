@@ -1,5 +1,5 @@
-{isObject, isArray, isString, isFunction, forEach, bind, copy, noop} = angular
-noopDefer = resolve: noop, reject: noop
+const {isObject, isArray, isString, isFunction, forEach, bind, copy, noop} = angular
+const noopDefer = resolve: noop, reject: noop
 
 !function extendToChild (parent, childName, childSnap, prevKeysStore)
   val = childSnap.val!
@@ -43,6 +43,7 @@ function bindAll (target, ...srcs)
       target[key] = bind src, val
   target
 
+const QUERY_KEYS = <[startAt endAt limit]>
 
 angular.module \firebaseIO <[]>
 .value Firebase: Firebase
@@ -85,6 +86,7 @@ angular.module \firebaseIO <[]>
       setDirty!
 
   !function destroyChildEvents (ref)
+    # In order to use cache in firebase, we don't off \value event here!
     for name in <[child_added child_removed child_changed]>
       ref.off name
 
@@ -92,6 +94,10 @@ angular.module \firebaseIO <[]>
   const TYPE_MISMATCH_ERROR = !-> throw new TypeError \Mismatch
   
   !function readData (ref, query, valueRef, prevKeysStore, resolve)
+    # The on is called for maintain cache in firebase
+    # see: http://stackoverflow.com/questions/11991426/firebase-does-caching-improve-performance
+    ref.on \value noop unless query
+    #
     (snap) <-! (query || ref)[if query then \on else \once] \value
     if snap.val!
       TYPE_MISMATCH_ERROR! if isArray that isnt isArray valueRef
@@ -106,8 +112,6 @@ angular.module \firebaseIO <[]>
     else
       setupChildEvents ref, valueRef, prevKeysStore
   
-  const QUERY_KEYS = <[startAt endAt limit]>
-
   function createFireFrom (pathObject, valueRef)
     if isObject pathObject
       path = delete pathObject.path
@@ -116,14 +120,13 @@ angular.module \firebaseIO <[]>
       path = pathObject
     #
     const onScopeDestroyed = $q.defer!
-    const onInitialValue = $q.defer!
     # create bounded object
-    const fireFrom = {ServerValue}
+    const fireFrom = {ServerValue, $resolved: false}
 
     onScopeDestroyed.promise.then !-> destroyChildEvents ref
     fireFrom.resolve = onScopeDestroyed.resolve
     #
-    promise = onInitialValue.promise
+    {resolve, promise} = $q.defer!
     fireFrom.then = ->
       promise := promise.then ...
       fireFrom
@@ -135,6 +138,11 @@ angular.module \firebaseIO <[]>
     query = null
     const ref = AllSpark.child(path)
     const context = -> query || ref
+    const readDataBound = !->
+      <-! readData ref, query, valueRef, prevKeysStore
+      resolve ...
+      resolve := void
+      fireFrom.$resolved = true
     # 
     QUERY_KEYS.forEach !(name) ->
       if queries && isArray queries[name]
@@ -144,6 +152,7 @@ angular.module \firebaseIO <[]>
       # https://www.firebase.com/docs/javascript/query/index.html
       #
       fireFrom[name] = ->
+        fireFrom.$resolved = false
         if query
           query.off \value
         else
@@ -151,10 +160,14 @@ angular.module \firebaseIO <[]>
         const ctx = context!
         query := ctx[name].apply ctx, arguments
 
-        const deferred = $q.defer!
-        readData ref, query, valueRef, prevKeysStore, deferred.resolve
-        fireFrom.then -> deferred.promise
-    readData ref, query, valueRef, prevKeysStore, onInitialValue.resolve
+        unless resolve
+          const deferred = $q.defer!
+          fireFrom.then -> deferred.promise
+          resolve := deferred.resolve
+        readDataBound!
+        fireFrom
+      #
+    readDataBound!
     #
     # https://www.firebase.com/docs/javascript/firebase/index.html
     #
@@ -162,7 +175,91 @@ angular.module \firebaseIO <[]>
       fireFrom[key] = val
     #
     fireFrom
+.directive fbFrom: <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFrom) ->
+  const expMatcher = //
+  ^
+  \s*   # 
+  (\S+) # subject   -> 1
+  \s+   # 
+  (
+    in    # in
+    \s+   # (*)
+    (\S+) # subjectRef  -> 3
+    \s+   # 
+  )?    #           -> 2
+  from  # from
+  \s+'  # 
+  (.+)  # $path     -> 4
+  '$
+  //
+  const rootAtPathMatcher = //
+  \s+   # 
+  (     # 
+    at    # at
+    \s+   # 
+    (\S*) # $root       -> 2
+    \s*   # 
+  )?    #           -> 0
+  $
+  //
+  const evalMatcher = //
+  \{\{
+    ([^
+      \{,\}
+    ]+)
+  \}\}
+  //g
 
+  restrict: \A
+  scope: false
+  priority: 101
+  link: !(scope, iElement, iAttrs) ->
+    const result = iAttrs.fbFrom.match expMatcher
+    throw new Error "fbFrom should be the form ..." unless result
+    const valSetter = $parse result.1 .assign
+    const refSetter = $parse result.3 .assign || noop
+
+    pathString = result.4
+    const pathResult = pathString.match(rootAtPathMatcher) || []
+    if pathResult.length > 2
+      [rootString, _, rootKey] = pathResult 
+      pathString = pathString.replace rootString, ''
+    const pathEvals = pathString.match(evalMatcher) || []
+
+    forEach pathEvals, !(pathEval, index) ->
+      <-! scope.$watch $interpolate pathEval
+      pathEvals[index] = it
+
+    ref = {}
+    forEach QUERY_KEYS, !(key) ->
+      ref[key] = noop
+      return unless iAttrs[key]
+
+      <-! scope.$watchCollection iAttrs[key]
+      # console.log it, ref
+      ref[key] ...it
+
+    offDestroyAndResolve = noop
+    (fbFrom) <-! iAttrs.$observe \fbFrom
+    return unless pathEvals.every -> it
+    const path = fbFrom.match expMatcher .4.split rootString .0
+    # console.log "{{#{ path }}}", pathEvals
+    offDestroyAndResolve!
+
+    const pathObject = {path}
+    forEach QUERY_KEYS, !-> pathObject[it] = $parse(that)(scope) if iAttrs[it]
+    # console.log pathObject
+    ref := fireFrom pathObject, {}
+
+    const prevResolve = delete ref.resolve
+    const offDestroy = scope.$on \$destroy, prevResolve
+    offDestroyAndResolve := !-> offDestroy! && prevResolve!
+    
+    # console.log ref.$resolved
+    refSetter scope, ref
+    <-! ref.then
+    valSetter scope, it
+    
 .value FirebaseSimpleLogin: FirebaseSimpleLogin
 .factory fireEntry: <[$log $q $timeout FirebaseSimpleLogin AllSpark]> ++ ($log, $q, $timeout, FirebaseSimpleLogin, AllSpark) ->
   (authReference) ->
