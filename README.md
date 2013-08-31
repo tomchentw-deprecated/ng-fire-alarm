@@ -2,8 +2,16 @@ angular-on-fire
 ================
 
 An AngularJS library to provide access to Firebase.  
-It gives one way sync of data and make changes using *ref* object like the original Firebase JS lib.  
+It gives one way sync of data and make changes using **ref** object like the original Firebase JS lib.  
 
+
+Why
+----------
+The service `angularFire` provided by [angularFire](https://github.com/firebase/angularFire) is wierd. We have to provide $scope to the service.  
+It makes me feel very **unconfortable**.  
+But `angularFireCollection` only provides sync on collection, it doesn't provide one object sync.  
+
+So I decide to write my own version.
 
 Usage
 ----------
@@ -13,7 +21,7 @@ In your app.js:
 angular.module 'app' <[angular-on-fire]>
 .constant FirebaseUrl: 'https://{{ PLEASE_FILL_IN_YOUR_PROJECT_NAME }}.firebaseIO.com/'
 ```
-This will let angular-on-fire know which *Firebase* you're using.
+This will let angular-on-fire know which **Firebase** you're using.
 
 APIs
 ----------
