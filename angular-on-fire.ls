@@ -155,61 +155,62 @@ const fireFrom = <[$log $q $rootScope $timeout Firebase AllSpark]> ++ ($log, $q,
 
     
     const onEvents = !->
-        if query
-          return query.on \value onValue
+      if query
+        return query.on \value onValue
+        
+      # The on is called for maintain cache in firebase
+      # see: http://stackoverflow.com/questions/11991426/firebase-does-caching-improve-performance
+      ref.on \value noop
+      ref.once \value onValue
+      #
+      ref.on \child_added if toCollection
+        !(childSnap, prevId) -># $timeout !->
+          const index = getIndex prevId
+          extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
+          inject$Properties index, childSnap
+
+          updateIndexes index
+          setDirty!
+      else
+        !(childSnap) -># $timeout !->
+          value[childSnap.name!] = childSnap.val!
+          setDirty!
+
+      ref.on \child_removed if toCollection
+        !(childSnap) -># $timeout !->
+          const index = indexes[childSnap.name!]
+          delete! value[index]
+          updateIndexes index
+          setDirty!
+      else
+        !(childSnap) -># $timeout !->
+          console.log \child_removed value, childSnap.name!
+          delete! value[childSnap.name!]
+          setDirty!
+
+      ref.on \child_changed if toCollection
+        !(childSnap, prevId) -># $timeout !->
+          const index = indexes[childSnap.name!]
+          const newIndex = getIndex prevId
+          extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
+          inject$Properties index, childSnap
           
-        # The on is called for maintain cache in firebase
-        # see: http://stackoverflow.com/questions/11991426/firebase-does-caching-improve-performance
-        ref.on \value noop
-        ref.once \value onValue
-        #
-        ref.on \child_added if toCollection
-          !(childSnap, prevId) -># $timeout !->
-            const index = getIndex prevId
-            extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
-            inject$Properties index, childSnap
+          moveChild index, newIndex, value[index] if newIndex isnt index
+          setDirty!
+      else
+        !(childSnap) -># $timeout !->
+          const name = childSnap.name!
+          extendChildSnap value, name, childSnap, prevKeysStore[name] ||= {}
+          setDirty!
 
-            updateIndexes index
-            setDirty!
-        else
-          !(childSnap) -># $timeout !->
-            value[childSnap.name!] = childSnap.val!
-            setDirty!
-
-        ref.on \child_removed if toCollection
-          !(childSnap) -># $timeout !->
-            const index = indexes[childSnap.name!]
-            delete! value[index]
-            updateIndexes index
-            setDirty!
-        else
-          !(childSnap) -># $timeout !->
-            delete! value[childSnap.name!]
-            setDirty!
-
-        ref.on \child_changed if toCollection
-          !(childSnap, prevId) -># $timeout !->
-            const index = indexes[childSnap.name!]
-            const newIndex = getIndex prevId
-            extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
-            inject$Properties index, childSnap
-            
-            moveChild index, newIndex, value[index] if newIndex isnt index
-            setDirty!
-        else
-          !(childSnap) -># $timeout !->
-            const name = childSnap.name!
-            extendChildSnap value, name, childSnap, prevKeysStore[name] ||= {}
-            setDirty!
-
-        ref.on \child_moved if toCollection
-          !(childSnap, prevId) -># $timeout !->
-            const oldIndex = indexes[childSnap.name!]
-            const newIndex = getIndex prevId
-            moveChild oldIndex, newIndex, value[oldIndex]
-            setDirty!
-        else
-          noop
+      ref.on \child_moved if toCollection
+        !(childSnap, prevId) -># $timeout !->
+          const oldIndex = indexes[childSnap.name!]
+          const newIndex = getIndex prevId
+          moveChild oldIndex, newIndex, value[oldIndex]
+          setDirty!
+      else
+        noop
 
     const context = -> query || ref
     forEach QUERY_KEYS, !(name) ->
@@ -302,7 +303,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
       # console.log it, ref
       ref[key] ...it
 
-    refSetter scope, ref
+    # refSetter scope, ref
     #
     offDestroyAndResolve = noop
     (fbFrom) <-! iAttrs.$observe \fbFrom
@@ -316,17 +317,17 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     if iAttrs.fbToCollection
       path.toCollection = true
       value = []
-    # console.log path
+    # console.log path, result
     ref := fireFrom path, value
 
     const prevResolve = delete ref.resolve
     const offDestroy = scope.$on \$destroy prevResolve
     offDestroyAndResolve := !-> offDestroy! && prevResolve!
     
-    # console.log ref.$resolved
     refSetter scope, ref
-    <-! ref.then
+    <- ref.then
     valSetter scope, it
+    it
 
 const fireEntry = <[$log $q $timeout FirebaseSimpleLogin AllSpark]> ++ ($log, $q, $timeout, FirebaseSimpleLogin, AllSpark) ->
   (authReference) ->
