@@ -69,9 +69,10 @@ const fireFrom = <[$log $q $rootScope $timeout Firebase AllSpark]> ++ ($log, $q,
   const setDirty = !->
     # console.log \setDirty_called
     return if promise
+    # console.log \set
     promise := $timeout !->
+      # console.log \cancel
       promise := void
-    , 30
   
   digestCount = 0
   const startTime = Date.now! 
@@ -118,7 +119,10 @@ const fireFrom = <[$log $q $rootScope $timeout Firebase AllSpark]> ++ ($log, $q,
     const ref = AllSpark.child path
 
     const inject$Properties = !(index, childSnap) ->
-      value[index] <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
+      ref = value[index]
+      unless isObject ref
+        ref = value[index] = $value: value[index]
+      ref <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
 
     const onValue = !(snap) -># $timeout !->
       if toCollection
