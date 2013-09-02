@@ -51,20 +51,20 @@ const FIREBASE_ORDERS =
       1
     else if isString that
       2
-    console.log tmp
+    # console.log tmp
     tmp 
   -> if it.$priority then that else Infinity
 
   -> 
     tmp = it.$id
-    console.log tmp
+    # console.log tmp
     tmp
 
 
 
 const QUERY_KEYS = <[startAt endAt limit]>
 
-const fireFrom = <[$log $q $rootScope $timeout Firebase AllSpark]> ++ ($log, $q, $rootScope, $timeout, Firebase, AllSpark) ->
+const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope, $timeout, Firebase, AllSpark) ->
   promise = void
   const setDirty = !->
     # console.log \setDirty_called
@@ -184,7 +184,7 @@ const fireFrom = <[$log $q $rootScope $timeout Firebase AllSpark]> ++ ($log, $q,
           setDirty!
       else
         !(childSnap) -># $timeout !->
-          console.log \child_removed value, childSnap.name!
+          # console.log \child_removed value, childSnap.name!
           delete! value[childSnap.name!]
           setDirty!
 
@@ -329,7 +329,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     valSetter scope, it
     it
 
-const fireEntry = <[$log $q $timeout FirebaseSimpleLogin AllSpark]> ++ ($log, $q, $timeout, FirebaseSimpleLogin, AllSpark) ->
+const fireEntry = <[$q $timeout FirebaseSimpleLogin AllSpark]> ++ ($q, $timeout, FirebaseSimpleLogin, AllSpark) ->
   (authReference) ->
     {resolve, reject, promise} = $q.defer!
     const ref = new FirebaseSimpleLogin AllSpark, !(error, auth) ->
