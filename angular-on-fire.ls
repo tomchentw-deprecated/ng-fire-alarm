@@ -311,7 +311,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     #
     (fbFrom) <-! iAttrs.$observe \fbFrom
     offDestroyAndResolve!
-    unless pathEvals.every -> it
+    unless pathEvals.every(-> it)
       if ref isnt NOOP_REF
         ref := NOOP_REF
         refSetter scope, ref
