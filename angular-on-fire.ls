@@ -273,7 +273,9 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     ]+)
   \}\}
   //g
-
+  const NOOP_REF = {order: FIREBASE_ORDERS}
+  forEach QUERY_KEYS, !(key) -> NOOP_REF[key] = noop
+  #
   restrict: \A
   scope: false
   priority: 101
@@ -294,30 +296,32 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
       <-! scope.$watch $interpolate pathEval
       pathEvals[index] = it
 
-    ref = {order: FIREBASE_ORDERS}
     forEach QUERY_KEYS, !(key) ->
-      ref[key] = noop
-      return unless iAttrs[key]
-
       <-! scope.$watchCollection iAttrs[key]
-      # console.log it, ref
       ref[key] ...it
-
-    # refSetter scope, ref
     #
+    ref = NOOP_REF
     offDestroyAndResolve = noop
+    const getValue = (path) ->
+      value = {}
+      if iAttrs.fbToCollection
+        path.toCollection = true
+        value = []
+      value
+    #
     (fbFrom) <-! iAttrs.$observe \fbFrom
-    return unless pathEvals.every -> it
     offDestroyAndResolve!
+    unless pathEvals.every -> it
+      if ref isnt NOOP_REF
+        ref := NOOP_REF
+        refSetter scope, ref
+        valSetter scope, getValue {}
+      return
 
     const path = path: fbFrom.match expMatcher .4.split rootString .0
     forEach QUERY_KEYS, !-> path[it] = $parse(that)(scope) if iAttrs[it]
 
-    value = {}
-    if iAttrs.fbToCollection
-      path.toCollection = true
-      value = []
-    # console.log path, result
+    value = getValue path
     ref := fireFrom path, value
 
     const prevResolve = delete ref.resolve
