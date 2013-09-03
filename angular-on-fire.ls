@@ -297,6 +297,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
       pathEvals[index] = it
 
     forEach QUERY_KEYS, !(key) ->
+      return unless iAttrs[key]
       <-! scope.$watchCollection iAttrs[key]
       ref[key] ...it
     #
