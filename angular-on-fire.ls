@@ -1,11 +1,10 @@
-      val = $value: val
 const {module, isObject, isArray, isString, isNumber, isFunction, forEach, bind, copy, noop} = angular
 const noopDefer = resolve: noop, reject: noop
 
 const AllSpark = <[Firebase FirebaseUrl]> ++ (Firebase, FirebaseUrl) ->
   new Firebase FirebaseUrl
 
-const extendChildSnap = (parent, childName, childSnap, prevKeysStore) ->
+const extendChildSnap = (parent, childName, childSnap, prevKeysStore, forceTransform || false) ->
   val = childSnap.val!
   dstVal = parent[childName]
 
@@ -14,8 +13,12 @@ const extendChildSnap = (parent, childName, childSnap, prevKeysStore) ->
   else if isObject val
     dstVal = parent[childName] = {} unless isObject dstVal  
   else
-    dstVal = null
-    parent[childName] = val
+    if forceTransform
+      dstVal = parent[childName] = {} unless isObject dstVal
+      dstVal.$value = val
+    else
+      dstVal = null
+      parent[childName] = val
     # console.log "direct assign:#{ val } to #{ parent }:#{ childName }"
   extendSnap dstVal, childSnap, prevKeysStore if dstVal
 
@@ -27,7 +30,7 @@ const extendSnap = (dst, snap, prevKeysStore) ->
   snap.forEach !(childSnap) ->
     key = childSnap.name!
     newKeys[key] = key
-    extendChildSnap dst, key, childSnap, prevKeysStore[key] ||= {}
+    extendChildSnap dst, key, childSnap, prevKeysStore{}[key]
 
   for prevKey in $$prevKeys when not newKeys[prevKey]
     # console.log "deleting:#{ prevKey } from: #{ JSON.stringify dst } with newKeys: #{ JSON.stringify newKeys }"
@@ -114,17 +117,17 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
     const ref = AllSpark.child path
 
     const inject$Properties = !(index, childSnap) ->
-      ref = value[index]
-      unless isObject ref
-        ref = value[index] = $value: value[index]
-      ref <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
+      value[index] <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
 
     const onValue = !(snap) -># $timeout !->
       if toCollection
         index = 0
         snap.forEach !(childSnap) ->
-          extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
+          console.log path, index, value[index]
+          
+          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
           inject$Properties index, childSnap
+          console.log path, index, value[index]
           index := index + 1
       else
         extendSnap value, snap, prevKeysStore
@@ -161,9 +164,10 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
       ref.on \child_added if toCollection
         !(childSnap, prevId) -># $timeout !->
           const index = getIndex prevId
-          extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
+          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
           inject$Properties index, childSnap
-
+          #
+          indexes[childSnap.name!] = index
           updateIndexes index
           setDirty!
       else
@@ -173,8 +177,11 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
 
       ref.on \child_removed if toCollection
         !(childSnap) -># $timeout !->
-          const index = indexes[childSnap.name!]
-          delete! value[index]
+          const name = childSnap.name!
+          const index = indexes[name]
+          value[index] = void
+          #
+          indexes[name] = void
           updateIndexes index
           setDirty!
       else
@@ -187,7 +194,7 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
         !(childSnap, prevId) -># $timeout !->
           const index = indexes[childSnap.name!]
           const newIndex = getIndex prevId
-          extendChildSnap value, index, childSnap, prevKeysStore[index] ||= {}
+          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
           inject$Properties index, childSnap
           
           moveChild index, newIndex, value[index] if newIndex isnt index
@@ -195,7 +202,7 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
       else
         !(childSnap) -># $timeout !->
           const name = childSnap.name!
-          extendChildSnap value, name, childSnap, prevKeysStore[name] ||= {}
+          extendChildSnap value, name, childSnap, prevKeysStore{}[name]
           setDirty!
 
       ref.on \child_moved if toCollection
