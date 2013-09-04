@@ -118,23 +118,7 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
 
     const inject$Properties = !(index, childSnap) ->
       value[index] <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
-
-    const onValue = !(snap) -># $timeout !->
-      if toCollection
-        index = 0
-        snap.forEach !(childSnap) ->
-          # console.log path, index, value[index]
-          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
-          inject$Properties index, childSnap
-          # console.log path, index, value[index]
-          index := index + 1
-      else
-        extendSnap value, snap, prevKeysStore
-      if resolveWhenValue
-        resolveWhenValue value
-        resolveWhenValue := void
-      setDirty!
-
+      
     const indexes = {}
     const getIndex = -> if it then indexes[it]+1 else 0
     const moveChild = !(src, dst, item) ->
@@ -144,13 +128,58 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
 
     const updateIndexes = !(src, dst) ->
       const {length} = value
-      dst ||= length
-      dst = length if dst > length
+      dst = length if not dst || dst > length
       for i from src til dst
         const item = value[i]
         item.$index = indexes[item.$id] = i
 
+    const addChildToCollection = !(childSnap, prevId) ->
+      const index = getIndex prevId
+      extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
+      inject$Properties index, childSnap
+      #
+      indexes[childSnap.name!] = index
+      updateIndexes index
+
+    const removeChildFromCollection = !(childSnap) ->
+      const name = childSnap.name!
+      const index = indexes[name]
+      value.splice index, 1
+      #
+      indexes[name] = void
+      updateIndexes index
+
+    const changeChildInCollection = !(childSnap, prevId) ->
+      const prevIndex = indexes[childSnap.name!]
+      const newIndex = getIndex prevId
+      extendChildSnap value, prevIndex, childSnap, prevKeysStore{}[prevIndex], true
+      inject$Properties prevIndex, childSnap
+      
+      moveChild prevIndex, newIndex, value[prevIndex] if newIndex isnt prevIndex
     
+    const onValue = !(snap) ->
+      if toCollection
+        cache = {}
+        while value.pop!
+          cache[that.$id] = that
+          indexes[that.$id] = void
+        #
+        index = -1
+        prevId = null
+        (childSnap) <-! snap.forEach
+        index := index + 1
+        const name = childSnap.name!
+        value[index] = cache[name]
+        indexes[index] = name
+        addChildToCollection childSnap, prevId
+        prevId := name
+      else
+        extendSnap value, snap, prevKeysStore
+      if resolveWhenValue
+        resolveWhenValue value
+        resolveWhenValue := void
+      setDirty!
+
     const onEvents = !->
       if query
         return query.on \value onValue
@@ -160,46 +189,26 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
       ref.on \value noop
       ref.once \value onValue
       #
-      ref.on \child_added if toCollection
-        !(childSnap, prevId) -># $timeout !->
-          const index = getIndex prevId
-          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
-          inject$Properties index, childSnap
-          #
-          indexes[childSnap.name!] = index
-          updateIndexes index
-          setDirty!
-      else
-        !(childSnap) -># $timeout !->
+      ref.on \child_added !(childSnap, prevId) ->
+        if toCollection
+          addChildToCollection childSnap, prevId
+        else
           value[childSnap.name!] = childSnap.val!
-          setDirty!
+        setDirty!
 
-      ref.on \child_removed if toCollection
-        !(childSnap) -># $timeout !->
-          const name = childSnap.name!
-          const index = indexes[name]
-          value[index] = void
-          #
-          indexes[name] = void
-          updateIndexes index
-          setDirty!
-      else
-        !(childSnap) -># $timeout !->
-          # console.log \child_removed value, childSnap.name!
+      ref.on \child_removed !(childSnap) ->
+        if toCollection
+          removeChildFromCollection childSnap
+        else
           delete! value[childSnap.name!]
-          setDirty!
+        setDirty!
 
       ref.on \child_changed if toCollection
-        !(childSnap, prevId) -># $timeout !->
-          const index = indexes[childSnap.name!]
-          const newIndex = getIndex prevId
-          extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
-          inject$Properties index, childSnap
-          
-          moveChild index, newIndex, value[index] if newIndex isnt index
+        !(childSnap, prevId) ->
+          changeChildInCollection childSnap, prevId
           setDirty!
       else
-        !(childSnap) -># $timeout !->
+        !(childSnap) ->
           const name = childSnap.name!
           extendChildSnap value, name, childSnap, prevKeysStore{}[name]
           setDirty!
