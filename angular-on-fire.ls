@@ -123,11 +123,10 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
       if toCollection
         index = 0
         snap.forEach !(childSnap) ->
-          console.log path, index, value[index]
-          
+          # console.log path, index, value[index]
           extendChildSnap value, index, childSnap, prevKeysStore{}[index], true
           inject$Properties index, childSnap
-          console.log path, index, value[index]
+          # console.log path, index, value[index]
           index := index + 1
       else
         extendSnap value, snap, prevKeysStore
