@@ -1,3 +1,4 @@
+      val = $value: val
 const {module, isObject, isArray, isString, isNumber, isFunction, forEach, bind, copy, noop} = angular
 const noopDefer = resolve: noop, reject: noop
 
