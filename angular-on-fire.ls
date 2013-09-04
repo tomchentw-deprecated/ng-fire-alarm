@@ -42,24 +42,19 @@ const bindPromise = (target, promise) ->
     target
   target
 
-const FIREBASE_ORDERS =
+const FirebaseOrder =
   ->
     const that = it.$priority
-    tmp = unless that?
+    unless that?
       0
     else if isNumber that
       1
     else if isString that
       2
-    # console.log tmp
-    tmp 
-  -> if it.$priority then that else Infinity
-
   -> 
-    tmp = it.$id
-    # console.log tmp
-    tmp
-
+    if it.$priority then that else Infinity
+  -> 
+    it.$id
 
 
 const QUERY_KEYS = <[startAt endAt limit]>
@@ -105,7 +100,6 @@ const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope
     tmp.promise.then offEvents
 
     const fireFrom = {ServerValue, $resolved: false, resolve: resolveWhenDestroyed}
-    fireFrom.order = FIREBASE_ORDERS if toCollection
     
     tmp = $q.defer!
     resolveWhenValue = ->
@@ -273,7 +267,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     ]+)
   \}\}
   //g
-  const NOOP_REF = {order: FIREBASE_ORDERS}
+  const NOOP_REF = {}
   forEach QUERY_KEYS, !(key) -> NOOP_REF[key] = noop
   #
   restrict: \A
@@ -358,6 +352,6 @@ const fireEntry = <[$q $timeout FirebaseSimpleLogin AllSpark]> ++ ($q, $timeout,
 #
 module \angular-on-fire <[]>
 .constant FirebaseUrl: \https://pleaseenteryourappnamehere.firebaseIO.com/
-.value {Firebase, FirebaseSimpleLogin}
+.value {Firebase, FirebaseSimpleLogin, FirebaseOrder}
 .factory {AllSpark, fireFrom, fireEntry}
 .directive {fbFrom}
