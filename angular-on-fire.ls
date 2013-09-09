@@ -233,7 +233,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
   link: !(scope, iElement, iAttrs) ->
     const result = iAttrs.fbFrom.match expMatcher
     throw new Error "fbFrom should be the form ..." unless result
-    const valSetter = $parse result.1 .assign
+    const valGetter = $parse result.1
     const refSetter = $parse result.3 .assign || noop
 
     pathString = result.4
@@ -267,13 +267,13 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
       if ref isnt NOOP_REF
         ref := NOOP_REF
         refSetter scope, ref
-        valSetter scope, getValue {}
+        valGetter.assign scope, getValue {}
       return
 
     const path = path: fbFrom.match expMatcher .4.split rootString .0
     forEach QUERY_KEYS, !-> path[it] = $parse(that)(scope) if iAttrs[it]
 
-    value = getValue path
+    value = valGetter(scope) || getValue path
     ref := fireFrom path, value
 
     const prevResolve = delete ref.resolve
@@ -282,7 +282,7 @@ const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFr
     
     refSetter scope, ref
     <- ref.then
-    valSetter scope, it
+    valGetter.assign scope, it
     it
 
 const fireEntry = <[$q $timeout FirebaseSimpleLogin AllSpark]> ++ ($q, $timeout, FirebaseSimpleLogin, AllSpark) ->
