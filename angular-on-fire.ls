@@ -1,50 +1,9 @@
-const {module, isObject, isArray, isString, isNumber, isFunction, forEach, bind, copy, noop} = angular
+const {module, isObject, isArray, isString, isNumber, isFunction, forEach, bind, copy, extend, noop, toJson} = angular
 const noopDefer = resolve: noop, reject: noop
+const noopRef = off: noop
 
 const AllSpark = <[Firebase FirebaseUrl]> ++ (Firebase, FirebaseUrl) ->
   new Firebase FirebaseUrl
-
-const extendChildSnap = (parent, childName, childSnap, prevKeysStore, forceTransform || false) ->
-  val = childSnap.val!
-  dstVal = parent[childName]
-
-  if isArray val
-    dstVal = parent[childName] = [] unless isArray dstVal
-  else if isObject val
-    dstVal = parent[childName] = {} unless isObject dstVal  
-  else
-    if forceTransform
-      dstVal = parent[childName] = {} unless isObject dstVal
-      dstVal.$value = val
-    else
-      dstVal = null
-      parent[childName] = val
-    # console.log "direct assign:#{ val } to #{ parent }:#{ childName }"
-  extendSnap dstVal, childSnap, prevKeysStore if dstVal
-
-const extendSnap = (dst, snap, prevKeysStore) ->
-  # console.log \extendSnap, dst, snap.name!, snap.val!
-  newKeys = {}
-  {$$prevKeys || []} = prevKeysStore
-
-  snap.forEach !(childSnap) ->
-    key = childSnap.name!
-    newKeys[key] = key
-    extendChildSnap dst, key, childSnap, prevKeysStore{}[key]
-
-  for prevKey in $$prevKeys when not newKeys[prevKey]
-    # console.log "deleting:#{ prevKey } from: #{ JSON.stringify dst } with newKeys: #{ JSON.stringify newKeys }"
-    delete dst[prevKey]
-  prevKeysStore.$$prevKeys = Object.keys newKeys
-
-const bindPromise = (target, promise) ->
-  target.then = ->
-    promise := promise.then ...&
-    target
-  target.always = ->
-    promise := promise.always ...&
-    target
-  target
 
 const FirebaseOrder =
   ->
@@ -60,231 +19,6 @@ const FirebaseOrder =
   -> 
     it.$id
 
-
-const QUERY_KEYS = <[startAt endAt limit]>
-
-const fireFrom = <[$q $rootScope $timeout Firebase AllSpark]> ++ ($q, $rootScope, $timeout, Firebase, AllSpark) ->
-  promise = void
-  const setDirty = !->
-    # console.log \setDirty_called
-    return if promise
-    # console.log \set
-    promise := $timeout !->
-      # console.log \cancel
-      promise := void
-  
-  digestCount = 0
-  const startTime = Date.now! 
-  $rootScope.$watch !-># digest
-    if promise && $timeout.cancel promise
-      # console.log \cancel_in_digest
-      promise := void 
-    # console.log "fps: #{ Math.round (digestCount:=digestCount+1)/(Date.now!-startTime)*1000 }"
-
-
-  const ServerValue = ^^Firebase.ServerValue
-  const TYPE_MISMATCH_ERROR = !-> throw new TypeError \Mismatch
-
-  (path, value) ->
-    throw new TypeError "Require object" unless isObject value
-    if isObject path
-      queries = path
-      path = delete queries.path
-      toCollection = delete queries.toCollection
-      throw new TypeError "Require array" if toCollection && !isArray value
-    queries ||= {}
-    toCollection ||= false
-
-    const offEvents = !->
-      # https://www.firebase.com/docs/javascript/query/index.html
-      forEach <[child_added child_removed child_changed]> !-> ref.off it
-
-    tmp = $q.defer!
-    const resolveWhenDestroyed = tmp.resolve
-    tmp.promise.then offEvents
-
-    const fireFrom = {ServerValue, $resolved: false, resolve: resolveWhenDestroyed}
-    
-    tmp = $q.defer!
-    resolveWhenValue = ->
-      tmp.resolve it
-      fireFrom.$resolved = true
-      it
-    bindPromise fireFrom, tmp.promise
-
-    prevKeysStore = {}
-    query = null
-    const ref = AllSpark.child path
-   
-    const onValue = !(snap) ->
-      if toCollection
-        cache = {}
-        while value.pop!
-          cache[that.$id] = that
-        #
-        index = -1
-        prevId = null
-        (childSnap) <-! snap.forEach
-        index := index + 1
-        const name = childSnap.name!
-        value[index] = cache[name]
-        extendChildSnap value, index, childSnap, prevKeysStore{}[name], true
-        value[index] <<< {$id: childSnap.name!, $index: index, $priority: childSnap.getPriority!}
-
-        prevId := name
-      else
-        extendSnap value, snap, prevKeysStore
-      if resolveWhenValue
-        resolveWhenValue value
-        resolveWhenValue := void
-      setDirty!
-
-    const onEvents = !->
-      if query || toCollection
-        return context!.on \value onValue
-        
-      # The on is called for maintain cache in firebase
-      # see: http://stackoverflow.com/questions/11991426/firebase-does-caching-improve-performance
-      ref.on \value noop
-      ref.once \value onValue
-      #
-      ref.on \child_added !(childSnap, prevId) ->
-        value[childSnap.name!] = childSnap.val!
-        setDirty!
-
-      ref.on \child_removed !(childSnap) ->
-        delete! value[childSnap.name!]
-        setDirty!
-
-      ref.on \child_changed !(childSnap) ->
-          const name = childSnap.name!
-          extendChildSnap value, name, childSnap, prevKeysStore{}[name]
-          setDirty!
-
-      ref.on \child_moved noop
-
-    const context = -> query || ref
-    forEach QUERY_KEYS, !(name) ->
-      query := context![name] ...queries[name] if isArray queries[name]
-      #
-      fireFrom[name] = ->
-        fireFrom.$resolved = false
-        offEvents!
-        query := context![name] ...&
-
-        unless resolveWhenValue
-          const {resolve, promise} = $q.defer!
-          fireFrom.then -> promise
-          resolveWhenValue := ->
-            resolve it
-            fireFrom.$resolved = true
-            it
-        onEvents!
-        fireFrom
-    #
-    onEvents!
-    for key, val of ref when isFunction(val) && key not in QUERY_KEYS
-      # https://www.firebase.com/docs/javascript/firebase/index.html
-      fireFrom[key] = bind ref, val
-    # console.log fireFrom.order
-    #
-    fireFrom
-
-const fbFrom = <[$parse $interpolate fireFrom]> ++ ($parse, $interpolate, fireFrom) ->
-  const expMatcher = //
-  ^
-  \s*   # 
-  (\S+) # subject   -> 1
-  \s+   # 
-  (
-    in    # in
-    \s+   # (*)
-    (\S+) # subjectRef  -> 3
-    \s+   # 
-  )?    #           -> 2
-  from  # from
-  \s+'  # 
-  (.+)  # $path     -> 4
-  '$
-  //
-  const rootAtPathMatcher = //
-  \s+   # 
-  (     # 
-    at    # at
-    \s+   # 
-    (\S*) # $root       -> 2
-    \s*   # 
-  )?    #           -> 0
-  $
-  //
-  const evalMatcher = //
-  \{\{
-    ([^
-      \{,\}
-    ]+)
-  \}\}
-  //g
-  const NOOP_REF = {}
-  forEach QUERY_KEYS, !(key) -> NOOP_REF[key] = noop
-  #
-  restrict: \A
-  scope: false
-  priority: 101
-  link: !(scope, iElement, iAttrs) ->
-    const result = iAttrs.fbFrom.match expMatcher
-    throw new Error "fbFrom should be the form ..." unless result
-    const valGetter = $parse result.1
-    const refSetter = $parse result.3 .assign || noop
-
-    pathString = result.4
-    const pathResult = pathString.match(rootAtPathMatcher) || []
-    if pathResult.length > 2
-      [rootString, _, rootKey] = pathResult 
-      pathString = pathString.replace rootString, ''
-    const pathEvals = pathString.match(evalMatcher) || []
-
-    forEach pathEvals, !(pathEval, index) ->
-      <-! scope.$watch $interpolate pathEval
-      pathEvals[index] = it
-
-    forEach QUERY_KEYS, !(key) ->
-      return unless iAttrs[key]
-      <-! scope.$watchCollection iAttrs[key]
-      ref[key] ...it
-    #
-    ref = NOOP_REF
-    offDestroyAndResolve = noop
-    const getValue = (path) ->
-      value = {}
-      if iAttrs.fbToCollection
-        path.toCollection = true
-        value = []
-      value
-    #
-    (fbFrom) <-! iAttrs.$observe \fbFrom
-    offDestroyAndResolve!
-    unless pathEvals.every(-> it)
-      if ref isnt NOOP_REF
-        ref := NOOP_REF
-        refSetter scope, ref
-        valGetter.assign scope, getValue {}
-      return
-
-    const path = path: fbFrom.match expMatcher .4.split rootString .0
-    forEach QUERY_KEYS, !-> path[it] = $parse(that)(scope) if iAttrs[it]
-
-    value = valGetter(scope) || getValue path
-    ref := fireFrom path, value
-
-    const prevResolve = delete ref.resolve
-    const offDestroy = scope.$on \$destroy prevResolve
-    offDestroyAndResolve := !-> offDestroy! && prevResolve!
-    
-    refSetter scope, ref
-    <- ref.then
-    valGetter.assign scope, it
-    it
-
 const fireEntry = <[$q $timeout FirebaseSimpleLogin AllSpark]> ++ ($q, $timeout, FirebaseSimpleLogin, AllSpark) ->
   (authReference) ->
     {resolve, reject, promise} = $q.defer!
@@ -299,16 +33,208 @@ const fireEntry = <[$q $timeout FirebaseSimpleLogin AllSpark]> ++ ($q, $timeout,
     tmp = $q.defer!
     tmp.promise.then !-> console.log "fireEntry's scope destroyed!!"
 
-    const target = bindPromise {resolve: tmp.resolve}, promise
+    const target = do
+      resolve: tmp.resolve
+      then: !->
+        promise := promise.then ...&
     for key, val of ref when isFunction(val) 
       target[key] = bind ref, val
 
     target
+
+
+const QUERY_KEYS = <[startAt endAt limit]>
+const evalMatcher = /\{\{\s*(\S*)\s*\}\}/g
+
+class SourceSpark
+  ->
+    @nextHandler = []
+    @config = {}
+
+  const waitForPaths = (config, childSnap, childIndex, readValue) ->
+    const pathEvals = while evalMatcher.exec config.path
+      that
+    #
+    const callNext = !(value, pathIndex) ~>
+      pathEvals[pathIndex] = value
+      return unless pathEvals.every -> not isArray(it) && it
+      paths = config.path.split evalMatcher
+      for i from 1 til paths.length by 2
+        paths[i] = pathEvals[Math.floor(i/2)]
+      readValue extend({}, config, path: paths.join ''), childIndex
+
+    if pathEvals.length is 0
+      readValue config, childIndex
+      return @
+  
+    pathEvals.forEach (array, pathIndex) ->
+      switch array.1
+      | \$id =>
+        callNext childSnap.name!, pathIndex
+      | _ =>
+        @_requireScope!.$watch @@$interpolate(array.0), !->
+          return unless it
+          callNext it, pathIndex
+    , @
+    @
+
+  const getConfig = (method, config) ->
+    if isObject config
+      config
+    else if isString config
+      path: config
+    else throw new Error "#{ method } require string or object but got #{ config }"
+
+  const getRef = (AllSpark, config) ->
+    ref = AllSpark.child config.path
+    QUERY_KEYS.filter(-> config[it]).forEach (name) ->
+      ref := ref[name] ...config[name]
+    ref
+
+  const trimValSize = !(val, targetSize || 0) ->
+    if val.length >= targetSize
+      val.splice targetSize, val.length-targetSize
+    else
+      val.push ...[void for i from val.length til targetSize]
+    throw new Error "Mismatch #{ val.length }, #{ targetSize }" if val.length isnt targetSize
+    targetSize
+
+  _requireScope: ->
+    if @scope then that
+    else throw new Error "Scope!!"
+  
+  get: (config) ->
+    @config = getConfig \get config    
+    @
+
+  map: (config) ->
+    config = getConfig \map config
+    const handlerIndex = @nextHandler.length+1
+    
+    @nextHandler.push !->
+      const refsMap = {}
+      const val = []
+      const numChildren = trimValSize val, it.numChildren?! || it.length
+      index = -1
+      #
+      <~! it.forEach
+      index := index + 1
+      const name = it.name!
+      refsMap[name] ||= noopRef
+
+      (config, childIndex) <~! waitForPaths.call @, config, it, index
+      refsMap[name].off!
+      refsMap[name] = getRef @@AllSpark, config
+      refsMap[name].on \value !->
+        val[childIndex] = it
+        @nextHandler[handlerIndex].call @, val if val.every -> it
+      , noop, @
+    @
+
+  reduce: ->
+    const handlerIndex = @nextHandler.length+1
+    @nextHandler.push !->
+      val = []
+      it.forEach !-> it.forEach !-> val.push it
+      @nextHandler[handlerIndex].call @, val
+    @
+
+  clone: (config) ->
+    const cloned = new SourceSpark!
+    copy @nextHandler, cloned.nextHandler
+    copy @config, cloned.config
+    extend cloned.config, config if isObject config
+    cloned
+
+  _execute: ->
+    ref = noopRef
+    (config) <~! waitForPaths.call @, @config, null, 0
+    ref.off!
+    ref := getRef @@AllSpark, config
+    ref.on \value !->
+      @nextHandler.0.call @, it
+    , noop, @
+
+  const injectProps = ->
+    if it.val?!
+      that = {$value: that} unless isObject that
+      that <<< {$id: it.name!, $priority: it.getPriority!}  
+    else
+      that = {}
+    [that, it.ref!]
+
+  const snapToVal = (it, toCollection) ->
+    if toCollection || isArray it
+      const vals = [], refs = []
+      it.forEach !->
+        const [val, ref] = injectProps it
+        vals.push val
+        refs.push ref
+      [vals, refs]
+    else
+      injectProps it
+
+  defer: (toCollection) ->
+    const {resolve, promise} = @@$q.defer!
+    @nextHandler.push !->
+      snapToVal it, toCollection .0 |> resolve
+    @_execute!
+    promise
+
+  promise = void
+  queue = []
+  const timeoutedFn = !->
+    while queue.shift!
+      that!
+    promise := void
+
+  const delayMillis = 300
+
+  _setScope: !(scope, valueSetter, refSetter, toCollection) ->
+    return if @scope
+    @scope = scope
+    @nextHandler.push !->
+      const [vals, refs] = snapToVal it, toCollection
+      const updateFn = !->
+        valueSetter scope, vals
+        refSetter scope, refs
+      if scope.$root.$$phase  
+        queue.push updateFn
+        @@$timeout timeoutedFn, delayMillis unless promise
+      else
+        scope.$apply updateFn
+    @_execute!
+      
+const SourceSparkFactory = <[$q $timeout $interpolate AllSpark]> ++ ($q, $timeout, $interpolate, AllSpark) ->
+  SourceSpark <<< {$q, $timeout, $interpolate, AllSpark}
+
+const fbSpark = <[$parse SourceSpark]> ++ ($parse, SourceSpark) ->
+  const expMatcher = /\s*(\S+)(?:\s+from\s+(\S+))?\s+in\s+([^;\s]+)\s*;*/g
+
+  restrict: \A
+  link: !(scope, iElement, iAttrs) ->
+    const validKeys = QUERY_KEYS.filter -> iAttrs[it]
+    const config = {}
+    validKeys.forEach !->
+      (config[it]) <-! scope.$watchCollection iAttrs[it]
+      updateSparks!
+
+    const updateSparks = !->
+      return unless validKeys.every -> isArray config[it]
+      <-! sparks.forEach
+      const spark = it.2 scope
+      return unless spark
+      spark.clone config ._setScope scope, it.0.assign, it.1.assign || noop, iAttrs.fbToCollection
+
+    const sparks = while expMatcher.exec iAttrs.fbSpark
+      that.slice 1, 4 .map $parse
+
+    updateSparks! unless validKeys.length
 #
 # Module definition
 #
 module \angular-on-fire <[]>
 .constant FirebaseUrl: \https://pleaseenteryourappnamehere.firebaseIO.com/
 .value {Firebase, FirebaseSimpleLogin, FirebaseOrder}
-.factory {AllSpark, fireFrom, fireEntry}
-.directive {fbFrom}
+.factory {AllSpark, fireEntry, SourceSpark: SourceSparkFactory}
+.directive {fbSpark}
