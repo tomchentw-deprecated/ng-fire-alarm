@@ -70,7 +70,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= livescript.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>.js'
+        dest: 'dist/script.js'
       },
       release: {
         src: '<%= livescript.release.dest %>',
