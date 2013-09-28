@@ -24,7 +24,7 @@ module.exports = function(grunt) {
     // Task configuration.
     concat: {
       livescript: {
-        src: ['lib/<%= pkg.name %>.ls', 'src/*/*.ls'],
+        src: ['lib/<%= pkg.name %>.ls', 'src/**/*.ls'],
         dest: 'tmp/.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       }
@@ -136,7 +136,6 @@ module.exports = function(grunt) {
   // grunt.loadNpmTasks('grunt-contrib-qunit');
   //
   grunt.loadNpmTasks('grunt-livescript');
-  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
