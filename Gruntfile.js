@@ -32,7 +32,7 @@ module.exports = function(grunt) {
     livescript: {
       dist: {
         src: '<%= concat.livescript.dest %>',
-        dest: 'tmp/.ls-cache/<%= pkg.name %>.js'
+        dest: 'dist/script.js'
       },
       release: {
         src: 'lib/<%= pkg.name %>.ls',
@@ -140,8 +140,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
   grunt.registerTask('lsall', ['concat:livescript', 'livescript']);
-  grunt.registerTask('jsall', ['lsall', 'jshint', 'uglify']);
-  grunt.registerTask('default', ['jsall', 'jade']);
-  grunt.registerTask('dev', ['default', 'connect', 'watch']);
+  grunt.registerTask('jsall', ['lsall', 'jshint']);
+  grunt.registerTask('dev', ['jsall', 'jade', 'connect', 'watch']);
+  grunt.registerTask('default', ['jsall', 'uglify:dist', 'jade']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
 };

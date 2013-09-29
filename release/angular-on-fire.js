@@ -1,54 +1,85 @@
 (function(){
-  var isString, isArray, isFunction, isObject, isNumber, noop, forEach, bind, extend, module, clone, childSnap2Value, immediate, DataFlow, ToSyncFlow, FireSync, interpolateMatcher, GetFlow, MapFlow, FlattenDataFlow;
+  var isString, isArray, isFunction, isObject, isNumber, noop, forEach, bind, extend, module, FireNode, createFireNode, DataFlow, ToSyncFlow, FireSync, InterpolateFlow, GetFlow, MapFlow, FlattenDataFlow, FireSyncFactory;
   isString = angular.isString, isArray = angular.isArray, isFunction = angular.isFunction, isObject = angular.isObject, isNumber = angular.isNumber;
   noop = angular.noop, forEach = angular.forEach, bind = angular.bind, extend = angular.extend, module = angular.module;
-  clone = function(proto, snap){
-    proto.$ref = snap.ref();
-    proto.$name = snap.name();
-    proto.$priority = snap.getPriority();
-    return clone$(proto);
+  FireNode = (function(){
+    FireNode.displayName = 'FireNode';
+    var noopRef, prototype = FireNode.prototype, constructor = FireNode;
+    noopRef = {
+      set: noop,
+      update: noop,
+      push: noop
+    };
+    function FireNode(){
+      this._setFireProperties = bind$(this, '_setFireProperties', prototype);
+      this.$ref = noopRef;
+      return clone$(this);
+    }
+    prototype._setFireProperties = function(nodeOrSnap){
+      var isSnap;
+      isSnap = isFunction(nodeOrSnap.val);
+      this.$ref = isSnap
+        ? nodeOrSnap.ref()
+        : nodeOrSnap.$ref;
+      this.$name = isSnap
+        ? nodeOrSnap.name()
+        : nodeOrSnap.$name;
+      this.$priority = isSnap
+        ? nodeOrSnap.getPriority()
+        : nodeOrSnap.$priority;
+      return isSnap;
+    };
+    prototype.extend = function(nodeOrSnap){
+      var key, val, counter, value, own$ = {}.hasOwnProperty, this$ = this;
+      if (!nodeOrSnap) {
+        return this;
+      }
+      for (key in this) if (own$.call(this, key)) {
+        if (!FireNode.prototype[key]) {
+          delete this[key];
+        }
+      }
+      if (this._setFireProperties(nodeOrSnap)) {
+        val = nodeOrSnap.val();
+        if (isArray(this)) {
+          counter = -1;
+          nodeOrSnap.forEach(function(snap){
+            this$[counter += 1] = createFireNode(snap);
+          });
+        } else {
+          extend(this, isObject(val)
+            ? val
+            : {
+              $value: val
+            });
+        }
+      } else {
+        for (key in nodeOrSnap) if (own$.call(nodeOrSnap, key)) {
+          value = nodeOrSnap[key];
+          this[key] = value;
+        }
+      }
+      return this;
+    };
+    forEach(noopRef, function(value, key){
+      this["$" + key] = function(){
+        var ref$;
+        (ref$ = this.$ref)[key].apply(ref$, arguments);
+      };
+    }, FireNode.prototype);
+    return FireNode;
+  }());
+  createFireNode = function(snap, flow){
+    var node;
+    node = (flow != null && flow.toCollection) || isArray(snap != null ? snap.val() : void 8)
+      ? import$([], FireNode.prototype)
+      : new FireNode();
+    return node.extend(snap);
   };
-  childSnap2Value = function(snap, val){
-    val || (val = snap.val());
-    return extend(clone({}, snap), isObject(val)
-      ? val
-      : {
-        $value: val
-      });
-  };
-  immediate = bind(this, setTimeout);
-  this.DataFlow = DataFlow = (function(){
+  DataFlow = (function(){
     DataFlow.displayName = 'DataFlow';
     var prototype = DataFlow.prototype, constructor = DataFlow;
-    DataFlow.immediate = function(){
-      return DataFlow._immediate.apply(DataFlow, arguments);
-    };
-    DataFlow.interpolate = function(){
-      return DataFlow._interpolate.apply(DataFlow, arguments);
-    };
-    DataFlow.parse = function(){
-      return DataFlow._parse.apply(DataFlow, arguments);
-    };
-    DataFlow._snap2Value = function(snap){
-      var val, ref$, proto, valFn, value;
-      val = snap.val();
-      ref$ = isArray(val) || this.toCollection
-        ? {
-          proto: [],
-          valFn: function(it){
-            value.push(childSnap2Value(it));
-          }
-        }
-        : {
-          proto: {},
-          valFn: function(it){
-            value[it.name()] = it.val();
-          }
-        }, proto = ref$.proto, valFn = ref$.valFn;
-      value = clone(proto, snap);
-      snap.forEach(valFn);
-      return value;
-    };
+    DataFlow.immediate = noop;
     function DataFlow(config){
       extend(this, config);
     }
@@ -70,19 +101,8 @@
     var prototype = extend$((import$(ToSyncFlow, superclass).displayName = 'ToSyncFlow', ToSyncFlow), superclass).prototype, constructor = ToSyncFlow;
     prototype.start = function(result){
       var this$ = this;
-      this.constructor.immediate(function(){
-        var sync, key, that, own$ = {}.hasOwnProperty;
-        sync = this$.sync;
-        for (key in sync) if (own$.call(sync, key)) {
-          delete sync[key];
-        }
-        forEach(result, function(v, k){
-          return sync[k] = v;
-        });
-        if (that = parseInt(result.length)) {
-          sync.length = that;
-        }
-        sync._set$(result);
+      DataFlow.immediate(function(){
+        this$.sync.node.extend(result);
       });
     };
     function ToSyncFlow(){
@@ -90,18 +110,13 @@
     }
     return ToSyncFlow;
   }(DataFlow));
-  this.FireSync = FireSync = (function(){
+  FireSync = (function(){
     FireSync.displayName = 'FireSync';
     var prototype = FireSync.prototype, constructor = FireSync;
     function FireSync(){
-      this._set$ = bind$(this, '_set$', prototype);
-      this._head = this._tail = void 8;
+      this.destroy = bind$(this, 'destroy', prototype);
+      this._head = this._tail = this._scope = this.node = void 8;
     }
-    prototype._set$ = function(it){
-      this.$ref = it.$ref;
-      this.$name = it.$name;
-      this.$priority = it.$priority;
-    };
     prototype._addFlow = function(flow){
       var that;
       if (!this._head) {
@@ -113,17 +128,11 @@
       this._tail = flow;
       return this;
     };
-    prototype._checkIsSynced = function(){
-      var ref$;
-      if ((ref$ = this._dataflows)[ref$.length - 1] instanceof ToSyncFlow) {
-        throw new Error("Already sync!");
-      }
-    };
     prototype.get = function(queryStr, config){
       var ref$;
       return this._addFlow(new GetFlow((ref$ = config || {}, ref$.queryStr = queryStr, ref$)));
     };
-    prototype.map = function(queryString){
+    prototype.map = function(queryStr){
       return this._addFlow(new MapFlow({
         queryString: queryString
       }));
@@ -132,24 +141,23 @@
       return this._addFlow(new FlattenDataFlow);
     };
     prototype.sync = function(){
-      var cloned;
-      cloned = clone$(this._addFlow(new ToSyncFlow));
-      cloned._head._setSync(cloned);
-      cloned._head.start();
-      return cloned;
+      this.node = createFireNode(void 8, this._tail);
+      this._addFlow(new ToSyncFlow);
+      this._head._setSync(this);
+      this._head.start();
+      return this.node;
     };
     prototype.syncWithScope = function(_scope){
-      var this$ = this;
       this._scope = _scope;
-      this._cleanupScope = function(){
-        delete this$._scope;
-      };
       return this.sync();
     };
     prototype.destroy = function(){
       this._head.stop();
-      this._cleanupScope();
+      delete this._scope;
     };
+    /*
+      function exposed for $ref
+    */
     /*
       angular specifiy code...
       http://docs.angularjs.org/api/ng.$rootScope.Scope
@@ -160,24 +168,61 @@
     };
     return FireSync;
   }());
-  interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
+  InterpolateFlow = (function(superclass){
+    var interpolateMatcher, prototype = extend$((import$(InterpolateFlow, superclass).displayName = 'InterpolateFlow', InterpolateFlow), superclass).prototype, constructor = InterpolateFlow;
+    interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
+    function InterpolateFlow(){
+      var interpolate;
+      InterpolateFlow.superclass.apply(this, arguments);
+      this.queryFuncs = [];
+      interpolate = DataFlow.interpolate;
+      if (interpolateMatcher.test(this.queryStr)) {
+        forEach(this.queryStr.split(interpolateMatcher), function(str, index){
+          this.queryFuncs.push(index % 2 ? interpolate("{{ " + str + " }}") : str);
+        }, this);
+      }
+    }
+    prototype._buildWatchFn = function(value){
+      var queryFuncs;
+      queryFuncs = this.queryFuncs;
+      return function(scope){
+        var url;
+        url = '';
+        forEach(queryFuncs, function(str, index){
+          var path, that;
+          path = index % 2 === 0
+            ? str
+            : (that = str(scope) || str(value))
+              ? that
+              : url = void 8;
+          if (isString(url)) {
+            return url += path;
+          }
+        });
+        return url;
+      };
+    };
+    return InterpolateFlow;
+  }(DataFlow));
   GetFlow = (function(superclass){
     var prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
     prototype.start = function(){
-      var ref$, _snap2Value, interpolate, callNext, getValue, this$ = this;
-      ref$ = this.constructor, _snap2Value = ref$._snap2Value, interpolate = ref$.interpolate;
+      var callNext, getValue, this$ = this;
       callNext = function(snap){
-        this$.next.start(_snap2Value.call(this$, snap));
+        this$.next.start(createFireNode(snap, this$));
       };
       getValue = function(queryStr){
+        if (!queryStr) {
+          return;
+        }
         if (this$.query) {
           this$.query.off('value');
         }
         this$.query = new Firebase(queryStr);
         this$.query.on('value', callNext);
       };
-      if (interpolateMatcher.test(this.queryStr)) {
-        this.stopWatch = this.sync._watch(interpolate(this.queryStr), getValue);
+      if (this.queryFuncs.length) {
+        this.stopWatch = this.sync._watch(this._buildWatchFn({}), getValue);
       } else {
         getValue(this.queryStr);
       }
@@ -194,53 +239,39 @@
       GetFlow.superclass.apply(this, arguments);
     }
     return GetFlow;
-  }(DataFlow));
+  }(InterpolateFlow));
   MapFlow = (function(superclass){
     var prototype = extend$((import$(MapFlow, superclass).displayName = 'MapFlow', MapFlow), superclass).prototype, constructor = MapFlow;
     function MapFlow(){
-      var interpolate;
       MapFlow.superclass.apply(this, arguments);
       this.stopWatches = [];
       this.queries = [];
       this.mappedResult = [];
-      this.queryFuncs = [];
-      interpolate = this.constructor.interpolate;
-      forEach(this.queryString.split(interpolateMatcher), function(str, index){
-        this.queryFuncs.push(index % 2 ? interpolate("{{ " + str + " }}") : str);
-      }, this);
     }
     prototype._setSync = function(sync, prev){
       prev.toCollection = true;
       superclass.prototype._setSync.apply(this, arguments);
     };
     prototype.start = function(result){
-      var _snap2Value, sync, stopWatches, queries, mappedResult, queryFuncs, this$ = this;
+      var sync, stopWatches, queries, mappedResult, queryFuncs, this$ = this;
       this.stop();
-      _snap2Value = this.constructor._snap2Value;
+      if (!isArray(result)) {
+        throw new TypeError('Map require result is array');
+      }
       sync = this.sync, stopWatches = this.stopWatches, queries = this.queries, mappedResult = this.mappedResult, queryFuncs = this.queryFuncs;
       forEach(result, function(value, index){
-        var watchFn;
-        if (!isNumber(index)) {
-          throw new TypeError('Map require result is array');
-        }
-        watchFn = function(scope){
-          var url;
-          url = '';
-          forEach(queryFuncs, function(str, index){
-            return url += index % 2 ? str(scope) || str(value) : str;
-          });
-          return url;
-        };
-        stopWatches.push(sync._watch(watchFn, function(queryStr){
+        stopWatches.push(sync._watch(this$._buildWatchFn(value), function(queryStr){
           var that, query;
+          if (!queryStr) {
+            return;
+          }
           if (that = queries[index]) {
             that.off();
           }
           query = new Firebase(queryStr);
-          query.on('value', function(it){
+          query.on('value', function(snap){
             var allResolved, i$, ref$, len$, value;
-            console.log(this.toCollection, it.val());
-            mappedResult[index] = _snap2Value.call(this, it);
+            mappedResult[index] = createFireNode(snap, this);
             allResolved = true;
             for (i$ = 0, len$ = (ref$ = mappedResult).length; i$ < len$; ++i$) {
               value = ref$[i$];
@@ -268,7 +299,7 @@
       superclass.prototype.stop.call(this);
     };
     return MapFlow;
-  }(DataFlow));
+  }(InterpolateFlow));
   FlattenDataFlow = (function(superclass){
     var prototype = extend$((import$(FlattenDataFlow, superclass).displayName = 'FlattenDataFlow', FlattenDataFlow), superclass).prototype, constructor = FlattenDataFlow;
     prototype._setSync = function(sync, prev){
@@ -277,11 +308,11 @@
     };
     prototype.start = function(result){
       var results;
+      if (!isArray(result)) {
+        throw new TypeError('Flatten require result is array');
+      }
       results = [];
-      forEach(result, function(value, index){
-        if (!isNumber(index)) {
-          throw new TypeError("Flatten require result[" + index + "] is array");
-        }
+      forEach(result, function(value){
         results.push.apply(results, value);
       });
       this.next.start(results);
@@ -291,22 +322,33 @@
     }
     return FlattenDataFlow;
   }(DataFlow));
+  /*
+    angular module definition
+  */
+  FireSyncFactory = ['$timeout', '$interpolate'].concat(function($timeout, $interpolate){
+    DataFlow.immediate = $timeout;
+    DataFlow.interpolate = $interpolate;
+    return FireSync;
+  });
+  module('angular-on-fire', []).factory({
+    FireSync: FireSyncFactory
+  });
+  function bind$(obj, key, target){
+    return function(){ return (target || obj)[key].apply(obj, arguments) };
+  }
   function clone$(it){
     function fun(){} fun.prototype = it;
     return new fun;
-  }
-  function extend$(sub, sup){
-    function fun(){} fun.prototype = (sub.superclass = sup).prototype;
-    (sub.prototype = new fun).constructor = sub;
-    if (typeof sup.extended == 'function') sup.extended(sub);
-    return sub;
   }
   function import$(obj, src){
     var own = {}.hasOwnProperty;
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];
     return obj;
   }
-  function bind$(obj, key, target){
-    return function(){ return (target || obj)[key].apply(obj, arguments) };
+  function extend$(sub, sup){
+    function fun(){} fun.prototype = (sub.superclass = sup).prototype;
+    (sub.prototype = new fun).constructor = sub;
+    if (typeof sup.extended == 'function') sup.extended(sub);
+    return sub;
   }
 }).call(this);

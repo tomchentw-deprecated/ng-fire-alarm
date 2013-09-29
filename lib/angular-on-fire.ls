@@ -1,33 +1,55 @@
 const {isString, isArray, isFunction, isObject, isNumber} = angular
 const {noop, forEach, bind, extend, module} = angular
 
-const clone = (proto, snap) ->
-  proto <<< {$ref: snap.ref!, $name: snap.name!, $priority: snap.getPriority!}
-  ^^proto
+class FireNode
 
-const childSnap2Value = (snap, val) ->
-  val ||= snap.val!  
-  extend clone({}, snap), if isObject val
-    val 
-  else 
-    $value: val
+  const noopRef = do
+    set: noop
+    update: noop
+    push: noop
 
-const immediate = bind @, setTimeout
+  ->
+    @$ref = noopRef
+    return ^^@
 
-class @DataFlow
+  _setFireProperties: (nodeOrSnap) ~>
+    const isSnap = isFunction nodeOrSnap.val
+    @$ref       = if isSnap then nodeOrSnap.ref!          else nodeOrSnap.$ref
+    @$name      = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
+    @$priority  = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
+    isSnap
 
-  @immediate    = -> DataFlow._immediate ...&
-  @interpolate  = -> DataFlow._interpolate ...&
-  @parse = -> DataFlow._parse ...&
-  @_snap2Value  = (snap) ->
-    const val = snap.val!
-    const {proto, valFn} = if isArray(val) || @toCollection
-      proto: [], valFn: !-> value.push childSnap2Value it
+  extend: (nodeOrSnap) ->
+    return @ unless nodeOrSnap
+    for own key of @ when not FireNode::[key]
+      delete! @[key]
+
+    if @_setFireProperties nodeOrSnap
+      const val = nodeOrSnap.val!
+      if isArray @
+        counter = -1
+        nodeOrSnap.forEach !(snap) ~>
+          @[counter += 1] = createFireNode(snap)
+      else
+        extend @, if isObject val then val else $value: val
     else
-      proto: {}, valFn: !-> value[it.name!] = it.val!
-    const value = clone proto, snap
-    snap.forEach valFn
-    value
+      for own key, value of nodeOrSnap
+        @[key] = value
+    @
+
+  forEach noopRef, !(value, key) ->
+    @["$#{ key }"] = !-> @$ref[key] ...&
+  , @::
+
+const createFireNode = (snap, flow) ->
+  const node = if flow?toCollection || isArray(snap?val!)
+    [] <<< FireNode::
+  else
+    new FireNode!
+  node.extend snap
+
+class DataFlow
+  @immediate = noop
 
   (config) -> extend @, config
 
@@ -40,18 +62,11 @@ class @DataFlow
 class ToSyncFlow extends DataFlow
 
   start: !(result) ->
-    <~! @constructor.immediate
-    const {sync} = @
-    for own key of sync
-      delete! sync[key]
-    #
-    forEach result, (v, k) -> sync[k] = v
-    sync.length = that if parseInt result.length
-    sync._set$ result
+    <~! DataFlow.immediate
+    @sync.node.extend result
 
-class @FireSync
-  -> @_head = @_tail = void
-  _set$: !~> @ <<< it{$ref, $name, $priority}
+class FireSync
+  -> @_head = @_tail = @_scope = @node = void
 
   _addFlow: (flow) ->
     @_head = flow unless @_head
@@ -59,31 +74,33 @@ class @FireSync
     @_tail = flow
     @
 
-  _checkIsSynced: !->
-    throw new Error "Already sync!" if @_dataflows[*-1] instanceof ToSyncFlow
-
   get: (queryStr, config) ->
     @_addFlow new GetFlow (config || {})<<<{queryStr}
 
-  map: (queryString) ->
+  map: (queryStr) ->
     @_addFlow new MapFlow {queryString}
 
   flatten: ->
     @_addFlow new FlattenDataFlow
 
   sync: ->
-    const cloned = ^^(@_addFlow new ToSyncFlow)
-    cloned._head._setSync cloned
-    cloned._head.start!
-    cloned
+    @node = createFireNode void, @_tail
+    @_addFlow new ToSyncFlow
+    @_head._setSync @
+    @_head.start!
+    @node
   
   syncWithScope: (@_scope) ->
-    @_cleanupScope = !~> delete! @_scope
     @sync!
   
-  destroy: !-> 
+  destroy: !~> 
     @_head.stop!
-    @_cleanupScope!
+    delete! @_scope
+
+  /*
+    function exposed for $ref
+  */
+  
 
   /*
     angular specifiy code...
@@ -92,22 +109,46 @@ class @FireSync
   _watch: ->
     @_scope.$watch ...&
 
-const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
+class InterpolateFlow extends DataFlow
 
-class GetFlow extends DataFlow
+  const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
+  ->
+    super ...&
+    @queryFuncs   = []
+    const {interpolate} = DataFlow
+    forEach @queryStr.split(interpolateMatcher), !(str, index) ->
+      @queryFuncs.push if index % 2
+        interpolate "{{ #str }}"
+      else
+        str
+    , @ if interpolateMatcher.test @queryStr
+
+  _buildWatchFn: (value) -> 
+    const {queryFuncs} = @
+    (scope) ->
+      url = ''
+      forEach queryFuncs, (str, index) ->
+        const path = if   index % 2 is 0    then str
+          else if str(scope) || str(value)  then that
+          else
+            url := void
+        url += path if isString url
+      url
+
+class GetFlow extends InterpolateFlow
 
   start: !->
-    const {_snap2Value, interpolate} = @constructor
     const callNext = !(snap) ~>
-      @next.start _snap2Value.call @, snap
+      @next.start createFireNode snap, @
 
     const getValue = !(queryStr) ~>
+      return unless queryStr
       @query.off \value if @query
       @query = new Firebase queryStr
       @query.on \value callNext
 
-    if interpolateMatcher.test @queryStr
-      @stopWatch = @sync._watch interpolate(@queryStr), getValue
+    if @queryFuncs.length
+      @stopWatch = @sync._watch @_buildWatchFn({}), getValue
     else
       getValue @queryStr
 
@@ -116,7 +157,7 @@ class GetFlow extends DataFlow
     @query.off \value
     super!
 
-class MapFlow extends DataFlow
+class MapFlow extends InterpolateFlow
 
   ->
     super ...&
@@ -124,43 +165,23 @@ class MapFlow extends DataFlow
     @queries      = []
     @mappedResult = []
 
-    @queryFuncs   = []
-    const {interpolate} = @constructor
-    forEach @queryString.split(interpolateMatcher), !(str, index) ->
-      @queryFuncs.push if index % 2
-        interpolate "{{ #str }}"
-      else
-        str
-    , @
-
-
   _setSync: !(sync, prev) ->
     prev.toCollection = true
     super ...&
 
   start: !(result) ->
     @stop!
-    const {_snap2Value} = @constructor
+    throw new TypeError 'Map require result is array' unless isArray result
     const {sync, stopWatches, queries, mappedResult, queryFuncs} = @
 
     (value, index) <~! forEach result
-    throw new TypeError 'Map require result is array' unless isNumber index
-    const watchFn = (scope) ->
-      url = ''
-      forEach queryFuncs, (str, index) ->
-        url += if index % 2
-          str(scope) || str(value)
-        else
-          str
-      url
-    
-    stopWatches.push sync._watch watchFn, !(queryStr) ~>
+    stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
+      return unless queryStr
       that.off! if queries[index]
       const query = new Firebase queryStr
 
-      query.on \value !->
-        console.log @toCollection, it.val!
-        mappedResult[index] = _snap2Value.call @, it
+      query.on \value !(snap) ->
+        mappedResult[index] = createFireNode snap, @
         allResolved = true
         for value in mappedResult when not value
           allResolved = false
@@ -183,14 +204,20 @@ class FlattenDataFlow extends DataFlow
     super ...&
 
   start: !(result) ->
+    throw new TypeError 'Flatten require result is array' unless isArray result
     const results = []
-    forEach result, !(value, index) ->
-      throw new TypeError "Flatten require result[#index] is array" unless isNumber index
-      results.push ...value
 
+    forEach result, !(value) -> results.push ...value
     @next.start results
 
+/*
+  angular module definition
+*/
+const FireSyncFactory = <[$timeout $interpolate]> ++ ($timeout, $interpolate) ->
+  DataFlow <<< {immediate: $timeout, interpolate: $interpolate}
+  FireSync
+
+module \angular-on-fire <[]>
+.factory {FireSync: FireSyncFactory}
 
 
-
-# @buildings = new FireSync!.get \https://urcourz-data.firebaseio.com/buildings toCollection: true .sync!
