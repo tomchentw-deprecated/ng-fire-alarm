@@ -8,7 +8,8 @@
     noopRef = {
       set: noop,
       update: noop,
-      push: noop
+      push: noop,
+      transaction: noop
     };
     function FireNode(){
       this._setFireProperties = bind$(this, '_setFireProperties', prototype);
@@ -67,6 +68,12 @@
         (ref$ = this.$ref)[key].apply(ref$, arguments);
       };
     }, FireNode.prototype);
+    prototype.$increase = function(byNumber){
+      byNumber || (byNumber = 1);
+      return this.$ref.transaction(function(it){
+        return it + byNumber;
+      });
+    };
     return FireNode;
   }());
   createFireNode = function(snap, flow){

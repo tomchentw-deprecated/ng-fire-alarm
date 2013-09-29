@@ -7,6 +7,7 @@ class FireNode
     set: noop
     update: noop
     push: noop
+    transaction: noop
 
   ->
     @$ref = noopRef
@@ -40,6 +41,9 @@ class FireNode
   forEach noopRef, !(value, key) ->
     @["$#{ key }"] = !-> @$ref[key] ...&
   , @::
+
+  $increase: (byNumber || 1) ->
+    @$ref.transaction -> it + byNumber
 
 const createFireNode = (snap, flow) ->
   const node = if flow?toCollection || isArray(snap?val!)

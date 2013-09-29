@@ -20,11 +20,13 @@ html(ng-app="demo")
             span.icon-bar
           a.brand(ui-sref="Home") angular-on-fire
     .container-fluid
-      .hero-unit
+      section.hero-unit(ng-controller="HeroCtrl")
         h1 Hello, angular-on-fire!!
         p angularjs, binding, firebase
         p
           | The greatest way to use Firebase with AngularJS!
+        a.btn.btn-primary.btn-large(href="", ng-click="counter.$increase()")
+          | Click to Increase Counter : {{ counter.$value }}
       section(ng-controller="ButtonGroupCtrl")
         .row-fluid
           h1 Easy Button Group

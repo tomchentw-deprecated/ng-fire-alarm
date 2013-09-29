@@ -4,7 +4,8 @@
   "description": "angularjs binding with Firebase.com",
   "main": "angular-on-fire.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "./scripts/deploy"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# http://jgoodall.me/posts/2012/10/26/keep-gh-pages-in-sync-with-master/
+upstream=$1
+: ${upstream:=origin}
+npm i -q
+grunt
+if ! git add -A
+then
+  exit 1
+fi
+
+REV=`git describe --always`
+DEPLOY_DIR=~/.deploy
+DIR_PATH=$DEPLOY_DIR/$REV
+
+mkdir $DEPLOY_DIR
+mkdir $DIR_PATH
+mv dist/* $DIR_PATH
+cp scripts/CNAME $DIR_PATH/CNAME
+
+if ! git checkout gh-pages
+then
+  rm -rf $DIR_PATH
+  exit 1
+fi
+ls | xargs rm -rf
+mv $DIR_PATH/* .
+rmdir $DIR_PATH
+cp index.html 404.html
+
+git add -A
+git ls-files --deleted | while read FILE; do git rm "$FILE"; done
+git commit -m "deploy gh-pages for commit $REV"
+git push origin master gh-pages
+git checkout master
+
+npm i -q
+grunt
