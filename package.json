@@ -11,8 +11,17 @@
     "type": "git",
     "url": "git://github.com/tomchentw/angular-on-fire.git"
   },
-  "author": "tomchentw",
-  "license": "MIT",
+  "author": {
+    "name": "tomchentw",
+    "email": "developer@tomchentw.com",
+    "url": "https://github.com/tomchentw/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://tomchentw.mit-license.org/"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/tomchentw/angular-on-fire/issues"
   },
