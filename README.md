@@ -12,3 +12,6 @@ It makes me feel very **unconfortable**.
 But `angularFireCollection` only provides sync on collection, it doesn't provide one object sync.  
 
 So I decide to write my own version.
+
+Visit our site: [angular-on-fire](http://angular-on-fire.tomchentw.com/)
+----------
