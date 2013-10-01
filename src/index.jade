@@ -28,34 +28,30 @@ html(ng-app="demo")
           | The greatest way to use Firebase with AngularJS!
         a.btn.btn-primary.btn-large(href="", ng-click="counter.$increase()")
           | Click to Increase Counter : {{ counter.$value }}
-      section(ng-controller="ButtonGroupCtrl")
+      section
         .row-fluid
           h1 Easy Button Group
         .row-fluid
           .span8
             tabset
-              tab(heading="index.html")
-                pre.prettyprint= renderFile('mixins/btn-group.jade')
-              tab(heading="index.js")
-                pre.prettyprint
-                  | this.ButtonGroupCtrl = ['$log', '$scope', 'FireSync'].concat(function($log, $scope, FireSync){
-                  |   $scope.states = new FireSync().get(FirebaseURL + "/button-states").sync();
-                  |   $log.log('ButtonGroupCtrl', $scope);
-                  | });
-          .span4
+              tab(heading="btn-group.html")
+                pre.prettyprint= renderMixin('mixins/btn-group.jade')
+              tab(heading="btn-group.js")
+                pre.prettyprint= renderMixin('mixins/btn-group.ls')
+          .span4(ng-controller="ButtonGroupCtrl")
             include mixins/btn-group
-      section(ng-controller="ButtonToolbarCtrl")
+      section
         .row-fluid
           h1 Easy Button Toolbar
         .row-fluid
-          .btn-toolbar
-            .btn-group
-              button.btn(ng-repeat="state in states track by state.$name",
-                ng-class="{active: state.$value}", 
-                ng-click="state.$set(!state.$value)") 
-                | {{ state.$name }}
-            .code
-              {{states}}
+          .span8
+            tabset
+              tab(heading="btn-toolbar.html")
+                pre.prettyprint= renderMixin('mixins/btn-toolbar.jade')
+              tab(heading="btn-toolbar.js")
+                pre.prettyprint= renderMixin('mixins/btn-toolbar.ls')
+          .span4(ng-controller="ButtonToolbarCtrl")
+            include mixins/btn-toolbar
       section(ng-controller="DelayEvalCtrl")
         .row-fluid
           h1 With Delayed Evaluation at '/{{ path }}/state'

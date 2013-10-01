@@ -9,12 +9,23 @@ function indentToLet (src) {
   }, ['let\n']).join('');
 }
 
-var JADE_CWD_DIRPATH = 'src';
-
-function renderFile () {
-  var jade = require('jade');
+function renderMixin (grunt) {
+  var path = require('path');
   return function (filepath) {
-    return jade.renderFile(JADE_CWD_DIRPATH+'/'+filepath, {pretty: true});
+    // throw new Error(grunt, path, filepath);
+    var segments  = filepath.split('.'),
+        lastSeg   = segments.pop(),
+        taskname  = null;
+    if (lastSeg === 'ls') {
+      taskname  = 'livescript';
+      lastSeg   = 'js';
+    } else {
+      taskname  = lastSeg;
+      lastSeg   = 'html';
+    }
+    segments.unshift("./", grunt.config.get(taskname+".compile.files")[0].dest);
+    segments.push(segments.pop() + "." + lastSeg);
+    return grunt.file.read(path.join.apply(path, segments));
   };
 }
 
@@ -42,6 +53,20 @@ module.exports = function(grunt) {
       dist: {
         src: '<%= concat.livescript.dest %>',
         dest: 'dist/script.js'
+      },
+      compile: {
+        options: {
+          bare: true
+        },
+        files: [
+          {
+            expand: true,
+            src: 'mixins/*.ls',
+            dest: 'dist/',
+            cwd: 'src/',
+            ext: '.js'
+          }
+        ]
       },
       release: {
         src: 'lib/<%= pkg.name %>.ls',
@@ -116,7 +141,7 @@ module.exports = function(grunt) {
         options: {
           pretty: true,
           data: {
-            renderFile: renderFile(grunt)
+            renderMixin: renderMixin(grunt)
           }
         },
         files: [
@@ -124,7 +149,7 @@ module.exports = function(grunt) {
             expand: true,
             src: '**/*.jade',
             dest: 'dist/',
-            cwd: JADE_CWD_DIRPATH,
+            cwd: 'src/',
             ext: '.html'
           }
         ]
@@ -151,8 +176,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
-  grunt.registerTask('lsall', ['concat:livescript', 'livescript']);
-  grunt.registerTask('jsall', ['lsall', 'jshint']);
+  grunt.registerTask('lsall', ['concat:livescript', /*jshint scripturl:true*/'livescript:dist']);
+  grunt.registerTask('jsall', ['lsall', /*jshint scripturl:true*/'livescript:compile', 'jshint']);
   grunt.registerTask('dev', ['jsall', 'jade', 'connect', 'watch']);
   grunt.registerTask('default', ['jsall', 'uglify:dist', 'jade']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
