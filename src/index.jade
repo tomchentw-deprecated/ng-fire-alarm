@@ -8,6 +8,7 @@ html(ng-app="demo")
     link(rel="stylesheet", href="//netdna.bootstrapcdn.com/bootstrap/2.3.2/css/bootstrap.min.css")
     link(rel="stylesheet", href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css")
     script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
+    script(type="text/javascript", src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.6.0/ui-bootstrap-tpls.min.js")
     script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase.js")
     script(src="/script.js")
   body
@@ -31,15 +32,18 @@ html(ng-app="demo")
         .row-fluid
           h1 Easy Button Group
         .row-fluid
-          .btn-group
-            button.btn(ng-class="{active: states.left}",
-              ng-click="states.$update({left: !states.left})") Left
-            button.btn(ng-class="{active: states.middle}",
-              ng-click="states.$update({middle: !states.middle})") Middle
-            button.btn(ng-class="{active: states.right}",
-              ng-click="states.$update({right: !states.right})") Right
-          .code
-            {{states}}
+          .span8
+            tabset
+              tab(heading="index.html")
+                pre.prettyprint= renderFile('mixins/btn-group.jade')
+              tab(heading="index.js")
+                pre.prettyprint
+                  | this.ButtonGroupCtrl = ['$log', '$scope', 'FireSync'].concat(function($log, $scope, FireSync){
+                  |   $scope.states = new FireSync().get(FirebaseURL + "/button-states").sync();
+                  |   $log.log('ButtonGroupCtrl', $scope);
+                  | });
+          .span4
+            include mixins/btn-group
       section(ng-controller="ButtonToolbarCtrl")
         .row-fluid
           h1 Easy Button Toolbar

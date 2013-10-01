@@ -26,6 +26,6 @@ const DelayEvalCtrl = <[$log $scope $timeout FireSync]> ++ !($log, $scope, $time
   $scope.$on \$destroy stateSync.destroy
   $log.log \DelayEvalCtrl $scope
 
-module \demo <[angular-on-fire]>
+module \demo <[ui.bootstrap angular-on-fire]>
 .value {FirebaseURL}
 .controller {HeroCtrl, ButtonGroupCtrl, ButtonToolbarCtrl, DelayEvalCtrl}

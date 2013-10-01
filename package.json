@@ -28,6 +28,7 @@
     "grunt-contrib-jade": "~0.8.0"
   },
   "dependencies": {
-    "LiveScript": "~1.2.0"
+    "LiveScript": "~1.2.0",
+    "jade": "~0.35.0"
   }
 }

@@ -1,0 +1,8 @@
+//- mixin btn-group
+.btn-group
+  button.btn(ng-class="{active: states.left}",
+    ng-click="states.$update({left: !states.left})") Left
+  button.btn(ng-class="{active: states.middle}",
+    ng-click="states.$update({middle: !states.middle})") Middle
+  button.btn(ng-class="{active: states.right}",
+    ng-click="states.$update({right: !states.right})") Right

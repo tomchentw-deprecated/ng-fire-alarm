@@ -9,6 +9,15 @@ function indentToLet (src) {
   }, ['let\n']).join('');
 }
 
+var JADE_CWD_DIRPATH = 'src';
+
+function renderFile () {
+  var jade = require('jade');
+  return function (filepath) {
+    return jade.renderFile(JADE_CWD_DIRPATH+'/'+filepath, {pretty: true});
+  };
+}
+
 /*global module:false*/
 module.exports = function(grunt) {
 
@@ -54,7 +63,7 @@ module.exports = function(grunt) {
         eqnull: true,
         browser: true,
         globals: {
-          jQuery: true
+          require: true
         }
       },
       gruntfile: {
@@ -105,14 +114,17 @@ module.exports = function(grunt) {
     jade: {
       compile: {
         options: {
-          pretty: true
+          pretty: true,
+          data: {
+            renderFile: renderFile(grunt)
+          }
         },
         files: [
           {
             expand: true,
             src: '**/*.jade',
             dest: 'dist/',
-            cwd: 'src',
+            cwd: JADE_CWD_DIRPATH,
             ext: '.html'
           }
         ]
