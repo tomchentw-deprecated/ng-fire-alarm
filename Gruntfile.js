@@ -139,20 +139,26 @@ module.exports = function(grunt) {
     jade: {
       compile: {
         options: {
-          pretty: true,
-          data: {
-            renderMixin: renderMixin(grunt)
-          }
+          pretty: true
         },
         files: [
           {
             expand: true,
-            src: '**/*.jade',
+            src: 'mixins/*.jade',
             dest: 'dist/',
             cwd: 'src/',
             ext: '.html'
           }
         ]
+      },
+      dist: {
+        options: {
+          data: {
+            renderMixin: renderMixin(grunt)
+          }
+        },
+        src: 'src/index.jade',
+        dest: 'dist/index.html'
       }
     },
     connect: {
@@ -178,7 +184,7 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('lsall', ['concat:livescript', /*jshint scripturl:true*/'livescript:dist']);
   grunt.registerTask('jsall', ['lsall', /*jshint scripturl:true*/'livescript:compile', 'jshint']);
-  grunt.registerTask('dev', ['jsall', 'jade', 'connect', 'watch']);
+  grunt.registerTask('dev', ['jsall', 'jade:compile', 'jade:dist', 'connect', 'watch']);
   grunt.registerTask('default', ['jsall', 'uglify:dist', 'jade']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
 };
