@@ -47,12 +47,16 @@ module.exports = function(grunt) {
         src: ['lib/<%= pkg.name %>.ls', 'src/**/*.ls'],
         dest: 'tmp/.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
+      },
+      dist: {
+        src: ['vendor/**/*.js', '<%= livescript.dist.dest %>'],
+        dest: 'dist/script.js'
       }
     },
     livescript: {
       dist: {
         src: '<%= concat.livescript.dest %>',
-        dest: 'dist/script.js'
+        dest: '<%= concat.livescript.dest %>.js'
       },
       compile: {
         options: {
@@ -103,8 +107,8 @@ module.exports = function(grunt) {
         banner: '<%= banner %>'
       },
       dist: {
-        src: '<%= livescript.dist.dest %>',
-        dest: 'dist/script.js'
+        src: '<%= concat.dist.dest %>',
+        dest: 'dist/script.min.js'
       },
       release: {
         src: '<%= livescript.release.dest %>',
@@ -121,7 +125,7 @@ module.exports = function(grunt) {
         files: ['dist/**/*']
       },
       jsall: {
-        files: ['src/**/*.ls', 'lib/**/*.ls'],
+        files: ['src/**/*.ls', 'lib/**/*.ls', 'vendor/**/*.js'],
         tasks: ['jsall']
       },
       jade: {
@@ -183,8 +187,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
   grunt.registerTask('lsall', ['concat:livescript', /*jshint scripturl:true*/'livescript:dist']);
-  grunt.registerTask('jsall', ['lsall', /*jshint scripturl:true*/'livescript:compile', 'jshint']);
+  grunt.registerTask('jsall', ['lsall', /*jshint scripturl:true*/'livescript:compile', 'concat:dist', 'jshint', 'uglify:dist']);
   grunt.registerTask('dev', ['jsall', 'jade:compile', 'jade:dist', 'connect', 'watch']);
-  grunt.registerTask('default', ['jsall', 'uglify:dist', 'jade']);
+  grunt.registerTask('default', ['jsall', 'jade']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
 };
