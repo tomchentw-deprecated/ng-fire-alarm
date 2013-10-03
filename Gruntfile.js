@@ -97,12 +97,6 @@ module.exports = function(grunt) {
       },
       options: { banner: '<%= banner %>' }
     },
-    sass: { compile: {
-        src: '<%= fdr.src %>/index.scss',
-        dest: 'tmp/.sass-cache/<%= pkg.name %>.css',
-        options: { cacheLocation: 'tmp/.sass-cache' }
-      }
-    },
     jade: { compile: {
         src: '<%= fdr.src %>/index.jade',
         dest: '<%= fdr.dest %>/index.html',
@@ -118,6 +112,18 @@ module.exports = function(grunt) {
         ext: '.html'
       }, options: { 
         pretty: true
+      }
+    },
+    sass: { compile: {
+        src: '<%= fdr.src %>/index.scss',
+        dest: 'tmp/.sass-cache/<%= pkg.name %>.css',
+        options: { cacheLocation: 'tmp/.sass-cache' }
+      }
+    },
+    cssmin: {
+      compile: {
+        src: '<%= concat.css.dest %>',
+        dest: '<%= concat.css.dest.replace(".css", ".min.css") %>'
       }
     },
     jshint: {
@@ -191,13 +197,14 @@ module.exports = function(grunt) {
   // grunt.loadNpmTasks('grunt-contrib-qunit');
   //
   grunt.loadNpmTasks('grunt-livescript');
-  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-jade');
+  grunt.loadNpmTasks('grunt-contrib-sass');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
   grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js', 'uglify:compile']);
-  grunt.registerTask('css:compile', ['sass:compile', 'concat:css']);
+  grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixin:compile', [/*jshint scripturl:true*/'livescript:mixin', 'jade:mixin']);
   grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixin:compile', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
