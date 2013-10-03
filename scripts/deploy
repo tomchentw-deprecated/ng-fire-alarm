@@ -3,6 +3,12 @@
 # http://jgoodall.me/posts/2012/10/26/keep-gh-pages-in-sync-with-master/
 upstream=$1
 : ${upstream:=origin}
+REV=`git describe --always`
+DEPLOY_DIR=~/.deploy
+DIR_PATH=$DEPLOY_DIR/$REV
+SRC_DIR=dest
+
+
 npm i -q
 grunt
 if ! git add -A
@@ -10,13 +16,9 @@ then
   exit 1
 fi
 
-REV=`git describe --always`
-DEPLOY_DIR=~/.deploy
-DIR_PATH=$DEPLOY_DIR/$REV
-
 mkdir $DEPLOY_DIR
 mkdir $DIR_PATH
-mv dist/* $DIR_PATH
+mv $SRC_DIR/* $DIR_PATH
 cp scripts/CNAME $DIR_PATH/CNAME
 
 if ! git checkout gh-pages
