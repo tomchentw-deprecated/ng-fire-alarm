@@ -172,7 +172,7 @@ module.exports = function(grunt) {
       },
       mixins: {
         files: ['<%= fdr.src %>/mixins/*'],
-        tasks: [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']
+        tasks: [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins', 'jade:compile']
       },
       lib_test: {
         files: ['<%= jshint.lib_test.src %>'],

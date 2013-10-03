@@ -33,9 +33,9 @@ html(ng-app="demo")
           .span4
             tabset
               tab(heading="hero-unit.html")
-                pre.prettyprint.linenums= renderMixin('mixins/hero-unit.jade')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/hero-unit.jade')
               tab(heading="hero-unit.js")
-                pre.prettyprint.linenums= renderMixin('mixins/hero-unit.ls')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/hero-unit.ls')
       section
         .page-header
           h1 Easy Button Group
@@ -43,9 +43,9 @@ html(ng-app="demo")
           .span8
             tabset
               tab(heading="btn-group.html")
-                pre.prettyprint.linenums= renderMixin('mixins/btn-group.jade')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-group.jade')
               tab(heading="btn-group.js")
-                pre.prettyprint.linenums= renderMixin('mixins/btn-group.ls')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-group.ls')
           .span4(ng-controller="ButtonGroupCtrl")
             include mixins/btn-group
       section
@@ -55,9 +55,9 @@ html(ng-app="demo")
           .span8
             tabset
               tab(heading="btn-toolbar.html")
-                pre.prettyprint.linenums= renderMixin('mixins/btn-toolbar.jade')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-toolbar.jade')
               tab(heading="btn-toolbar.js")
-                pre.prettyprint.linenums= renderMixin('mixins/btn-toolbar.ls')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-toolbar.ls')
           .span4(ng-controller="ButtonToolbarCtrl")
             include mixins/btn-toolbar
       section(ng-controller="DelayEvalCtrl")
@@ -67,9 +67,9 @@ html(ng-app="demo")
           .span8
             tabset
               tab(heading="delay-eval.html")
-                pre.prettyprint.linenums= renderMixin('mixins/delay-eval.jade')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/delay-eval.jade')
               tab(heading="delay-eval.js")
-                pre.prettyprint.linenums= renderMixin('mixins/delay-eval.ls')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/delay-eval.ls')
           .span4
             include mixins/delay-eval
       section
@@ -79,9 +79,9 @@ html(ng-app="demo")
           .span8
             tabset
               tab(heading="fb-sync.html")
-                pre.prettyprint.linenums= renderMixin('mixins/fb-sync.jade')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/fb-sync.jade')
               tab(heading="fb-sync.js")
-                pre.prettyprint.linenums= renderMixin('mixins/fb-sync.ls')
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/fb-sync.ls')
           .span4(ng-controller="FbSyncCtrl")
             include mixins/fb-sync
     script.
