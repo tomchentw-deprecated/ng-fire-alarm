@@ -88,12 +88,9 @@ module.exports = function(grunt) {
         dest: 'release/<%= pkg.name %>.js'
       }
     },
-    uglify: { compile: {
-        src: '<%= concat.js.dest %>',
-        dest: '<%= concat.js.dest.replace(".js", ".min.js") %>'
-      },      release: {
+    uglify: { release: {
         src: '<%= livescript.release.dest %>',
-        dest: '<%= livescript.release.dest.replace(".js", ".min.js") %>'
+        dest: '<%= grunt.config.get("livescript.release.dest").replace(".js", ".min.js") %>'
       },
       options: { banner: '<%= banner %>' }
     },
@@ -123,7 +120,7 @@ module.exports = function(grunt) {
     cssmin: {
       compile: {
         src: '<%= concat.css.dest %>',
-        dest: '<%= concat.css.dest.replace(".css", ".min.css") %>'
+        dest: '<%= grunt.config.get("concat.css.dest").replace(".css", ".min.css") %>'
       }
     },
     jshint: {
@@ -203,7 +200,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
   grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
-  grunt.registerTask('js:compile', ['ls:compile', 'concat:js', 'uglify:compile']);
+  grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixin:compile', [/*jshint scripturl:true*/'livescript:mixin', 'jade:mixin']);
   grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixin:compile', 'jade:compile']);
