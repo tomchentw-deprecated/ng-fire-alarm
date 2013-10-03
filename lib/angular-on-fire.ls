@@ -231,6 +231,7 @@ extend FireSync::, do
     @node
   
   syncWithScope: (@_scope) ->
+    @_scope.$on \$destroy @destroy
     @sync!
 
 /*
@@ -240,8 +241,15 @@ const FireSyncFactory = <[$timeout $interpolate]> ++ ($timeout, $interpolate) ->
   DataFlow <<< {immediate: $timeout, interpolate: $interpolate}
   FireSync
 
+const fbSync = <[$parse SourceSpark]> ++ ($parse, SourceSpark) ->
+  restrict: \A
+  terminal: true
+  link: !(scope, iElement, iAttrs) ->
+    (syncName) <-! forEach iAttrs.fbSync.split(/,\ ?/)
+    scope.$eval syncName .clone!syncWithScope scope
+
 module \angular-on-fire <[]>
 .factory {FireSync: FireSyncFactory}
-# .directive {fbSync}
+.directive {fbSync}
 
 

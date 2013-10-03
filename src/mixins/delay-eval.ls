@@ -2,9 +2,6 @@
   $scope.path = $timeout -> \delayed-eval
   , 5_000# mock http request ...
 
-  const stateSync = new FireSync!.get "#{ FirebaseURL }/{{ path }}/state"
-  $scope.state = stateSync.syncWithScope $scope
-  
-  # Off the Firebase `on` callback to FireSync when scope is destroyed
-  $scope.$on \$destroy stateSync.destroy
+  $scope.state = new FireSync!.get "#{ FirebaseURL }/{{ path }}/state" .syncWithScope $scope
+  # If you call syncWithScope, you don't need to hook up scope destroy event
   $log.log \DelayEvalCtrl $scope
