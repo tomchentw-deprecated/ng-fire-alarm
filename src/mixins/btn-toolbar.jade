@@ -1,6 +1,3 @@
 .btn-toolbar
   .btn-group
-    button.btn(ng-repeat="state in states track by state.$name",
-      ng-class="{active: state.$value}", 
-      ng-click="state.$set(!state.$value)") 
-      | {{ state.$name }}
+    button.btn(ng-repeat="state in states track by state.$name", ng-class="{active: state.$value}", ng-click="state.$set(!state.$value)") {{ state.$name }}

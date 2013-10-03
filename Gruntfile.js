@@ -9,6 +9,11 @@ function indentToLet (src) {
   }, ['let\n']).join('');
 }
 
+function jsWrapper (src) {
+  if (src.match(/^\(function\(\)\{/)) { return src; }
+  return "(function () {\n" + src + "\n}).call(this);";
+}
+
 function renderMixin (grunt) {
   var path = require('path');
   return function (filepath) {
@@ -60,7 +65,8 @@ module.exports = function(grunt) {
           '<%= fdr.vendor %>/**/*.js',
           '<%= livescript.compile.dest %>'
         ],
-        dest: '<%= fdr.dest %>/script.js'
+        dest: '<%= fdr.dest %>/script.js',
+        options: { process: jsWrapper }
       },
       css: {
         src: ['<%= fdr.vendor %>/**/*.css', 'tmp/.sass-cache/<%= pkg.name %>.css'],
@@ -142,35 +148,27 @@ module.exports = function(grunt) {
     },
     watch: {
       gruntfile: {
-        files: '<%= jshint.gruntfile.src %>',
+        files: ['<%= jshint.gruntfile.src %>'],
         tasks: ['jshint:gruntfile']
       },
       livereload: {
-        expand: true,
-        cwd: '<%= fdr.src %>',
-        src: '**/*',
+        files: ['<%= fdr.dest %>/**/*'],
         options: { livereload: true }
       },
       js: {
-        expand: true,
-        cwd: ['<%= fdr.src %>', '<%= fdr.vendor %>', '<%= fdr.lib %>'],
-        src: ['**/*.ls', '**/*.js'],
+        files: ['<%= fdr.src %>/**/*.ls', '<%= fdr.lib %>/**/*.js', '<%= fdr.vendor %>/**/*.js'],
         tasks: ['js:compile', /*jshint scripturl:true*/'livescript:mixin']
       },
       sass: {
-        expand: true,
-        cwd: ['<%= fdr.src %>', '<%= fdr.vendor %>'],
-        src: '**/*.scss',
+        files: ['<%= fdr.src %>/**/*.scss', '<%= fdr.vendor %>/**/*.scss'],
         tasks: ['css:compile']
       },
       jade: {
-        expand: true,
-        cwd: '<%= fdr.src %>',
-        src: '**/*.jade',
-        tasks: ['jade:compile', 'jade:mixin']
+        files: ['<%= fdr.src %>/**/*.jade'],
+        tasks: ['jade:mixin', 'jade:compile']
       },
       lib_test: {
-        files: '<%= jshint.lib_test.src %>',
+        files: ['<%= jshint.lib_test.src %>'],
         tasks: ['jshint:lib_test', 'qunit']
       }
     },

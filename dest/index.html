@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/2.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/style.css">
     <style>
       .prettyprint {
         padding: 8px;
@@ -32,7 +33,6 @@
     </style>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.6.0/ui-bootstrap-tpls.min.js"></script>
-    <script type="text/javascript" src="//google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
     <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
     <script src="/script.js"></script>
   </head>
@@ -93,10 +93,7 @@
                 <pre class="prettyprint linenums">
 &lt;div class=&quot;btn-toolbar&quot;&gt;
   &lt;div class=&quot;btn-group&quot;&gt;
-    &lt;button ng-repeat=&quot;state in states track by state.$name&quot; ng-class=&quot;{active: state.$value}&quot; ng-click=&quot;state.$set(!state.$value)&quot; class=&quot;btn&quot;&gt;
-       
-      {{ state.$name }}
-    &lt;/button&gt;
+    &lt;button ng-repeat=&quot;state in states track by state.$name&quot; ng-class=&quot;{active: state.$value}&quot; ng-click=&quot;state.$set(!state.$value)&quot; class=&quot;btn&quot;&gt;{{ state.$name }}&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;</pre>
               </tab>
@@ -113,10 +110,7 @@
           <div ng-controller="ButtonToolbarCtrl" class="span4">
             <div class="btn-toolbar">
               <div class="btn-group">
-                <button ng-repeat="state in states track by state.$name" ng-class="{active: state.$value}" ng-click="state.$set(!state.$value)" class="btn">
-                   
-                  {{ state.$name }}
-                </button>
+                <button ng-repeat="state in states track by state.$name" ng-class="{active: state.$value}" ng-click="state.$set(!state.$value)" class="btn">{{ state.$name }}</button>
               </div>
             </div>
           </div>
@@ -140,6 +134,8 @@
       
       ga('create', 'UA-41104589-6', 'tomchentw.com');
       ga('send', 'pageview');
+      
+      prettyPrint();
     </script>
   </body>
 </html>
