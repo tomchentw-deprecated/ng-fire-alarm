@@ -4,8 +4,7 @@
 
   const stateSync = new FireSync!.get "#{ FirebaseURL }/{{ path }}/state"
   $scope.state = stateSync.syncWithScope $scope
-  #
-  # If you use scope to resolve value, remember to call destroy ol FireSync instance
-  #
+  
+  # Off the Firebase `on` callback to FireSync when scope is destroyed
   $scope.$on \$destroy stateSync.destroy
   $log.log \DelayEvalCtrl $scope

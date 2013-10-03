@@ -1,115 +1,23 @@
 const {isString, isArray, isFunction, isObject, isNumber} = angular
 const {noop, forEach, bind, extend, module} = angular
 
-class FireNode
-
-  const noopRef = do
-    set: noop
-    update: noop
-    push: noop
-    transaction: noop
-
-  ->
-    @$ref = noopRef
-    return ^^@
-
-  _setFireProperties: (nodeOrSnap) ~>
-    const isSnap = isFunction nodeOrSnap.val
-    @$ref       = if isSnap then nodeOrSnap.ref!          else nodeOrSnap.$ref
-    @$name      = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
-    @$priority  = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
-    isSnap
-
-  extend: (nodeOrSnap) ->
-    return @ unless nodeOrSnap
-    for own key of @ when not FireNode::[key]
-      delete! @[key]
-
-    if @_setFireProperties nodeOrSnap
-      const val = nodeOrSnap.val!
-      if isArray @
-        counter = -1
-        nodeOrSnap.forEach !(snap) ~>
-          @[counter += 1] = createFireNode(snap)
-      else
-        extend @, if isObject val then val else $value: val
-    else
-      for own key, value of nodeOrSnap
-        @[key] = value
-    @
-
-  forEach noopRef, !(value, key) ->
-    @["$#{ key }"] = !-> @$ref[key] ...&
-  , @::
-
-  $increase: (byNumber || 1) ->
-    @$ref.transaction -> it + byNumber
-
-  $decrease: (byNumber || 1) ->
-    @$ref.transaction -> it - byNumber
-
-const createFireNode = (snap, flow) ->
-  const node = if flow?toCollection || isArray(snap?val!)
-    [] <<< FireNode::
-  else
-    new FireNode!
-  node.extend snap
-
 class DataFlow
   @immediate = noop
 
-  (config) -> extend @, config
+  (config) ->
+    extend @, config
+    @next = void
 
-  _setSync: !(@sync, prev) ->
+  _clone: ->
+    const cloned = new @constructor @
+    cloned.next = that._clone! if @next
+    cloned
+  
+  _setSync: !(@sync, prev) -> 
     that._setSync sync, @ if @next
-
+  
   stop: !->
     @next.stop! if @next
-
-class ToSyncFlow extends DataFlow
-
-  start: !(result) ->
-    <~! DataFlow.immediate
-    @sync.node.extend result
-
-class FireSync
-  -> @_head = @_tail = @_scope = @node = void
-
-  _addFlow: (flow) ->
-    @_head = flow unless @_head
-    that.next = flow if @_tail
-    @_tail = flow
-    @
-
-  get: (queryStr, config) ->
-    @_addFlow new GetFlow (config || {})<<<{queryStr}
-
-  map: (queryStr) ->
-    @_addFlow new MapFlow {queryString}
-
-  flatten: ->
-    @_addFlow new FlattenDataFlow
-
-  sync: ->
-    @node = createFireNode void, @_tail
-    @_addFlow new ToSyncFlow
-    @_head._setSync @
-    @_head.start!
-    @node
-  
-  syncWithScope: (@_scope) ->
-    @sync!
-  
-  destroy: !~> 
-    @_head.stop!
-    delete! @_scope
-
-  /*
-    angular specifiy code...
-    http://docs.angularjs.org/api/ng.$rootScope.Scope
-  */
-  _watch: ->
-    @_scope.$watch ...&
 
 class InterpolateFlow extends DataFlow
 
@@ -212,6 +120,119 @@ class FlattenDataFlow extends DataFlow
     forEach result, !(value) -> results.push ...value
     @next.start results
 
+class ToSyncFlow extends DataFlow
+
+  start: !(result) ->
+    <~! DataFlow.immediate
+    @sync.node.extend result
+
+class FireSync
+  -> @_head = @_tail = @_scope = @node = void
+
+  _addFlow: (flow) ->
+    @_head = flow unless @_head
+    that.next = flow if @_tail
+    @_tail = flow
+    @
+
+  get: (queryStr, config) ->
+    @_addFlow new GetFlow (config || {})<<<{queryStr}
+
+  map: (queryStr) ->
+    @_addFlow new MapFlow {queryString}
+
+  flatten: ->
+    @_addFlow new FlattenDataFlow
+
+  clone: ->
+    const cloned = new FireSync
+    if @_head
+      flow = cloned._head = that._clone!
+      while flow.next
+        flow = that
+      cloned._tail = flow
+    cloned
+
+  destroy: !~> 
+    @_head.stop!
+    delete! @_scope
+
+  /*
+    angular specifiy code...
+    http://docs.angularjs.org/api/ng.$rootScope.Scope
+  */
+  _watch: ->
+    @_scope.$watch ...&
+
+class FireNode
+
+  const noopRef = do
+    set: noop
+    update: noop
+    push: noop
+    transaction: noop
+    remove: noop
+    setPriority: noop
+    setWithPriority: noop
+
+  ->
+    @$ref = noopRef
+    return ^^@
+
+  _setFireProperties: (nodeOrSnap) ~>
+    const isSnap = isFunction nodeOrSnap.val
+    @$ref       = if isSnap then nodeOrSnap.ref!          else nodeOrSnap.$ref
+    @$name      = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
+    @$priority  = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
+    isSnap
+
+  extend: (nodeOrSnap) ->
+    return @ unless nodeOrSnap
+    for own key of @ when not FireNode::[key]
+      delete! @[key]
+
+    if @_setFireProperties nodeOrSnap
+      const val = nodeOrSnap.val!
+      if isArray @
+        counter = -1
+        nodeOrSnap.forEach !(snap) ~>
+          @[counter += 1] = createFireNode(snap)
+      else
+        extend @, if isObject val then val else $value: val
+    else
+      for own key, value of nodeOrSnap
+        @[key] = value
+    @
+
+  forEach noopRef, !(value, key) ->
+    @["$#{ key }"] = !-> @$ref[key] ...&
+  , @::
+
+  $increase: (byNumber || 1) ->
+    @$ref.transaction -> it + byNumber
+
+  $decrease: (byNumber || 1) ->
+    @$ref.transaction -> it - byNumber
+
+const createFireNode = (snap, flow) ->
+  const node = if flow?toCollection || isArray(snap?val!)
+    [] <<< FireNode::
+  else
+    new FireNode!
+  node.extend snap
+
+extend FireSync::, do
+
+  sync: ->
+    @node = createFireNode void, @_tail
+    @_addFlow new ToSyncFlow
+    @_head._setSync @
+    @_head.start!
+    @node
+  
+  syncWithScope: (@_scope) ->
+    @sync!
+
 /*
   angular module definition
 */
@@ -221,5 +242,6 @@ const FireSyncFactory = <[$timeout $interpolate]> ++ ($timeout, $interpolate) ->
 
 module \angular-on-fire <[]>
 .factory {FireSync: FireSyncFactory}
+# .directive {fbSync}
 
 

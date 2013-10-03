@@ -26,8 +26,8 @@ function renderMixin (grunt) {
     } else {
       taskname  = lastSeg;
     }
-    segments.unshift("./", grunt.config.get(taskname+".mixin.dest"));
-    segments.push(segments.pop() + grunt.config.get(taskname+".mixin.ext"));
+    segments.unshift("./", grunt.config.get(taskname+".mixins.dest"));
+    segments.push(segments.pop() + grunt.config.get(taskname+".mixins.ext"));
     filepath = path.join.apply(path, segments);
     return grunt.file.read(filepath);
   };
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
     livescript: { compile: {
         src: '<%= concat.ls.dest %>',
         dest: '<%= concat.ls.dest %>.js'
-      },          mixin: {
+      },          mixins: {
         expand: true,
         src: 'mixins/*.ls',
         dest: '<%= fdr.dest %>',
@@ -101,7 +101,7 @@ module.exports = function(grunt) {
         options: {
           data: { renderMixin: renderMixin(grunt) }
         }
-      },     mixin: {
+      },     mixins: {
         expand: true,
         cwd: '<%= fdr.src %>',
         src: 'mixins/*.jade',
@@ -159,16 +159,20 @@ module.exports = function(grunt) {
         options: { livereload: true }
       },
       js: {
-        files: ['<%= fdr.src %>/**/*.ls', '<%= fdr.lib %>/**/*.ls', '<%= fdr.vendor %>/**/*.js'],
-        tasks: ['js:compile', /*jshint scripturl:true*/'livescript:mixin']
+        files: ['<%= fdr.src %>/*.ls', '<%= fdr.lib %>/**/*.ls', '<%= fdr.vendor %>/**/*.js'],
+        tasks: ['js:compile']
       },
       sass: {
         files: ['<%= fdr.src %>/**/*.scss', '<%= fdr.vendor %>/**/*.scss'],
         tasks: ['css:compile']
       },
       jade: {
-        files: ['<%= fdr.src %>/**/*.jade'],
-        tasks: ['jade:mixin', 'jade:compile']
+        files: ['<%= fdr.src %>/*.jade'],
+        tasks: ['jade:compile']
+      },
+      mixins: {
+        files: ['<%= fdr.src %>/mixins/*'],
+        tasks: [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']
       },
       lib_test: {
         files: ['<%= jshint.lib_test.src %>'],
@@ -202,8 +206,8 @@ module.exports = function(grunt) {
   grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
-  grunt.registerTask('mixin:compile', [/*jshint scripturl:true*/'livescript:mixin', 'jade:mixin']);
-  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixin:compile', 'jade:compile']);
+  grunt.registerTask('mixins:compile', [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']);
+  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixins:compile', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
 };

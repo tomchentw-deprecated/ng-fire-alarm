@@ -1,3 +1,7 @@
 @ButtonGroupCtrl = <[$log $scope FirebaseURL FireSync]> ++ !($log, $scope, FirebaseURL, FireSync) ->
-  $scope.states = new FireSync!.get "#{ FirebaseURL }/button-states" .sync!
+  const statesSync = new FireSync!.get "#{ FirebaseURL }/button-states"
+  $scope.states = statesSync.sync!
   $log.log \ButtonGroupCtrl $scope
+
+  # Off the Firebase `on` callback to FireSync when scope is destroyed
+  $scope.$on \$destroy statesSync.destroy
