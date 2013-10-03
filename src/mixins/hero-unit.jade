@@ -1,0 +1,12 @@
+.hero-unit(ng-controller="HeroCtrl")
+  h1 Hello,
+  h1 angular-on-fire!!
+  p
+    a(href="http://angularjs.org/") angularjs
+    , binding, 
+    a(href="https://www.firebase.com/") firebase
+  p
+    | The greatest way to use Firebase with AngularJS!
+  a.btn.btn-primary.btn-large(href="", ng-click="counter.$increase()")
+    | Click to Increase Counter :
+    span(ng-bind="counter.$value")
