@@ -159,7 +159,7 @@ module.exports = function(grunt) {
         options: { livereload: true }
       },
       js: {
-        files: ['<%= fdr.src %>/**/*.ls', '<%= fdr.lib %>/**/*.js', '<%= fdr.vendor %>/**/*.js'],
+        files: ['<%= fdr.src %>/**/*.ls', '<%= fdr.lib %>/**/*.ls', '<%= fdr.vendor %>/**/*.js'],
         tasks: ['js:compile', /*jshint scripturl:true*/'livescript:mixin']
       },
       sass: {

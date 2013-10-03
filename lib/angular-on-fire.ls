@@ -45,6 +45,9 @@ class FireNode
   $increase: (byNumber || 1) ->
     @$ref.transaction -> it + byNumber
 
+  $decrease: (byNumber || 1) ->
+    @$ref.transaction -> it - byNumber
+
 const createFireNode = (snap, flow) ->
   const node = if flow?toCollection || isArray(snap?val!)
     [] <<< FireNode::
@@ -100,11 +103,6 @@ class FireSync
   destroy: !~> 
     @_head.stop!
     delete! @_scope
-
-  /*
-    function exposed for $ref
-  */
-  
 
   /*
     angular specifiy code...
