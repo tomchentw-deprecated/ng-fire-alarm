@@ -18,63 +18,100 @@ function renderMixin (grunt) {
         taskname  = null;
     if (lastSeg === 'ls') {
       taskname  = 'livescript';
-      lastSeg   = 'js';
     } else {
       taskname  = lastSeg;
-      lastSeg   = 'html';
     }
-    segments.unshift("./", grunt.config.get(taskname+".compile.files")[0].dest);
-    segments.push(segments.pop() + "." + lastSeg);
-    return grunt.file.read(path.join.apply(path, segments));
+    segments.unshift("./", grunt.config.get(taskname+".mixin.dest"));
+    segments.push(segments.pop() + grunt.config.get(taskname+".mixin.ext"));
+    filepath = path.join.apply(path, segments);
+    return grunt.file.read(filepath);
   };
 }
 
 /*global module:false*/
 module.exports = function(grunt) {
-
+  
   // Project configuration.
   grunt.initConfig({
     // Metadata.
     pkg: grunt.file.readJSON('package.json'),
+    fdr: {
+      src:    'src',
+      dest:   'dest',
+      lib:    'lib',
+      vendor: 'vendor'
+    },
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
       '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
       '* Copyright (c) <%= grunt.template.today("yyyy") %> [<%= pkg.author.name %>](<%= pkg.author.url %>);\n' +
       ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
     // Task configuration.
-    concat: {
-      livescript: {
-        src: ['lib/<%= pkg.name %>.ls', 'src/**/*.ls'],
+    concat: { 
+      ls: {
+        src: ['<%= fdr.lib %>/**/*.ls', '<%= fdr.src %>/**/*.ls'],
         dest: 'tmp/.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       },
-      dist: {
-        src: ['vendor/**/*.js', '<%= livescript.dist.dest %>'],
-        dest: 'dist/script.js'
+      js: {
+        src: [
+          '<%= fdr.vendor %>/scripts/angular.js',
+          '<%= fdr.vendor %>/scripts/firebase.js', '<%= fdr.vendor %>/scripts/firebase-simple-login.js',
+          '<%= fdr.vendor %>/**/*.js',
+          '<%= livescript.compile.dest %>'
+        ],
+        dest: '<%= fdr.dest %>/script.js'
+      },
+      css: {
+        src: ['<%= fdr.vendor %>/**/*.css', 'tmp/.sass-cache/<%= pkg.name %>.css'],
+        dest: '<%= fdr.dest %>/style.css'
       }
     },
-    livescript: {
-      dist: {
-        src: '<%= concat.livescript.dest %>',
-        dest: '<%= concat.livescript.dest %>.js'
-      },
-      compile: {
-        options: {
-          bare: true
-        },
-        files: [
-          {
-            expand: true,
-            src: 'mixins/*.ls',
-            dest: 'dist/',
-            cwd: 'src/',
-            ext: '.js'
-          }
-        ]
-      },
-      release: {
+    livescript: { compile: {
+        src: '<%= concat.ls.dest %>',
+        dest: '<%= concat.ls.dest %>.js'
+      },          mixin: {
+        expand: true,
+        src: 'mixins/*.ls',
+        dest: '<%= fdr.dest %>',
+        cwd: '<%= fdr.src %>',
+        ext: '.js',
+        options: { bare: true }
+      },          release: {
         src: 'lib/<%= pkg.name %>.ls',
         dest: 'release/<%= pkg.name %>.js'
+      }
+    },
+    uglify: { compile: {
+        src: '<%= concat.js.dest %>',
+        dest: '<%= concat.js.dest.replace(".js", ".min.js") %>'
+      },      release: {
+        src: '<%= livescript.release.dest %>',
+        dest: '<%= livescript.release.dest.replace(".js", ".min.js") %>'
+      },
+      options: { banner: '<%= banner %>' }
+    },
+    sass: { compile: {
+        src: '<%= fdr.src %>/index.scss',
+        dest: 'tmp/.sass-cache/<%= pkg.name %>.css',
+        options: { cacheLocation: 'tmp/.sass-cache' }
+      }
+    },
+    jade: { compile: {
+        src: '<%= fdr.src %>/index.jade',
+        dest: '<%= fdr.dest %>/index.html',
+        ext: '.html',
+        options: {
+          data: { renderMixin: renderMixin(grunt) }
+        }
+      },     mixin: {
+        expand: true,
+        cwd: '<%= fdr.src %>',
+        src: 'mixins/*.jade',
+        dest: '<%= fdr.dest %>',
+        ext: '.html'
+      }, options: { 
+        pretty: true
       }
     },
     jshint: {
@@ -92,6 +129,7 @@ module.exports = function(grunt) {
         eqnull: true,
         browser: true,
         globals: {
+          angular: true,
           require: true
         }
       },
@@ -102,74 +140,46 @@ module.exports = function(grunt) {
         src: ['lib/**/*.js', 'test/**/*.js']
       }
     },
-    uglify: {
-      options: {
-        banner: '<%= banner %>'
-      },
-      dist: {
-        src: '<%= concat.dist.dest %>',
-        dest: 'dist/script.min.js'
-      },
-      release: {
-        src: '<%= livescript.release.dest %>',
-        dest: 'release/<%= pkg.name %>.min.js'
-      }
-    },
     watch: {
       gruntfile: {
         files: '<%= jshint.gruntfile.src %>',
         tasks: ['jshint:gruntfile']
       },
       livereload: {
-        options: { livereload: true },
-        files: ['dist/**/*']
+        expand: true,
+        cwd: '<%= fdr.src %>',
+        src: '**/*',
+        options: { livereload: true }
       },
-      jsall: {
-        files: ['src/**/*.ls', 'lib/**/*.ls', 'vendor/**/*.js'],
-        tasks: ['jsall']
+      js: {
+        expand: true,
+        cwd: ['<%= fdr.src %>', '<%= fdr.vendor %>', '<%= fdr.lib %>'],
+        src: ['**/*.ls', '**/*.js'],
+        tasks: ['js:compile', /*jshint scripturl:true*/'livescript:mixin']
+      },
+      sass: {
+        expand: true,
+        cwd: ['<%= fdr.src %>', '<%= fdr.vendor %>'],
+        src: '**/*.scss',
+        tasks: ['css:compile']
       },
       jade: {
-        files: ['src/**/*.jade'],
-        tasks: ['jade']
+        expand: true,
+        cwd: '<%= fdr.src %>',
+        src: '**/*.jade',
+        tasks: ['jade:compile', 'jade:mixin']
       },
       lib_test: {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
       }
     },
-    qunit: {
-      files: ['test/**/*.html']
-    },
-    jade: {
-      compile: {
-        options: {
-          pretty: true
-        },
-        files: [
-          {
-            expand: true,
-            src: 'mixins/*.jade',
-            dest: 'dist/',
-            cwd: 'src/',
-            ext: '.html'
-          }
-        ]
-      },
-      dist: {
-        options: {
-          data: {
-            renderMixin: renderMixin(grunt)
-          }
-        },
-        src: 'src/index.jade',
-        dest: 'dist/index.html'
-      }
-    },
+    qunit: { files: ['test/**/*.html'] },
     connect: {
       server: {
         options: {
           port: 3333,
-          base: 'dist'
+          base: '<%= fdr.dest %>'
         }
       }
     }
@@ -183,12 +193,15 @@ module.exports = function(grunt) {
   // grunt.loadNpmTasks('grunt-contrib-qunit');
   //
   grunt.loadNpmTasks('grunt-livescript');
+  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // Default task.
-  grunt.registerTask('lsall', ['concat:livescript', /*jshint scripturl:true*/'livescript:dist']);
-  grunt.registerTask('jsall', ['lsall', /*jshint scripturl:true*/'livescript:compile', 'concat:dist', 'jshint', 'uglify:dist']);
-  grunt.registerTask('dev', ['jsall', 'jade:compile', 'jade:dist', 'connect', 'watch']);
-  grunt.registerTask('default', ['jsall', 'jade']);
+  grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
+  grunt.registerTask('js:compile', ['ls:compile', 'concat:js', 'uglify:compile']);
+  grunt.registerTask('css:compile', ['sass:compile', 'concat:css']);
+  grunt.registerTask('mixin:compile', [/*jshint scripturl:true*/'livescript:mixin', 'jade:mixin']);
+  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixin:compile', 'jade:compile']);
+  grunt.registerTask('dev', ['default', 'connect', 'watch']);
   grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
 };

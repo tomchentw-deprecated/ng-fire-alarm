@@ -1,0 +1,9 @@
+
+<div class="btn-toolbar">
+  <div class="btn-group">
+    <button ng-repeat="state in states track by state.$name" ng-class="{active: state.$value}" ng-click="state.$set(!state.$value)" class="btn">
+       
+      {{ state.$name }}
+    </button>
+  </div>
+</div>
