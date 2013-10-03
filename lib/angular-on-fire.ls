@@ -38,10 +38,11 @@ class InterpolateFlow extends DataFlow
     (scope) ->
       url = ''
       forEach queryFuncs, (str, index) ->
-        const path = if   index % 2 is 0    then str
-          else if str(scope) || str(value)  then that
-          else
-            url := void
+        if index % 2 is 1
+          path = str(scope) || str(value)
+          return url := void unless isString path
+        else
+          path = str
         url += path if isString url
       url
 
@@ -241,12 +242,14 @@ const FireSyncFactory = <[$timeout $interpolate]> ++ ($timeout, $interpolate) ->
   DataFlow <<< {immediate: $timeout, interpolate: $interpolate}
   FireSync
 
-const fbSync = <[$parse SourceSpark]> ++ ($parse, SourceSpark) ->
+const fbSync = <[$parse]> ++ ($parse) ->
   restrict: \A
   terminal: true
   link: !(scope, iElement, iAttrs) ->
     (syncName) <-! forEach iAttrs.fbSync.split(/,\ ?/)
-    scope.$eval syncName .clone!syncWithScope scope
+    const syncGetter = $parse syncName
+    const node = syncGetter scope .clone!syncWithScope scope
+    syncGetter.assign scope, node
 
 module \angular-on-fire <[]>
 .factory {FireSync: FireSyncFactory}
