@@ -76,7 +76,7 @@ class GetFlow extends InterpolateFlow
       getValue @queryStr
 
   stop: !->
-    that! if @stopWatch
+    DataFlow.immediate that if @stopWatch
     that.off \value void, @ if @query
     super!
 
@@ -92,6 +92,7 @@ class MapFlow extends InterpolateFlow
     @stop!
     throw new TypeError 'Map require result is array' unless isArray result
     const {sync, stopWatches, queries, mappedResult, queryFuncs} = @
+    mappedResult.length = result.length
 
     (value, index) <~! forEach result
     stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
@@ -110,8 +111,11 @@ class MapFlow extends InterpolateFlow
       queries[index] = query
   
   stop: !->
-    while @stopWatches.shift!
-      that!
+    const {stopWatches} = @
+    @stopWatches = []
+    DataFlow.immediate !->
+      for that in stopWatches by -1
+        that!
     while @queries.shift!
       that.off!
     @mappedResult = []
@@ -138,6 +142,9 @@ class ToSyncFlow extends DataFlow
   start: !(result) ->
     <~! DataFlow.immediate
     @sync._extend result
+    return unless @resolve
+    @resolve @sync.$node
+    @resolve = void
 
 class FireSync
   @queryUrl = (queryStrOrPath) ->
@@ -162,7 +169,9 @@ class FireSync
   get: (queryStrOrPath) ->
     @_addFlow new GetFlow {queryStr: @@queryUrl queryStrOrPath}
 
-  clone: ->
+  cloneIfNotDeferred: ->
+    return @ if @$deferred
+    #
     const cloned = new @constructor
     if @_head?!
       const flow = that._clone!
@@ -175,20 +184,30 @@ class FireSync
     cloned
 
   sync: ->
-    @_addFlow new ToSyncFlow
+    return that if @$node
+    @_addFlow new ToSyncFlow @$deferred?{resolve}
     @_head!_setSync @
 
     @destroy = !~>
+      @$deferred?reject!
       @_head!stop!
       @_head!_setSync void
+      #
+      DataFlow.immediate delete @$offDestroy
       delete! @$scope
     @_head!start!
     @$node = @constructor.createNode!
   
   syncWithScope: (@$scope) ->
     @sync!
-    @$scope.$on \$destroy @destroy
+    @$offDestroy = @$scope.$on \$destroy @destroy
     @$node
+
+  defer: ->
+    @$deferred = FireSync.q.defer! unless @$defer
+    @
+
+  promise: -> @$deferred.promise
 
   _extend: !(result) ->
     @$node.$extend result
@@ -307,9 +326,9 @@ const DataFlowFactory = <[
   DataFlow
 
 const FireSyncFactory = <[
-      AngularOnFireDataFlow FirebaseUrl
-]> ++ (AngularOnFireDataFlow, FirebaseUrl) ->
-  FireSync <<< {FirebaseUrl}
+      $q AngularOnFireDataFlow FirebaseUrl
+]> ++ ($q, AngularOnFireDataFlow, FirebaseUrl) ->
+  FireSync <<< {q: $q, FirebaseUrl}
   FireSync
 
 const FireCollectionFactory = <[
@@ -330,10 +349,10 @@ const fbSync = <[
     (syncName) <-! forEach iAttrs.fbSync.split(/,\ ?/)
     sync = void
     const syncGetter = $parse syncName
-    const offWatch = scope.$watch syncGetter, !->
-      return unless it?clone?
-      offWatch!
-      sync := it.clone!
+    scope.$watch syncGetter, !->
+      return unless it?cloneIfNotDeferred?
+      sync.destroy! if sync
+      sync := it.cloneIfNotDeferred!
       #
       if sync instanceof FireCollection
         (key) <-! forEach FIREBASE_QUERY_KEYS
@@ -344,7 +363,7 @@ const fbSync = <[
         sync[key] ...array
       #
       const node = sync.syncWithScope scope, iAttrs
-      syncGetter.assign scope, node
+      syncGetter.assign scope, node if sync isnt it# not deferred!
 
 const FireAuthFactory = <[
       $q $immediate Firebase FirebaseUrl FirebaseSimpleLogin

@@ -118,7 +118,7 @@
     prototype.stop = function(){
       var that;
       if (that = this.stopWatch) {
-        that();
+        DataFlow.immediate(that);
       }
       if (that = this.query) {
         that.off('value', void 8, this);
@@ -145,6 +145,7 @@
         throw new TypeError('Map require result is array');
       }
       sync = this.sync, stopWatches = this.stopWatches, queries = this.queries, mappedResult = this.mappedResult, queryFuncs = this.queryFuncs;
+      mappedResult.length = result.length;
       forEach(result, function(value, index){
         stopWatches.push(sync._watch(this$._buildWatchFn(value), function(queryStr){
           var that, query;
@@ -177,10 +178,16 @@
       });
     };
     prototype.stop = function(){
-      var that;
-      while (that = this.stopWatches.shift()) {
-        that();
-      }
+      var stopWatches, that;
+      stopWatches = this.stopWatches;
+      this.stopWatches = [];
+      DataFlow.immediate(function(){
+        var i$, ref$, that;
+        for (i$ = (ref$ = stopWatches).length - 1; i$ >= 0; --i$) {
+          that = ref$[i$];
+          that();
+        }
+      });
       while (that = this.queries.shift()) {
         that.off();
       }
@@ -222,6 +229,11 @@
       var this$ = this;
       DataFlow.immediate(function(){
         this$.sync._extend(result);
+        if (!this$.resolve) {
+          return;
+        }
+        this$.resolve(this$.sync.$node);
+        this$.resolve = void 8;
       });
     };
     function ToSyncFlow(){
@@ -266,8 +278,11 @@
         queryStr: constructor.queryUrl(queryStrOrPath)
       }));
     };
-    prototype.clone = function(){
+    prototype.cloneIfNotDeferred = function(){
       var cloned, that, flow, next;
+      if (this.$deferred) {
+        return this;
+      }
       cloned = new this.constructor;
       if (that = typeof this._head === 'function' ? this._head() : void 8) {
         flow = that._clone();
@@ -283,12 +298,22 @@
       return cloned;
     };
     prototype.sync = function(){
-      var this$ = this;
-      this._addFlow(new ToSyncFlow);
+      var that, ref$, this$ = this;
+      if (that = this.$node) {
+        return that;
+      }
+      this._addFlow(new ToSyncFlow((ref$ = this.$deferred) != null ? {
+        resolve: ref$.resolve
+      } : void 8));
       this._head()._setSync(this);
       this.destroy = function(){
+        var ref$;
+        if ((ref$ = this$.$deferred) != null) {
+          ref$.reject();
+        }
         this$._head().stop();
         this$._head()._setSync(void 8);
+        DataFlow.immediate((ref$ = this$.$offDestroy, delete this$.$offDestroy, ref$));
         delete this$.$scope;
       };
       this._head().start();
@@ -297,8 +322,17 @@
     prototype.syncWithScope = function($scope){
       this.$scope = $scope;
       this.sync();
-      this.$scope.$on('$destroy', this.destroy);
+      this.$offDestroy = this.$scope.$on('$destroy', this.destroy);
       return this.$node;
+    };
+    prototype.defer = function(){
+      if (!this.$defer) {
+        this.$deferred = FireSync.q.defer();
+      }
+      return this;
+    };
+    prototype.promise = function(){
+      return this.$deferred.promise;
     };
     prototype._extend = function(result){
       this.$node.$extend(result);
@@ -477,7 +511,8 @@
     DataFlow.Firebase = Firebase;
     return DataFlow;
   });
-  FireSyncFactory = ['AngularOnFireDataFlow', 'FirebaseUrl'].concat(function(AngularOnFireDataFlow, FirebaseUrl){
+  FireSyncFactory = ['$q', 'AngularOnFireDataFlow', 'FirebaseUrl'].concat(function($q, AngularOnFireDataFlow, FirebaseUrl){
+    FireSync.q = $q;
     FireSync.FirebaseUrl = FirebaseUrl;
     return FireSync;
   });
@@ -489,16 +524,18 @@
       restrict: 'A',
       link: function(scope, iElement, iAttrs){
         forEach(iAttrs.fbSync.split(/,\ ?/), function(syncName){
-          var sync, syncGetter, offWatch;
+          var sync, syncGetter;
           sync = void 8;
           syncGetter = $parse(syncName);
-          offWatch = scope.$watch(syncGetter, function(it){
+          scope.$watch(syncGetter, function(it){
             var node;
-            if ((it != null ? it.clone : void 8) == null) {
+            if ((it != null ? it.cloneIfNotDeferred : void 8) == null) {
               return;
             }
-            offWatch();
-            sync = it.clone();
+            if (sync) {
+              sync.destroy();
+            }
+            sync = it.cloneIfNotDeferred();
             if (sync instanceof FireCollection) {
               forEach(FIREBASE_QUERY_KEYS, function(key){
                 var value, that;
@@ -515,7 +552,9 @@
               });
             }
             node = sync.syncWithScope(scope, iAttrs);
-            syncGetter.assign(scope, node);
+            if (sync !== it) {
+              syncGetter.assign(scope, node);
+            }
           });
         });
       }
