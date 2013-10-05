@@ -152,9 +152,12 @@
             return;
           }
           if (that = queries[index]) {
-            that.off();
+            that.off('value', void 8, this$);
           }
           query = new DataFlow.Firebase(queryStr);
+          if (!queries[index]) {
+            query.on('value', noop);
+          }
           query.on('value', function(snap){
             var allResolved, i$, ref$, len$, value;
             mappedResult[index] = (this.flatten ? FireCollection : FireSync).createNode(snap, index);
@@ -202,7 +205,9 @@
       }
       results = [];
       forEach(result, function(value){
-        results.push.apply(results, value);
+        forEach(value, function(item){
+          item.$extend(void 8, results.push(item));
+        });
       });
       this.next.start(results);
     };
@@ -216,7 +221,7 @@
     prototype.start = function(result){
       var this$ = this;
       DataFlow.immediate(function(){
-        this$.sync.node.extend(result);
+        this$.sync._extend(result);
       });
     };
     function ToSyncFlow(){
@@ -238,10 +243,10 @@
       var node;
       node = new FireNode();
       node = clone$(node);
-      return node.extend(snap, index);
+      return node.$extend(snap, index);
     };
     function FireSync(){
-      this._head = this._tail = this._scope = this.node = void 8;
+      this.$head = this.$tail = this.$scope = this.$node = void 8;
     }
     prototype._addFlow = function(flow){
       var that;
@@ -250,10 +255,10 @@
           return flow;
         };
       }
-      if (that = this._tail) {
+      if (that = this.$tail) {
         that.next = flow;
       }
-      this._tail = flow;
+      this.$tail = flow;
       return this;
     };
     prototype.get = function(queryStrOrPath){
@@ -273,7 +278,7 @@
         while (that = next.next) {
           next = that;
         }
-        cloned._tail = next;
+        cloned.$tail = next;
       }
       return cloned;
     };
@@ -284,16 +289,19 @@
       this.destroy = function(){
         this$._head().stop();
         this$._head()._setSync(void 8);
-        delete this$._scope;
+        delete this$.$scope;
       };
       this._head().start();
-      return this.node = this.constructor.createNode();
+      return this.$node = this.constructor.createNode();
     };
-    prototype.syncWithScope = function(_scope){
-      this._scope = _scope;
+    prototype.syncWithScope = function($scope){
+      this.$scope = $scope;
       this.sync();
-      this._scope.$on('$destroy', this.destroy);
-      return this.node;
+      this.$scope.$on('$destroy', this.destroy);
+      return this.$node;
+    };
+    prototype._extend = function(result){
+      this.$node.$extend(result);
     };
     /*
       angular specifiy code...
@@ -301,7 +309,7 @@
     */
     prototype._watch = function(){
       var ref$;
-      return (ref$ = this._scope).$watch.apply(ref$, arguments);
+      return (ref$ = this.$scope).$watch.apply(ref$, arguments);
     };
     return FireSync;
   }());
@@ -312,7 +320,7 @@
       node = [];
       extend(node, FireNode.prototype);
       FireNode.call(node);
-      return node.extend(snap);
+      return node.$extend(snap);
     };
     prototype.map = function(queryStrOrPath){
       return this._addFlow(new MapFlow({
@@ -361,40 +369,43 @@
     function FireNode(){
       var ref, this$ = this;
       ref = constructor.noopRef;
-      this.ref = function(){
+      this.$ref = function(){
         return ref;
       };
-      this._setFireProperties = function(nodeOrSnap, index){
-        ref = typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8;
-        return FireNode.prototype._setFireProperties.call(this$, nodeOrSnap, index);
+      this.$_setFireProperties = function(nodeOrSnap, index){
+        if (nodeOrSnap) {
+          ref = typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8;
+        }
+        return FireNode.prototype.$_setFireProperties.call(this$, nodeOrSnap, index);
       };
     }
-    prototype.ref = noop;
-    prototype._setFireProperties = function(nodeOrSnap, index){
+    prototype.$ref = noop;
+    prototype.$_setFireProperties = function(nodeOrSnap, index){
       var isSnap;
-      isSnap = isFunction(nodeOrSnap.val);
       if (isNumber(index)) {
         this.$index = index;
       }
-      this.$name = isSnap
-        ? nodeOrSnap.name()
-        : nodeOrSnap.$name;
-      this.$priority = isSnap
-        ? nodeOrSnap.getPriority()
-        : nodeOrSnap.$priority;
+      if (nodeOrSnap) {
+        isSnap = isFunction(nodeOrSnap.val);
+        this.$name = isSnap
+          ? nodeOrSnap.name()
+          : nodeOrSnap.$name;
+        this.$priority = isSnap
+          ? nodeOrSnap.getPriority()
+          : nodeOrSnap.$priority;
+      }
       return isSnap;
     };
-    prototype.extend = function(nodeOrSnap, index){
+    prototype.$extend = function(nodeOrSnap, index){
       var key, val, counter, value, own$ = {}.hasOwnProperty, this$ = this;
-      if (!nodeOrSnap) {
-        return this;
-      }
-      for (key in this) if (own$.call(this, key)) {
-        if (!FireNode.prototype[key]) {
-          delete this[key];
+      if (nodeOrSnap) {
+        for (key in this) if (own$.call(this, key)) {
+          if (!FireNode.prototype[key]) {
+            delete this[key];
+          }
         }
       }
-      if (this._setFireProperties(nodeOrSnap, index)) {
+      if (this.$_setFireProperties(nodeOrSnap, index)) {
         val = nodeOrSnap.val();
         if (isArray(this)) {
           counter = -1;
@@ -419,18 +430,18 @@
     forEach(FireNode.noopRef, function(value, key){
       this["$" + key] = function(){
         var ref$;
-        (ref$ = this.ref())[key].apply(ref$, arguments);
+        (ref$ = this.$ref())[key].apply(ref$, arguments);
       };
     }, FireNode.prototype);
     prototype.$increase = function(byNumber){
       byNumber || (byNumber = 1);
-      return this.ref().transaction(function(it){
+      return this.$ref().transaction(function(it){
         return it + byNumber;
       });
     };
     prototype.$decrease = function(byNumber){
       byNumber || (byNumber = 1);
-      return this.ref().transaction(function(it){
+      return this.$ref().transaction(function(it){
         return it - byNumber;
       });
     };

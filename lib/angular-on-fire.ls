@@ -96,8 +96,9 @@ class MapFlow extends InterpolateFlow
     (value, index) <~! forEach result
     stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
       return unless queryStr
-      that.off! if queries[index]
+      that.off \value void, @ if queries[index]
       const query = new DataFlow.Firebase queryStr
+      query.on \value noop unless queries[index]# cache
 
       query.on \value !(snap) ->
         mappedResult[index] = (if @flatten then FireCollection else FireSync).createNode snap, index
@@ -127,14 +128,16 @@ class FlattenDataFlow extends DataFlow
     throw new TypeError 'Flatten require result is array' unless isArray result
     const results = []
 
-    forEach result, !(value) -> results.push ...value
+    forEach result, !(value) ->
+      (item) <-! forEach value
+      item.$extend void, results.push item
     @next.start results
 
 class ToSyncFlow extends DataFlow
 
   start: !(result) ->
     <~! DataFlow.immediate
-    @sync.node.extend result
+    @sync._extend result
 
 class FireSync
   @queryUrl = (queryStrOrPath) ->
@@ -146,14 +149,14 @@ class FireSync
   @createNode = (snap, index) ->
     node = new FireNode!
     node = ^^node
-    node.extend snap, index
+    node.$extend snap, index
 
-  -> @_head = @_tail = @_scope = @node = void
+  -> @$head = @$tail = @$scope = @$node = void
 
   _addFlow: (flow) ->
     @_head = (-> flow) unless @_head
-    that.next = flow if @_tail
-    @_tail = flow
+    that.next = flow if @$tail
+    @$tail = flow
     @
 
   get: (queryStrOrPath) ->
@@ -168,7 +171,7 @@ class FireSync
       next = flow
       while next.next
         next = that
-      cloned._tail = next
+      cloned.$tail = next
     cloned
 
   sync: ->
@@ -178,21 +181,24 @@ class FireSync
     @destroy = !~>
       @_head!stop!
       @_head!_setSync void
-      delete! @_scope
+      delete! @$scope
     @_head!start!
-    @node = @constructor.createNode!
+    @$node = @constructor.createNode!
   
-  syncWithScope: (@_scope) ->
+  syncWithScope: (@$scope) ->
     @sync!
-    @_scope.$on \$destroy @destroy
-    @node
+    @$scope.$on \$destroy @destroy
+    @$node
+
+  _extend: !(result) ->
+    @$node.$extend result
 
   /*
     angular specifiy code...
     http://docs.angularjs.org/api/ng.$rootScope.Scope
   */
   _watch: ->
-    @_scope.$watch ...&
+    @$scope.$watch ...&
 
 class FireCollection extends FireSync
 
@@ -200,7 +206,7 @@ class FireCollection extends FireSync
     const node = []
     extend node, FireNode::
     FireNode.call node
-    node.extend snap
+    node.$extend snap
 
   map: (queryStrOrPath) ->
     @_addFlow new MapFlow {queryStr: @@queryUrl queryStrOrPath}
@@ -233,26 +239,29 @@ class FireNode
   ->
     ref = @@noopRef
     # to prevent ref trigger angular.copy event, we need to wrap it!
-    @ref = -> ref # store ref in closure
-    @_setFireProperties = (nodeOrSnap, index) ~>
-      ref := nodeOrSnap.ref?! # update ref in closure
-      FireNode::_setFireProperties.call @, nodeOrSnap, index
+    @$ref = -> ref # store ref in closure
+    @$_setFireProperties = (nodeOrSnap, index) ~>
+      if nodeOrSnap
+        ref := nodeOrSnap.ref?!
+        # update ref in closure
+      FireNode::$_setFireProperties.call @, nodeOrSnap, index
 
-  ref: noop
+  $ref: noop
 
-  _setFireProperties: (nodeOrSnap, index) ->
-    const isSnap  = isFunction nodeOrSnap.val
+  $_setFireProperties: (nodeOrSnap, index) ->
     @$index       = index if isNumber index
-    @$name        = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
-    @$priority    = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
+    if nodeOrSnap
+      const isSnap  = isFunction nodeOrSnap.val
+      @$name        = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
+      @$priority    = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
     isSnap
 
-  extend: (nodeOrSnap, index) ->
-    return @ unless nodeOrSnap
-    for own key of @ when not FireNode::[key]
-      delete! @[key]
+  $extend: (nodeOrSnap, index) ->
+    if nodeOrSnap
+      for own key of @ when not FireNode::[key]
+        delete! @[key]
 
-    if @_setFireProperties nodeOrSnap, index
+    if @$_setFireProperties nodeOrSnap, index
       const val = nodeOrSnap.val!
       if isArray @
         counter = -1
@@ -266,14 +275,14 @@ class FireNode
     @
 
   forEach @noopRef, !(value, key) ->
-    @["$#{ key }"] = !-> @ref![key] ...&
+    @["$#{ key }"] = !-> @$ref![key] ...&
   , @::
 
   $increase: (byNumber || 1) ->
-    @ref!transaction -> it + byNumber
+    @$ref!transaction -> it + byNumber
 
   $decrease: (byNumber || 1) ->
-    @ref!transaction -> it - byNumber
+    @$ref!transaction -> it - byNumber
 
 class FireAuth
 
