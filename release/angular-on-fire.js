@@ -1,95 +1,23 @@
 (function(){
-  var isString, isArray, isFunction, isObject, isNumber, noop, forEach, bind, extend, module, FireNode, createFireNode, DataFlow, ToSyncFlow, FireSync, InterpolateFlow, GetFlow, MapFlow, FlattenDataFlow, FireSyncFactory;
+  var isString, isArray, isFunction, isObject, isNumber, noop, identity, forEach, bind, copy, extend, module, FIREBASE_QUERY_KEYS, DataFlow, InterpolateFlow, GetFlow, MapFlow, FlattenDataFlow, ToSyncFlow, FireSync, FireCollection, FireNode, FireAuth, DataFlowFactory, FireSyncFactory, FireCollectionFactory, fbSync, FireAuthFactory, slice$ = [].slice;
   isString = angular.isString, isArray = angular.isArray, isFunction = angular.isFunction, isObject = angular.isObject, isNumber = angular.isNumber;
-  noop = angular.noop, forEach = angular.forEach, bind = angular.bind, extend = angular.extend, module = angular.module;
-  FireNode = (function(){
-    FireNode.displayName = 'FireNode';
-    var noopRef, prototype = FireNode.prototype, constructor = FireNode;
-    noopRef = {
-      set: noop,
-      update: noop,
-      push: noop,
-      transaction: noop
-    };
-    function FireNode(){
-      this._setFireProperties = bind$(this, '_setFireProperties', prototype);
-      this.$ref = noopRef;
-      return clone$(this);
-    }
-    prototype._setFireProperties = function(nodeOrSnap){
-      var isSnap;
-      isSnap = isFunction(nodeOrSnap.val);
-      this.$ref = isSnap
-        ? nodeOrSnap.ref()
-        : nodeOrSnap.$ref;
-      this.$name = isSnap
-        ? nodeOrSnap.name()
-        : nodeOrSnap.$name;
-      this.$priority = isSnap
-        ? nodeOrSnap.getPriority()
-        : nodeOrSnap.$priority;
-      return isSnap;
-    };
-    prototype.extend = function(nodeOrSnap){
-      var key, val, counter, value, own$ = {}.hasOwnProperty, this$ = this;
-      if (!nodeOrSnap) {
-        return this;
-      }
-      for (key in this) if (own$.call(this, key)) {
-        if (!FireNode.prototype[key]) {
-          delete this[key];
-        }
-      }
-      if (this._setFireProperties(nodeOrSnap)) {
-        val = nodeOrSnap.val();
-        if (isArray(this)) {
-          counter = -1;
-          nodeOrSnap.forEach(function(snap){
-            this$[counter += 1] = createFireNode(snap);
-          });
-        } else {
-          extend(this, isObject(val)
-            ? val
-            : {
-              $value: val
-            });
-        }
-      } else {
-        for (key in nodeOrSnap) if (own$.call(nodeOrSnap, key)) {
-          value = nodeOrSnap[key];
-          this[key] = value;
-        }
-      }
-      return this;
-    };
-    forEach(noopRef, function(value, key){
-      this["$" + key] = function(){
-        var ref$;
-        (ref$ = this.$ref)[key].apply(ref$, arguments);
-      };
-    }, FireNode.prototype);
-    prototype.$increase = function(byNumber){
-      byNumber || (byNumber = 1);
-      return this.$ref.transaction(function(it){
-        return it + byNumber;
-      });
-    };
-    return FireNode;
-  }());
-  createFireNode = function(snap, flow){
-    var node;
-    node = (flow != null && flow.toCollection) || isArray(snap != null ? snap.val() : void 8)
-      ? import$([], FireNode.prototype)
-      : new FireNode();
-    return node.extend(snap);
-  };
+  noop = angular.noop, identity = angular.identity, forEach = angular.forEach, bind = angular.bind, copy = angular.copy, extend = angular.extend, module = angular.module;
+  FIREBASE_QUERY_KEYS = ['limit', 'startAt', 'endAt'];
   DataFlow = (function(){
     DataFlow.displayName = 'DataFlow';
     var prototype = DataFlow.prototype, constructor = DataFlow;
-    DataFlow.immediate = noop;
     function DataFlow(config){
       extend(this, config);
+      this.next = void 8;
     }
+    prototype._clone = function(){
+      var cloned, that;
+      cloned = new this.constructor(this);
+      if (that = this.next) {
+        cloned.next = that._clone();
+      }
+      return cloned;
+    };
     prototype._setSync = function(sync, prev){
       var that;
       this.sync = sync;
@@ -104,77 +32,6 @@
     };
     return DataFlow;
   }());
-  ToSyncFlow = (function(superclass){
-    var prototype = extend$((import$(ToSyncFlow, superclass).displayName = 'ToSyncFlow', ToSyncFlow), superclass).prototype, constructor = ToSyncFlow;
-    prototype.start = function(result){
-      var this$ = this;
-      DataFlow.immediate(function(){
-        this$.sync.node.extend(result);
-      });
-    };
-    function ToSyncFlow(){
-      ToSyncFlow.superclass.apply(this, arguments);
-    }
-    return ToSyncFlow;
-  }(DataFlow));
-  FireSync = (function(){
-    FireSync.displayName = 'FireSync';
-    var prototype = FireSync.prototype, constructor = FireSync;
-    function FireSync(){
-      this.destroy = bind$(this, 'destroy', prototype);
-      this._head = this._tail = this._scope = this.node = void 8;
-    }
-    prototype._addFlow = function(flow){
-      var that;
-      if (!this._head) {
-        this._head = flow;
-      }
-      if (that = this._tail) {
-        that.next = flow;
-      }
-      this._tail = flow;
-      return this;
-    };
-    prototype.get = function(queryStr, config){
-      var ref$;
-      return this._addFlow(new GetFlow((ref$ = config || {}, ref$.queryStr = queryStr, ref$)));
-    };
-    prototype.map = function(queryStr){
-      return this._addFlow(new MapFlow({
-        queryString: queryString
-      }));
-    };
-    prototype.flatten = function(){
-      return this._addFlow(new FlattenDataFlow);
-    };
-    prototype.sync = function(){
-      this.node = createFireNode(void 8, this._tail);
-      this._addFlow(new ToSyncFlow);
-      this._head._setSync(this);
-      this._head.start();
-      return this.node;
-    };
-    prototype.syncWithScope = function(_scope){
-      this._scope = _scope;
-      return this.sync();
-    };
-    prototype.destroy = function(){
-      this._head.stop();
-      delete this._scope;
-    };
-    /*
-      function exposed for $ref
-    */
-    /*
-      angular specifiy code...
-      http://docs.angularjs.org/api/ng.$rootScope.Scope
-    */
-    prototype._watch = function(){
-      var ref$;
-      return (ref$ = this._scope).$watch.apply(ref$, arguments);
-    };
-    return FireSync;
-  }());
   InterpolateFlow = (function(superclass){
     var interpolateMatcher, prototype = extend$((import$(InterpolateFlow, superclass).displayName = 'InterpolateFlow', InterpolateFlow), superclass).prototype, constructor = InterpolateFlow;
     interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
@@ -183,7 +40,7 @@
       InterpolateFlow.superclass.apply(this, arguments);
       this.queryFuncs = [];
       interpolate = DataFlow.interpolate;
-      if (interpolateMatcher.test(this.queryStr)) {
+      if (this.queryStr.match(interpolateMatcher)) {
         forEach(this.queryStr.split(interpolateMatcher), function(str, index){
           this.queryFuncs.push(index % 2 ? interpolate("{{ " + str + " }}") : str);
         }, this);
@@ -196,14 +53,17 @@
         var url;
         url = '';
         forEach(queryFuncs, function(str, index){
-          var path, that;
-          path = index % 2 === 0
-            ? str
-            : (that = str(scope) || str(value))
-              ? that
-              : url = void 8;
+          var path;
+          if (index % 2) {
+            path = str(scope) || str(value);
+            if (!(isString(path) && path.length)) {
+              return url = void 8;
+            }
+          } else {
+            path = str;
+          }
           if (isString(url)) {
-            return url += path;
+            url += path;
           }
         });
         return url;
@@ -213,20 +73,41 @@
   }(DataFlow));
   GetFlow = (function(superclass){
     var prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
+    prototype._callNext = function(snap){
+      this.next.start(this.sync.constructor.createNode(snap));
+    };
+    prototype._setQuery = function(it){
+      var query, i$, ref$, len$, key;
+      query = this.query;
+      if (query) {
+        query.off('value', void 8, this);
+      }
+      for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
+        key = ref$[i$];
+        if (key in this) {
+          it = it[key].apply(it, this[key]);
+        }
+      }
+      this.query = it;
+      if (!query) {
+        this.query.on('value', noop);
+      }
+      this.query.on('value', this._callNext, noop, this);
+    };
+    prototype.execQuery = function(key, args){
+      if (!this.query) {
+        return;
+      }
+      this[key] = args;
+      this._setQuery(this.query);
+    };
     prototype.start = function(){
-      var callNext, getValue, this$ = this;
-      callNext = function(snap){
-        this$.next.start(createFireNode(snap, this$));
-      };
+      var getValue, this$ = this;
       getValue = function(queryStr){
         if (!queryStr) {
           return;
         }
-        if (this$.query) {
-          this$.query.off('value');
-        }
-        this$.query = new Firebase(queryStr);
-        this$.query.on('value', callNext);
+        this$._setQuery(new DataFlow.Firebase(queryStr));
       };
       if (this.queryFuncs.length) {
         this.stopWatch = this.sync._watch(this._buildWatchFn({}), getValue);
@@ -239,7 +120,9 @@
       if (that = this.stopWatch) {
         that();
       }
-      this.query.off('value');
+      if (that = this.query) {
+        that.off('value', void 8, this);
+      }
       superclass.prototype.stop.call(this);
     };
     function GetFlow(){
@@ -255,10 +138,6 @@
       this.queries = [];
       this.mappedResult = [];
     }
-    prototype._setSync = function(sync, prev){
-      prev.toCollection = true;
-      superclass.prototype._setSync.apply(this, arguments);
-    };
     prototype.start = function(result){
       var sync, stopWatches, queries, mappedResult, queryFuncs, this$ = this;
       this.stop();
@@ -275,10 +154,10 @@
           if (that = queries[index]) {
             that.off();
           }
-          query = new Firebase(queryStr);
+          query = new DataFlow.Firebase(queryStr);
           query.on('value', function(snap){
             var allResolved, i$, ref$, len$, value;
-            mappedResult[index] = createFireNode(snap, this);
+            mappedResult[index] = (this.flatten ? FireCollection : FireSync).createNode(snap, index);
             allResolved = true;
             for (i$ = 0, len$ = (ref$ = mappedResult).length; i$ < len$; ++i$) {
               value = ref$[i$];
@@ -310,7 +189,10 @@
   FlattenDataFlow = (function(superclass){
     var prototype = extend$((import$(FlattenDataFlow, superclass).displayName = 'FlattenDataFlow', FlattenDataFlow), superclass).prototype, constructor = FlattenDataFlow;
     prototype._setSync = function(sync, prev){
-      prev.toCollection = true;
+      if (!(prev instanceof MapFlow)) {
+        throw new TypeError("Flatten require prev is map");
+      }
+      prev.flatten = true;
       superclass.prototype._setSync.apply(this, arguments);
     };
     prototype.start = function(result){
@@ -329,33 +211,348 @@
     }
     return FlattenDataFlow;
   }(DataFlow));
-  /*
-    angular module definition
-  */
-  FireSyncFactory = ['$timeout', '$interpolate'].concat(function($timeout, $interpolate){
-    DataFlow.immediate = $timeout;
+  ToSyncFlow = (function(superclass){
+    var prototype = extend$((import$(ToSyncFlow, superclass).displayName = 'ToSyncFlow', ToSyncFlow), superclass).prototype, constructor = ToSyncFlow;
+    prototype.start = function(result){
+      var this$ = this;
+      DataFlow.immediate(function(){
+        this$.sync.node.extend(result);
+      });
+    };
+    function ToSyncFlow(){
+      ToSyncFlow.superclass.apply(this, arguments);
+    }
+    return ToSyncFlow;
+  }(DataFlow));
+  FireSync = (function(){
+    FireSync.displayName = 'FireSync';
+    var prototype = FireSync.prototype, constructor = FireSync;
+    FireSync.queryUrl = function(queryStrOrPath){
+      if (queryStrOrPath.substr(0, 4) === 'http') {
+        return queryStrOrPath;
+      } else {
+        return FireSync.FirebaseUrl + queryStrOrPath;
+      }
+    };
+    FireSync.createNode = function(snap, index){
+      var node;
+      node = new FireNode();
+      node = clone$(node);
+      return node.extend(snap, index);
+    };
+    function FireSync(){
+      this._head = this._tail = this._scope = this.node = void 8;
+    }
+    prototype._addFlow = function(flow){
+      var that;
+      if (!this._head) {
+        this._head = function(){
+          return flow;
+        };
+      }
+      if (that = this._tail) {
+        that.next = flow;
+      }
+      this._tail = flow;
+      return this;
+    };
+    prototype.get = function(queryStrOrPath){
+      return this._addFlow(new GetFlow({
+        queryStr: constructor.queryUrl(queryStrOrPath)
+      }));
+    };
+    prototype.clone = function(){
+      var cloned, that, flow, next;
+      cloned = new this.constructor;
+      if (that = typeof this._head === 'function' ? this._head() : void 8) {
+        flow = that._clone();
+        cloned._head = function(){
+          return flow;
+        };
+        next = flow;
+        while (that = next.next) {
+          next = that;
+        }
+        cloned._tail = next;
+      }
+      return cloned;
+    };
+    prototype.sync = function(){
+      var this$ = this;
+      this._addFlow(new ToSyncFlow);
+      this._head()._setSync(this);
+      this.destroy = function(){
+        this$._head().stop();
+        this$._head()._setSync(void 8);
+        delete this$._scope;
+      };
+      this._head().start();
+      return this.node = this.constructor.createNode();
+    };
+    prototype.syncWithScope = function(_scope){
+      this._scope = _scope;
+      this.sync();
+      this._scope.$on('$destroy', this.destroy);
+      return this.node;
+    };
+    /*
+      angular specifiy code...
+      http://docs.angularjs.org/api/ng.$rootScope.Scope
+    */
+    prototype._watch = function(){
+      var ref$;
+      return (ref$ = this._scope).$watch.apply(ref$, arguments);
+    };
+    return FireSync;
+  }());
+  FireCollection = (function(superclass){
+    var prototype = extend$((import$(FireCollection, superclass).displayName = 'FireCollection', FireCollection), superclass).prototype, constructor = FireCollection;
+    FireCollection.createNode = function(snap){
+      var node;
+      node = [];
+      extend(node, FireNode.prototype);
+      FireNode.call(node);
+      return node.extend(snap);
+    };
+    prototype.map = function(queryStrOrPath){
+      return this._addFlow(new MapFlow({
+        queryStr: constructor.queryUrl(queryStrOrPath)
+      }));
+    };
+    prototype.flatten = function(){
+      return this._addFlow(new FlattenDataFlow);
+    };
+    forEach(FIREBASE_QUERY_KEYS, function(key){
+      this[key] = function(){
+        var args;
+        args = slice$.call(arguments);
+        this._head().execQuery(key, args);
+      };
+    }, FireCollection.prototype);
+    prototype.syncWithScope = function(_scope, iAttrs){
+      var head, i$, ref$, len$, key, array;
+      head = this._head();
+      for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
+        key = ref$[i$];
+        array = _scope.$eval(iAttrs[key]);
+        if (isArray(array)) {
+          head[key] = array;
+        }
+      }
+      return superclass.prototype.syncWithScope.apply(this, arguments);
+    };
+    function FireCollection(){
+      FireCollection.superclass.apply(this, arguments);
+    }
+    return FireCollection;
+  }(FireSync));
+  FireNode = (function(){
+    FireNode.displayName = 'FireNode';
+    var prototype = FireNode.prototype, constructor = FireNode;
+    FireNode.noopRef = {
+      set: noop,
+      update: noop,
+      push: noop,
+      transaction: noop,
+      remove: noop,
+      setPriority: noop,
+      setWithPriority: noop
+    };
+    function FireNode(){
+      var ref, this$ = this;
+      ref = constructor.noopRef;
+      this.ref = function(){
+        return ref;
+      };
+      this._setFireProperties = function(nodeOrSnap, index){
+        ref = typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8;
+        return FireNode.prototype._setFireProperties.call(this$, nodeOrSnap, index);
+      };
+    }
+    prototype.ref = noop;
+    prototype._setFireProperties = function(nodeOrSnap, index){
+      var isSnap;
+      isSnap = isFunction(nodeOrSnap.val);
+      if (isNumber(index)) {
+        this.$index = index;
+      }
+      this.$name = isSnap
+        ? nodeOrSnap.name()
+        : nodeOrSnap.$name;
+      this.$priority = isSnap
+        ? nodeOrSnap.getPriority()
+        : nodeOrSnap.$priority;
+      return isSnap;
+    };
+    prototype.extend = function(nodeOrSnap, index){
+      var key, val, counter, value, own$ = {}.hasOwnProperty, this$ = this;
+      if (!nodeOrSnap) {
+        return this;
+      }
+      for (key in this) if (own$.call(this, key)) {
+        if (!FireNode.prototype[key]) {
+          delete this[key];
+        }
+      }
+      if (this._setFireProperties(nodeOrSnap, index)) {
+        val = nodeOrSnap.val();
+        if (isArray(this)) {
+          counter = -1;
+          nodeOrSnap.forEach(function(snap){
+            this$[counter += 1] = FireSync.createNode(snap, counter);
+          });
+        } else {
+          extend(this, isObject(val)
+            ? val
+            : {
+              $value: val
+            });
+        }
+      } else {
+        for (key in nodeOrSnap) if (own$.call(nodeOrSnap, key)) {
+          value = nodeOrSnap[key];
+          this[key] = value;
+        }
+      }
+      return this;
+    };
+    forEach(FireNode.noopRef, function(value, key){
+      this["$" + key] = function(){
+        var ref$;
+        (ref$ = this.ref())[key].apply(ref$, arguments);
+      };
+    }, FireNode.prototype);
+    prototype.$increase = function(byNumber){
+      byNumber || (byNumber = 1);
+      return this.ref().transaction(function(it){
+        return it + byNumber;
+      });
+    };
+    prototype.$decrease = function(byNumber){
+      byNumber || (byNumber = 1);
+      return this.ref().transaction(function(it){
+        return it - byNumber;
+      });
+    };
+    return FireNode;
+  }());
+  FireAuth = (function(){
+    FireAuth.displayName = 'FireAuth';
+    var prototype = FireAuth.prototype, constructor = FireAuth;
+    function FireAuth(){
+      var cloned, this$ = this;
+      cloned = clone$(this);
+      this.ref = new constructor.FirebaseSimpleLogin(constructor.root, function(error, auth){
+        constructor.immediate(function(){
+          if (error) {
+            return copy({}, cloned);
+          }
+          copy(auth || {}, cloned);
+        });
+      });
+      return cloned;
+    }
+    forEach(['login', 'logout'], function(key){
+      this[key] = function(){
+        var ref$;
+        return (ref$ = this.ref)[key].apply(ref$, arguments);
+      };
+    }, FireAuth.prototype);
+    return FireAuth;
+  }());
+  DataFlowFactory = ['$interpolate', '$immediate', 'Firebase'].concat(function($interpolate, $immediate, Firebase){
     DataFlow.interpolate = $interpolate;
+    DataFlow.immediate = $immediate;
+    DataFlow.Firebase = Firebase;
+    return DataFlow;
+  });
+  FireSyncFactory = ['AngularOnFireDataFlow', 'FirebaseUrl'].concat(function(AngularOnFireDataFlow, FirebaseUrl){
+    FireSync.FirebaseUrl = FirebaseUrl;
     return FireSync;
   });
-  module('angular-on-fire', []).factory({
-    FireSync: FireSyncFactory
+  FireCollectionFactory = ['FireSync'].concat(function(FireSync){
+    return FireCollection;
   });
-  function bind$(obj, key, target){
-    return function(){ return (target || obj)[key].apply(obj, arguments) };
-  }
-  function clone$(it){
-    function fun(){} fun.prototype = it;
-    return new fun;
+  fbSync = ['$parse'].concat(function($parse){
+    return {
+      restrict: 'A',
+      link: function(scope, iElement, iAttrs){
+        forEach(iAttrs.fbSync.split(/,\ ?/), function(syncName){
+          var sync, syncGetter, offWatch;
+          sync = void 8;
+          syncGetter = $parse(syncName);
+          offWatch = scope.$watch(syncGetter, function(it){
+            var node;
+            if ((it != null ? it.clone : void 8) == null) {
+              return;
+            }
+            offWatch();
+            sync = it.clone();
+            if (sync instanceof FireCollection) {
+              forEach(FIREBASE_QUERY_KEYS, function(key){
+                var value, that;
+                value = iAttrs[key];
+                if (!value) {
+                  return;
+                }
+                if (that = scope.$eval(value)) {
+                  sync[key].apply(sync, that);
+                }
+                scope.$watchCollection(value, function(array){
+                  sync[key].apply(sync, array);
+                });
+              });
+            }
+            node = sync.syncWithScope(scope, iAttrs);
+            syncGetter.assign(scope, node);
+          });
+        });
+      }
+    };
+  });
+  FireAuthFactory = ['$q', '$immediate', 'Firebase', 'FirebaseUrl', 'FirebaseSimpleLogin'].concat(function($q, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin){
+    var root;
+    root = new Firebase(FirebaseUrl);
+    FireAuth.immediate = $immediate;
+    FireAuth.root = root;
+    FireAuth.FirebaseSimpleLogin = FirebaseSimpleLogin;
+    return FireAuth;
+  });
+  module('angular-on-fire', []).value({
+    Firebase: Firebase,
+    FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/'
+  }).factory({
+    AngularOnFireDataFlow: DataFlowFactory,
+    FireSync: FireSyncFactory,
+    FireCollection: FireCollectionFactory,
+    FireAuth: FireAuthFactory
+  }).directive({
+    fbSync: fbSync
+  }).config(function($provide, $injector){
+    if (!$injector.has('$immediate')) {
+      /*
+      an workaround for $immediate implementation, for better scope $digest performance,
+      please refer to `angular-utils`
+      */
+      $provide.factory('$immediate', ['$timeout'].concat(identity));
+    }
+    if (!($injector.has('FirebaseSimpleLogin') && FirebaseSimpleLogin)) {
+      $provide.value('FirebaseSimpleLogin', FirebaseSimpleLogin);
+    }
+  });
+  function extend$(sub, sup){
+    function fun(){} fun.prototype = (sub.superclass = sup).prototype;
+    (sub.prototype = new fun).constructor = sub;
+    if (typeof sup.extended == 'function') sup.extended(sub);
+    return sub;
   }
   function import$(obj, src){
     var own = {}.hasOwnProperty;
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];
     return obj;
   }
-  function extend$(sub, sup){
-    function fun(){} fun.prototype = (sub.superclass = sup).prototype;
-    (sub.prototype = new fun).constructor = sub;
-    if (typeof sup.extended == 'function') sup.extended(sub);
-    return sub;
+  function clone$(it){
+    function fun(){} fun.prototype = it;
+    return new fun;
   }
 }).call(this);
