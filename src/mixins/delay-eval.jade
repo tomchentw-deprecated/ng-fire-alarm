@@ -1,3 +1,5 @@
-button.btn(ng-class="{active: state.$value, disabled: !state.$name}", 
+h2
+  | Toggle Me
+button.btn(ng-class="{active: state.$value, disabled: !state.$name, 'btn-success': state.$name, 'btn-warning': !state.$name}", 
   ng-click="state.$set(!state.$value)")
-  | Toggle Me After Resolved 
+  | Toggle Value : {{state.$value}}

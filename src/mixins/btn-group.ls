@@ -1,5 +1,5 @@
-@ButtonGroupCtrl = <[$log $scope FirebaseURL FireSync]> ++ !($log, $scope, FirebaseURL, FireSync) ->
-  const statesSync = new FireSync!.get "#{ FirebaseURL }/button-states"
+@ButtonGroupCtrl = <[$log $scope FireSync]> ++ !($log, $scope, FireSync) ->
+  const statesSync = new FireSync!.get '/button-states'
   $scope.states = statesSync.sync!
   $log.log \ButtonGroupCtrl $scope
 

@@ -1,5 +1,5 @@
-@HeroCtrl = <[$log $scope FirebaseURL FireSync]> ++ !($log, $scope, FirebaseURL, FireSync) ->
-  const clickCounterSync = new FireSync!.get "#{ FirebaseURL }/counter"
+@HeroCtrl = <[$log $scope FireSync]> ++ !($log, $scope, FireSync) ->
+  const clickCounterSync = new FireSync!.get '/counter'
   $scope.counter = clickCounterSync.sync!
   $log.log \HeroCtrl $scope
 

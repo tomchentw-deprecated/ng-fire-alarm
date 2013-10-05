@@ -1,7 +1,5 @@
-@FbSyncCtrl = <[$log $scope $timeout FirebaseURL FireSync]> ++ !($log, $scope, $timeout, FirebaseURL, FireSync) ->
-  $scope.fullurl = $timeout -> FirebaseURL
-  , 2_000# mock http request ...
+@FbSyncCtrl = <[$log $scope FireSync]> ++ !($log, $scope, FireSync) ->
 
-  $scope.root = new FireSync!.get "{{ fullurl }}"
+  $scope.root = new FireSync!.get '/'
 
   $log.log \FbSyncCtrl $scope

@@ -21,6 +21,10 @@ class DataFlow
 
 class InterpolateFlow extends DataFlow
 
+  @createFirebase = (queryStr || '') ->
+    queryStr = @FirebaseUrl + queryStr if queryStr.substr(0, 4) isnt 'http'
+    new @Firebase queryStr
+
   const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
   ->
     super ...&
@@ -68,7 +72,7 @@ class GetFlow extends InterpolateFlow
   start: !->
     const getValue = !(queryStr) ~>
       return unless queryStr
-      @_setQuery new DataFlow.Firebase queryStr
+      @_setQuery InterpolateFlow.createFirebase queryStr
 
     if @queryFuncs.length
       @stopWatch = @sync._watch @_buildWatchFn({}), getValue
@@ -98,7 +102,7 @@ class MapFlow extends InterpolateFlow
     stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
       return unless queryStr
       that.off \value void, @ if queries[index]
-      const query = new DataFlow.Firebase queryStr
+      const query = InterpolateFlow.createFirebase queryStr
       query.on \value noop unless queries[index]# cache
 
       query.on \value !(snap) ->
@@ -147,12 +151,6 @@ class ToSyncFlow extends DataFlow
     @resolve = void
 
 class FireSync
-  @queryUrl = (queryStrOrPath) ->
-    if queryStrOrPath.substr(0, 4) is 'http'
-      queryStrOrPath
-    else
-      FireSync.FirebaseUrl + queryStrOrPath
-
   @createNode = (snap, index) ->
     node = new FireNode!
     node = ^^node
@@ -167,7 +165,7 @@ class FireSync
     @
 
   get: (queryStrOrPath) ->
-    @_addFlow new GetFlow {queryStr: @@queryUrl queryStrOrPath}
+    @_addFlow new GetFlow {queryStr: queryStrOrPath}
 
   clone: ->
     return @ if @$deferred
@@ -228,7 +226,7 @@ class FireCollection extends FireSync
     node.$extend snap
 
   map: (queryStrOrPath) ->
-    @_addFlow new MapFlow {queryStr: @@queryUrl queryStrOrPath}
+    @_addFlow new MapFlow {queryStr: queryStrOrPath}
 
   flatten: ->
     @_addFlow new FlattenDataFlow
@@ -320,15 +318,16 @@ class FireAuth
 # angular module definition
 #
 const DataFlowFactory = <[
-      $interpolate $immediate Firebase
-]> ++ ($interpolate, $immediate, Firebase) ->
-  DataFlow <<< {interpolate: $interpolate, immediate: $immediate, Firebase}
-  DataFlow
+      $interpolate $immediate Firebase FirebaseUrl
+]> ++ ($interpolate, $immediate, Firebase, FirebaseUrl) ->
+  DataFlow <<< {interpolate: $interpolate, immediate: $immediate}
+  InterpolateFlow <<< {Firebase, FirebaseUrl}
+  true
 
 const FireSyncFactory = <[
-      $q AngularOnFireDataFlow FirebaseUrl
-]> ++ ($q, AngularOnFireDataFlow, FirebaseUrl) ->
-  FireSync <<< {q: $q, FirebaseUrl}
+      $q AngularOnFireDataFlow
+]> ++ ($q, AngularOnFireDataFlow) ->
+  FireSync.q = $q
   FireSync
 
 const FireCollectionFactory = <[
@@ -372,6 +371,8 @@ const FireAuthFactory = <[
   FireAuth <<< {immediate: $immediate, root, FirebaseSimpleLogin}
   FireAuth
 
+const CompactFirebaseSimpleLogin = @FirebaseSimpleLogin || noop
+
 module \angular-on-fire <[]>
 .value do
   Firebase: Firebase
@@ -382,15 +383,17 @@ module \angular-on-fire <[]>
   FireCollection: FireCollectionFactory
   FireAuth: FireAuthFactory
 .directive {fbSync}
-.config !($provide, $injector) ->
+.config <[
+        $provide $injector
+]> ++ !($provide, $injector) ->
   unless $injector.has \$immediate
     /*
     an workaround for $immediate implementation, for better scope $digest performance,
     please refer to `angular-utils`
     */
     $provide.factory \$immediate <[$timeout]> ++ identity
+  return if $injector.has \FirebaseSimpleLogin 
   #
   # Conditionally inject FirebaseSimpleLogin
   #
-  if not $injector.has(\FirebaseSimpleLogin) && FirebaseSimpleLogin
-    $provide.value \FirebaseSimpleLogin FirebaseSimpleLogin
+  $provide.value \FirebaseSimpleLogin CompactFirebaseSimpleLogin

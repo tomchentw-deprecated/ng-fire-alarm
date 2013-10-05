@@ -1,7 +1,7 @@
-@ButtonToolbarCtrl = <[$log $scope FirebaseURL FireSync]> ++ !($log, $scope, FirebaseURL, FireSync) ->
-  const statesSync = new FireSync!.get "#{ FirebaseURL }/button-states" toCollection: true 
-  $scope.states = statesSync.sync!
+@ButtonToolbarCtrl = <[$log $scope FireCollection]> ++ !($log, $scope, FireCollection) ->
+  const statesCollection = new FireCollection!.get '/button-states'
+  $scope.states = statesCollection.sync!
   $log.log \ButtonToolbarCtrl $scope
 
-  # Off the Firebase `on` callback to FireSync when scope is destroyed
-  $scope.$on \$destroy statesSync.destroy
+  # Off the Firebase `on` callback to FireCollection when scope is destroyed
+  $scope.$on \$destroy statesCollection.destroy
