@@ -169,7 +169,7 @@ class FireSync
   get: (queryStrOrPath) ->
     @_addFlow new GetFlow {queryStr: @@queryUrl queryStrOrPath}
 
-  cloneIfNotDeferred: ->
+  clone: ->
     return @ if @$deferred
     #
     const cloned = new @constructor
@@ -261,11 +261,11 @@ class FireNode
     @$ref = -> ref # store ref in closure
     @$_setFireProperties = (nodeOrSnap, index) ~>
       if nodeOrSnap
-        ref := nodeOrSnap.ref?!
+        ref := nodeOrSnap.ref?! || nodeOrSnap.$ref?!
         # update ref in closure
       FireNode::$_setFireProperties.call @, nodeOrSnap, index
 
-  $ref: noop
+  $ref: noop # just for placeholder!
 
   $_setFireProperties: (nodeOrSnap, index) ->
     @$index       = index if isNumber index
@@ -350,9 +350,9 @@ const fbSync = <[
     sync = void
     const syncGetter = $parse syncName
     scope.$watch syncGetter, !->
-      return unless it?cloneIfNotDeferred?
+      return unless it?clone?
       sync.destroy! if sync
-      sync := it.cloneIfNotDeferred!
+      sync := it.clone!
       #
       if sync instanceof FireCollection
         (key) <-! forEach FIREBASE_QUERY_KEYS
@@ -389,5 +389,8 @@ module \angular-on-fire <[]>
     please refer to `angular-utils`
     */
     $provide.factory \$immediate <[$timeout]> ++ identity
-  unless $injector.has(\FirebaseSimpleLogin) && FirebaseSimpleLogin
+  #
+  # Conditionally inject FirebaseSimpleLogin
+  #
+  if not $injector.has(\FirebaseSimpleLogin) && FirebaseSimpleLogin
     $provide.value \FirebaseSimpleLogin FirebaseSimpleLogin

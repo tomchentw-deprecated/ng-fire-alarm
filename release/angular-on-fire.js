@@ -278,7 +278,7 @@
         queryStr: constructor.queryUrl(queryStrOrPath)
       }));
     };
-    prototype.cloneIfNotDeferred = function(){
+    prototype.clone = function(){
       var cloned, that, flow, next;
       if (this.$deferred) {
         return this;
@@ -408,7 +408,7 @@
       };
       this.$_setFireProperties = function(nodeOrSnap, index){
         if (nodeOrSnap) {
-          ref = typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8;
+          ref = (typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8) || (typeof nodeOrSnap.$ref === 'function' ? nodeOrSnap.$ref() : void 8);
         }
         return FireNode.prototype.$_setFireProperties.call(this$, nodeOrSnap, index);
       };
@@ -529,13 +529,13 @@
           syncGetter = $parse(syncName);
           scope.$watch(syncGetter, function(it){
             var node;
-            if ((it != null ? it.cloneIfNotDeferred : void 8) == null) {
+            if ((it != null ? it.clone : void 8) == null) {
               return;
             }
             if (sync) {
               sync.destroy();
             }
-            sync = it.cloneIfNotDeferred();
+            sync = it.clone();
             if (sync instanceof FireCollection) {
               forEach(FIREBASE_QUERY_KEYS, function(key){
                 var value, that;
@@ -586,7 +586,7 @@
       */
       $provide.factory('$immediate', ['$timeout'].concat(identity));
     }
-    if (!($injector.has('FirebaseSimpleLogin') && FirebaseSimpleLogin)) {
+    if (!$injector.has('FirebaseSimpleLogin') && FirebaseSimpleLogin) {
       $provide.value('FirebaseSimpleLogin', FirebaseSimpleLogin);
     }
   });
