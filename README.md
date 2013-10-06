@@ -1,17 +1,29 @@
-[angular-on-fire](http://angular-on-fire.tomchentw.com/)
-================
+angular-on-fire
+=========
+### Alternative Solution to use [AngularJS](http://angularjs.org/) with [Firebase](https://www.firebase.com/)
 
-An AngularJS library to provide access to Firebase.  
-It gives one way sync of data and make changes using **ref** object like the original Firebase JS lib.  
+It gives one way sync of data and make changes using **ref** object methods just like using the original Firebase JS lib.  
 
-
-Why
+Demo
 ----------
-The service `angularFire` provided by [angularFire](https://github.com/firebase/angularFire) is wierd. We have to provide $scope to the service.  
-It makes me feel very **unconfortable**.  
-But `angularFireCollection` only provides sync on collection, it doesn't provide one object sync.  
+Visit : [angular-on-fire](http://angular-on-fire.tomchentw.com/)
+
+
+Motivation
+----------
+Let's see the services provided by [angularFire](https://github.com/firebase/angularFire) :  
+* `angularFire` :  We have to provide `$scope` to it, and this makes me very **unconfortable** ( Why pass a `$scope` to `service`??).  
+* `angularFireCollection` : it only sync collection but not **plain object**. Plus, it's not ordered with **native Firebase order** (Need to sort manually). 
 
 So I decide to write my own version.
 
-Visit our site: [angular-on-fire](http://angular-on-fire.tomchentw.com/)
+
+Usage & APIs
 ----------
+First, if you only use one Firebase, put the root url to config:
+```JavaScript
+angular.module('your-app', ['angular-on-fire'])
+.value('FirebaseUrl', 'https://YOUR-FIREBASE-NAME.firebaseio.com')
+```
+
+
