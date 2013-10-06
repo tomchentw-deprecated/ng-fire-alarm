@@ -1,0 +1,5 @@
+ul(fb-sync="users")
+  li(ng-repeat="user in users | orderBy:'$index':true")
+    a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")
+      {{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})
+    p {{ user.bio | limitTo:100 }}...

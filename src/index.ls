@@ -10,7 +10,7 @@ const AuthCtrl = <[
 
   $scope.$watch 'auth && user.$name' !->
     return unless $scope.auth && $scope.user.$name
-    $scope.user.$set $scope.auth{id, displayName, profileUrl, bio}
+    $scope.user.$setWithPriority $scope.auth{id, displayName, profileUrl, bio}, Math.round(Math.random!*2^16)
 
 @demo = module \demo <[ui.bootstrap angular-on-fire]>
 .value {FirebaseUrl}

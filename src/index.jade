@@ -100,6 +100,20 @@ html(ng-app="demo")
             include mixins/4
       section
         .page-header
+          h1
+            pre.demo FireCollection
+            | service
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/5.jade')
+              tab(heading="5.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/5.ls')
+          .span4(ng-controller="UsersCtrl")
+            include mixins/5
+      section
+        .page-header
           h1 Easy Button Toolbar
         .row-fluid
           .span8
