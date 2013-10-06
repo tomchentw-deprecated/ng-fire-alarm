@@ -482,9 +482,9 @@
     FireAuth.displayName = 'FireAuth';
     var prototype = FireAuth.prototype, constructor = FireAuth;
     function FireAuth(){
-      var cloned, this$ = this;
+      var cloned, ref, this$ = this;
       cloned = clone$(this);
-      this.ref = new constructor.FirebaseSimpleLogin(constructor.root, function(error, auth){
+      ref = new constructor.FirebaseSimpleLogin(constructor.root, function(error, auth){
         constructor.immediate(function(){
           if (error) {
             return copy({}, cloned);
@@ -492,14 +492,13 @@
           copy(auth || {}, cloned);
         });
       });
+      forEach(['login', 'logout'], function(key){
+        this[key] = function(){
+          return ref[key].apply(ref, arguments);
+        };
+      }, this);
       return cloned;
     }
-    forEach(['login', 'logout'], function(key){
-      this[key] = function(){
-        var ref$;
-        return (ref$ = this.ref)[key].apply(ref$, arguments);
-      };
-    }, FireAuth.prototype);
     return FireAuth;
   }());
   DataFlowFactory = ['$interpolate', '$immediate', 'Firebase', 'FirebaseUrl'].concat(function($interpolate, $immediate, Firebase, FirebaseUrl){
