@@ -1,0 +1,152 @@
+angular-on-fire
+=========
+### Alternative Solution to use [AngularJS](http://angularjs.org/) with [Firebase](https://www.firebase.com/)
+
+It gives one way sync of data and make changes using **ref** object methods just like using the original Firebase JS lib.  
+
+Demo
+----------
+Visit : [angular-on-fire](http://angular-on-fire.tomchentw.com/)
+
+
+Motivation
+----------
+Let's see the services provided by [angularFire](https://github.com/firebase/angularFire) :  
+* `angularFire` :  We have to provide `$scope` to it, and this makes me very **unconfortable** ( Why pass a `$scope` to `service`??).  
+* `angularFireCollection` : it only sync collection but not **plain object**. Plus, it's not ordered with **native Firebase order** (Need to sort manually). 
+
+So I decide to write my own version.
+
+
+Usage & APIs
+----------
+* `FirebaseUrl` value
+* `FireSync` service
+* `fb-sync` directive
+* `FireCollection` service
+* `FireAuth` service
+
+### `FirebaseUrl` value
+First, if you only use one Firebase, put the root url to config:
+```JavaScript
+<%= file.read('dest/mixins/0.js') %>
+```
+
+### `FireSync` service
+Then, let's use `FireSync` :
+```JavaScript 
+<%= file.read('dest/mixins/1.js') %>
+```
+
+In your `/users/show.html` :
+```HTML
+<%= file.read('dest/mixins/1.html') %>
+```
+
+### `fb-sync` directive
+This is the powerful part of `angular-on-fire`.  
+If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
+```JavaScript
+<%= file.read('dest/mixins/2.js') %>
+```
+Then in your `/users/show.html` :
+```HTML
+<%= file.read('dest/mixins/2.html') %>
+```
+
+You can also specify multiple sync to load like this:  
+`fb-sync="user, account, book"` ( seperated by comma `,` )
+
+### Resolving Dynamic Path 
+Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
+```JavaScript
+<%= file.read('dest/mixins/3.js') %>
+```
+
+Then in your `/users/show-vip.html` :
+```HTML
+<%= file.read('dest/mixins/3.html') %>
+```
+If executed, it will load `vip_user` first, then `user` next, finally `friends_list`. All paths are automatically resolved.
+
+#### Important
+**Notice** that the `ng-click` in `button` will be valid once `user` is loaded. This is very important feature of `angular-on-fire`.
+If you use `angularFire`, you can't accomplish this but need to write an extra function then injected to `$scope`, so that the `ng-click` can bind to that function:
+```JavaScript
+// in replacement of user.$update
+$scope.updateUser = function (value){
+  if (!$scope.userRef) {
+    return;
+  }
+  $scope.userRef.update(value);
+}
+```
+This causes lots of extra effort. Thankfully, `angular-on-fire` already do ths for us.
+
+### prototype methods
+We expose `set`, `update`, `push`, `transaction`, `remove`, `setPriority`, `setWithPriority` and prefixed them with `$`.
+We also add another two common used functions : `$increase`, `$decrease` , which make great use of `transaction`.
+
+```JavaScript
+<%= file.read('dest/mixins/4.js') %>
+```
+
+In your `/users/edit.html` : 
+```HTML
+<%= file.read('dest/mixins/4.html') %>
+```
+
+### `FireCollection` service
+To sync object/array as a local collection, use this.
+It'll transform remote object/array as a local array (let's call it a collecion), ordered by **native Firebase order**.
+Each item in collection will be like a node synced with `FireSync`, with an extra **number** property : `$index` (index in collection).
+With `$index`, you can do a reverse order like this : `ng-repeat="user in users | ordeyBy:'$index':true"`
+
+
+```JavaScript
+<%= file.read('dest/mixins/5.js') %>
+```
+
+In your `/users/edit.html` : 
+```HTML
+<%= file.read('dest/mixins/5.html') %>
+```
+
+
+### Eager Loading on `FireCollection`
+The another powerful part of `angular-on-fire`.
+Let's say you have an indexes set, and each of tme can be mapped to a list of items in certain urls.
+Then `FireCollection` can map these keys to a collection of actual items. For example:
+The `UsersCtrl` used above can be rewritten as:
+
+```JavaScript
+<%= file.read('dest/mixins/6.js') %>
+```
+
+Moreover, if you need to map indexes twice or above, remember to `flatten` the indexes:
+
+```JavaScript
+<%= file.read('dest/mixins/7.js') %>
+```
+Easy! Right?
+
+
+### `FireAuth` service
+#### Requirement
+*  [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
+*  set `FirebaseUrl` in your app (see above section)
+
+Then, in controller:
+```JavaScript
+<%= file.read('dest/mixins/8.js') %>
+```
+
+and then, in your `/partials/auth.html`:
+```HTML
+<%= file.read('dest/mixins/8.html') %>
+```
+
+
+
+
+

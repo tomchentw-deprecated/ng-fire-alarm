@@ -6,5 +6,6 @@
 
   $scope.$watch 'auth && user.$name' !->
     return unless $scope.auth && $scope.user.$name
+    /* We need this to store user auth (like session) into database */
     $scope.user.$setWithPriority $scope.auth{id, displayName, profileUrl, bio}, Math.round(Math.random!*2^16)
 

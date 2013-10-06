@@ -202,12 +202,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-connect');
-  // Default task.
+  // 
   grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']);
   grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixins:compile', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
-  grunt.registerTask('build', [/*jshint scripturl:true*/'livescript:release', 'uglify:release']);
+  //
+  grunt.registerTask('readme', function () {
+    var readme = grunt.file.read('misc/README.md.template');
+    readme = grunt.template.process(readme, {data: grunt});
+    grunt.file.write('README.md', readme);
+  });
+  grunt.registerTask('release', ['default', /*jshint scripturl:true*/'livescript:release', 'uglify:release', 'readme']);
 };
