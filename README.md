@@ -127,7 +127,29 @@ $scope.updateUser = function (value){
 ```
 This causes lots of extra effort. Thankfully, `angular-on-fire` already do ths for us.
 
+### prototype methods
+We expose `set`, `update`, `push`, `transaction`, `remove`, `setPriority`, `setWithPriority` and prefixed them with `$`.
+We also add another two common used functions : `$increase`, `$decrease` , which make great use of `transaction`.
 
+```JavaScript
+app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
+  $scope.visited = new FireSybc('/visited/'); // this node points to a number,
+  // but the type of `visited` is object, we store that number to its `$value` property.
+  // This transformation applies to all non-object values (string, number ...)
+  
+  $scope.user = new FireSync('/users/tom'); 
+}]);
+```
 
+In your `/users/edit.html` : 
+```HTML
+<div fb-sync="visited, user">
+  <button ng-click="visited.$increase()">{{ visited.$value }}</button>
+  <form ng-controller="UserCtrl">
+    <input type="text", name="name", ng-model="user.name", ng-change="user.$update({name: user.name})">
+    <textarea, name="bio", ng-model="user.bio", ng-change="user.$update({name: user.bio})">
+  </form>
+</div>
+```
 
 
