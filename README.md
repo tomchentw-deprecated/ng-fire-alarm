@@ -20,14 +20,20 @@ So I decide to write my own version.
 
 Usage & APIs
 ----------
-### FirebaseUrl
+* `FirebaseUrl` value
+* `FireSync` service
+* `fb-sync` directive
+* `FireCollection` service
+* 
+
+### `FirebaseUrl` value
 First, if you only use one Firebase, put the root url to config:
 ```JavaScript
 var app = angular.module('your-app', ['angular-on-fire']) // declare as app module dependency.
 .value('FirebaseUrl', 'https://YOUR-FIREBASE-NAME.firebaseio.com')
 ```
 
-### FireSync
+### `FireSync` service
 Then, let's use `FireSync` :
 ```JavaScript 
 app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
@@ -49,7 +55,7 @@ In your `/users/show.html` :
 </div>
 ```
 
-### `fb-sync`
+### `fb-sync` directive
 This is the powerful part of `angular-on-fire`.  
 If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
 ```JavaScript
@@ -151,5 +157,44 @@ In your `/users/edit.html` :
   </form>
 </div>
 ```
+
+### `FireCollection` service
+To sync object/array as a local collection, use this.
+It'll transform remote object/array as a local array (let's call it a collecion), ordered by **native Firebase order**.
+Each item in collection will be like a node synced with `FireSync`, with an extra **number** property : `$index` (index in collection).
+With `$index`, you can do a reverse order like this : `ng-repeat="user in users | ordeyBy:'$index':true"`
+
+
+```JavaScript
+app.controller('UsersCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
+  $scope.users = new FireCollection('/users'); // lets assume it's a object with each item created by `push`
+}]);
+```
+
+In your `/users/edit.html` : 
+```HTML
+<ul fb-sync="users">
+  <li ng-repeat="user in users | ordeyBy:'$index':true">
+    <a ng-href="/users/{{ user.$name }}", tooltip="{{ user.bio }}">
+      {{ user.$name }} : {{ user.name }} ( priority: {{ user.$priority }})
+    </a>
+  </li>
+</ul>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
