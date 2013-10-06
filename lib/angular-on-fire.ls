@@ -304,15 +304,15 @@ class FireAuth
 
   ->
     const cloned = ^^@
-    @ref = new @@FirebaseSimpleLogin @@root, !(error, auth) ~>
+    const ref = new @@FirebaseSimpleLogin @@root, !(error, auth) ~>
       <~! @@immediate
       return copy {}, cloned if error
       copy auth || {}, cloned
+    
+    forEach <[login logout]> !(key) ->
+      @[key] = -> ref[key] ...&
+    , @
     return cloned
-
-  forEach <[login logout]> !(key) ->
-    @[key] = -> @ref[key] ...&
-  , @::
 #
 # angular module definition
 #

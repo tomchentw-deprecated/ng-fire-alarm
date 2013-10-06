@@ -11,16 +11,25 @@ html(ng-app="demo")
     script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
     script(type="text/javascript", src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.6.0/ui-bootstrap-tpls.min.js")
     script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase.js")
+    script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase-simple-login.js")
     script(src="script.js")
   body
     .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
-        .container-fluid
+        .container-fluid(ng-controller="AuthCtrl")
           button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
             span.icon-bar
             span.icon-bar
             span.icon-bar
           a.brand(href="https://github.com/tomchentw/angular-on-fire") angular-on-fire
+
+          ul.nav.pull-right(fb-sync="user")
+            li
+              a(ng-href="/users/{{ auth.provider }}/{{ auth.id }}")
+                {{ user.displayName }}
+            li
+              a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
+                | Facebook Login 
     a(href="https://github.com/tomchentw/angular-on-fire")
       img(style="position: absolute; z-index: 9999; top: 0; right: 0; border: 0;",
         src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png",
