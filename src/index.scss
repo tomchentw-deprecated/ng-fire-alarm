@@ -82,7 +82,7 @@
 @import "vendor/bootstrap/responsive-767px-max";
 
 body {
-  padding-top: 60px;
+  padding-top: 40px;
 }
 
 // RESPONSIVE NAVBAR
@@ -121,6 +121,10 @@ pre.demo {
 }
 
 @import "vendor/bootstrap-prettyprint";
+
+.prettyprint.noborder {
+  border: 0px;
+}
 
 li.L0,
 li.L1,

@@ -30,7 +30,7 @@ html(ng-app="demo")
     .container-fluid
       header.page-header
         .row-fluid
-          .span8
+          .span8(ng-controller="HeroCtrl")
             include mixins/hero-unit
           .span4
             tabset
@@ -46,7 +46,10 @@ html(ng-app="demo")
             |  in 
             pre.demo firebase
             small to understand how this page interact with it
-            
+        .row-fluid(ng-controller="RootCtrl", fb-sync="root")
+          accordion
+            accordion-group(heading="root.json")
+              pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
       section
         .page-header
           h1
