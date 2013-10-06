@@ -183,8 +183,32 @@ In your `/users/edit.html` :
 ```
 
 
+### Eager Loading on `FireCollection`
+The another powerful part of `angular-on-fire`.
+Let's say you have an indexes set, and each of tme can be mapped to a list of items in certain urls.
+Then `FireCollection` can map these keys to a collection of actual items. For example:
+The `UsersCtrl` used above can be rewritten as:
 
+```JavaScript
+app.controller('UsersInAccountCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
+  var collect = new FireCollection('/account/1/userIds'); // { 1: true, 3: true, 7: true } or [1, 3, 7]
+  $scope.users = collect.map('/users/{{ $name }}'); // or '/users/{{ $value }}' if above is array.
+}]);
+```
 
+Moreover, if you need to map indexes twice or above, remember to `flatten` the indexes:
+
+```JavaScript
+app.controller('UsersInBookCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
+  var collect = new FireCollection('/books/1/authorAccountIds'); //{ 1: true, 4: true }
+  
+  $scope.users = collect
+    .map('/accounts/{{ $name }}/userIds') // {1: { 1: true, 3: true, 7: true }, 4: { 5: true, 8: true } }
+    .flatten() // { 1: true, 3: true, 7: true, 5: true, 8:true }
+    .map('/users/{{ $name }}'); 
+}]);
+```
+Easy! Right?
 
 
 
