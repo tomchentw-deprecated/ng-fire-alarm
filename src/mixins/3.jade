@@ -1,9 +1,13 @@
 div(ng-controller="VipUserCtrl", fb-sync="vip_user, user, friends_list")
   h2
-    i(ng-class="{star: vip_user.valid && user.payed, 'star-empty': !vip_user.valid || !user.payed}")
-      {{ user.displayName }}
+    i(ng-class="{'icon-star': vip_user.valid && user.payed, 'icon-star-empty': !vip_user.valid || !user.payed}")
+      | 
+    {{ user.displayName }}
   p {{ user.bio }}
-  button.btn.btn-large.btn-info(ng-click="user.$update({payed: !user.payed})") Extend VIP : $USD 500
+  button.btn.btn-large.btn-info(ng-click="user.$update({payed: !user.payed})")
+    span(ng-if="user.payed") Extended
+    span(ng-if="!user.payed") Extend
+    |  VIP : $USD 500
   h2 {{ user.displayName.split(' ')[0] }}'s Friends
   ul
     li(ng-repeat="(userId, displayName) in friends_list")
