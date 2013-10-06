@@ -22,21 +22,13 @@ html(ng-app="demo")
             span.icon-bar
             span.icon-bar
           a.brand(href="https://github.com/tomchentw/angular-on-fire") angular-on-fire
-
-          ul.nav.pull-right(fb-sync="user")
-            li
-              a(ng-href="{{ user.profileUrl }}", target="_blank")
-                img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
-                | {{ user.displayName }}
-            li
-              a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
-                | Facebook Login 
+          include mixins/8
     a(href="https://github.com/tomchentw/angular-on-fire")
       img(style="position: absolute; z-index: 9999; top: 0; right: 0; border: 0;",
         src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png",
         alt="Fork me on GitHub")
     .container-fluid
-      section
+      header.page-header
         .row-fluid
           .span8
             include mixins/hero-unit
@@ -46,6 +38,15 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/hero-unit.jade')
               tab(heading="hero-unit.js")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/hero-unit.ls')
+        .row-fluid
+          h1 
+            | See 
+            a.btn.btn-large.btn-info(href="https://angular-on-fire.firebaseio.com/.json", target="_blank")
+              | root.json
+            |  in 
+            pre.demo firebase
+            small to understand how this page interact with it
+            
       section
         .page-header
           h1
@@ -141,6 +142,20 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/7.ls')
           .span4(ng-controller="UsersInBookCtrl")
             include mixins/5
+      section
+        .page-header
+          h1
+            pre.demo FireAuth
+            | service
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="8.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/8.jade')
+              tab(heading="8.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/8.ls')
+          .span4
+            h2 Please refer to the Navbar
     script.
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
