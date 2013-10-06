@@ -1,5 +1,5 @@
 (function(){
-  var isString, isArray, isFunction, isObject, isNumber, noop, identity, forEach, bind, copy, extend, module, FIREBASE_QUERY_KEYS, DataFlow, InterpolateFlow, GetFlow, MapFlow, FlattenDataFlow, ToSyncFlow, FireSync, FireCollection, FireNode, FireAuth, DataFlowFactory, FireSyncFactory, FireCollectionFactory, fbSync, FireAuthFactory, slice$ = [].slice;
+  var isString, isArray, isFunction, isObject, isNumber, noop, identity, forEach, bind, copy, extend, module, FIREBASE_QUERY_KEYS, DataFlow, InterpolateFlow, GetFlow, MapFlow, FlattenDataFlow, ToSyncFlow, FireSync, FireCollection, FireNode, FireAuth, DataFlowFactory, FireSyncFactory, FireCollectionFactory, fbSync, FireAuthFactory, CompactFirebaseSimpleLogin;
   isString = angular.isString, isArray = angular.isArray, isFunction = angular.isFunction, isObject = angular.isObject, isNumber = angular.isNumber;
   noop = angular.noop, identity = angular.identity, forEach = angular.forEach, bind = angular.bind, copy = angular.copy, extend = angular.extend, module = angular.module;
   FIREBASE_QUERY_KEYS = ['limit', 'startAt', 'endAt'];
@@ -34,6 +34,13 @@
   }());
   InterpolateFlow = (function(superclass){
     var interpolateMatcher, prototype = extend$((import$(InterpolateFlow, superclass).displayName = 'InterpolateFlow', InterpolateFlow), superclass).prototype, constructor = InterpolateFlow;
+    InterpolateFlow.createFirebase = function(queryStr){
+      queryStr || (queryStr = '');
+      if (queryStr.substr(0, 4) !== 'http') {
+        queryStr = this.FirebaseUrl + queryStr;
+      }
+      return new this.Firebase(queryStr);
+    };
     interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
     function InterpolateFlow(){
       var interpolate;
@@ -95,11 +102,10 @@
       this.query.on('value', this._callNext, noop, this);
     };
     prototype.execQuery = function(key, args){
-      if (!this.query) {
-        return;
-      }
       this[key] = args;
-      this._setQuery(this.query);
+      if (this.query) {
+        this._setQuery(this.query);
+      }
     };
     prototype.start = function(){
       var getValue, this$ = this;
@@ -107,7 +113,7 @@
         if (!queryStr) {
           return;
         }
-        this$._setQuery(new DataFlow.Firebase(queryStr));
+        this$._setQuery(InterpolateFlow.createFirebase(queryStr));
       };
       if (this.queryFuncs.length) {
         this.stopWatch = this.sync._watch(this._buildWatchFn({}), getValue);
@@ -155,7 +161,7 @@
           if (that = queries[index]) {
             that.off('value', void 8, this$);
           }
-          query = new DataFlow.Firebase(queryStr);
+          query = InterpolateFlow.createFirebase(queryStr);
           if (!queries[index]) {
             query.on('value', noop);
           }
@@ -244,13 +250,6 @@
   FireSync = (function(){
     FireSync.displayName = 'FireSync';
     var prototype = FireSync.prototype, constructor = FireSync;
-    FireSync.queryUrl = function(queryStrOrPath){
-      if (queryStrOrPath.substr(0, 4) === 'http') {
-        return queryStrOrPath;
-      } else {
-        return FireSync.FirebaseUrl + queryStrOrPath;
-      }
-    };
     FireSync.createNode = function(snap, index){
       var node;
       node = new FireNode();
@@ -275,7 +274,7 @@
     };
     prototype.get = function(queryStrOrPath){
       return this._addFlow(new GetFlow({
-        queryStr: constructor.queryUrl(queryStrOrPath)
+        queryStr: queryStrOrPath
       }));
     };
     prototype.clone = function(){
@@ -358,16 +357,14 @@
     };
     prototype.map = function(queryStrOrPath){
       return this._addFlow(new MapFlow({
-        queryStr: constructor.queryUrl(queryStrOrPath)
+        queryStr: queryStrOrPath
       }));
     };
     prototype.flatten = function(){
       return this._addFlow(new FlattenDataFlow);
     };
     forEach(FIREBASE_QUERY_KEYS, function(key){
-      this[key] = function(){
-        var args;
-        args = slice$.call(arguments);
+      this[key] = function(args){
         this._head().execQuery(key, args);
       };
     }, FireCollection.prototype);
@@ -505,15 +502,15 @@
     }, FireAuth.prototype);
     return FireAuth;
   }());
-  DataFlowFactory = ['$interpolate', '$immediate', 'Firebase'].concat(function($interpolate, $immediate, Firebase){
+  DataFlowFactory = ['$interpolate', '$immediate', 'Firebase', 'FirebaseUrl'].concat(function($interpolate, $immediate, Firebase, FirebaseUrl){
     DataFlow.interpolate = $interpolate;
     DataFlow.immediate = $immediate;
-    DataFlow.Firebase = Firebase;
-    return DataFlow;
+    InterpolateFlow.Firebase = Firebase;
+    InterpolateFlow.FirebaseUrl = FirebaseUrl;
+    return true;
   });
-  FireSyncFactory = ['$q', 'AngularOnFireDataFlow', 'FirebaseUrl'].concat(function($q, AngularOnFireDataFlow, FirebaseUrl){
+  FireSyncFactory = ['$q', 'AngularOnFireDataFlow'].concat(function($q, AngularOnFireDataFlow){
     FireSync.q = $q;
-    FireSync.FirebaseUrl = FirebaseUrl;
     return FireSync;
   });
   FireCollectionFactory = ['FireSync'].concat(function(FireSync){
@@ -539,15 +536,15 @@
             if (sync instanceof FireCollection) {
               forEach(FIREBASE_QUERY_KEYS, function(key){
                 var value, that;
-                value = iAttrs[key];
+                value = iAttrs["fb" + key[0].toUpperCase() + key.substr(1)];
                 if (!value) {
                   return;
                 }
                 if (that = scope.$eval(value)) {
-                  sync[key].apply(sync, that);
+                  sync[key](that);
                 }
                 scope.$watchCollection(value, function(array){
-                  sync[key].apply(sync, array);
+                  sync[key](array);
                 });
               });
             }
@@ -568,6 +565,7 @@
     FireAuth.FirebaseSimpleLogin = FirebaseSimpleLogin;
     return FireAuth;
   });
+  CompactFirebaseSimpleLogin = this.FirebaseSimpleLogin || noop;
   module('angular-on-fire', []).value({
     Firebase: Firebase,
     FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/'
@@ -578,7 +576,7 @@
     FireAuth: FireAuthFactory
   }).directive({
     fbSync: fbSync
-  }).config(function($provide, $injector){
+  }).config(['$provide', '$injector'].concat(function($provide, $injector){
     if (!$injector.has('$immediate')) {
       /*
       an workaround for $immediate implementation, for better scope $digest performance,
@@ -586,10 +584,11 @@
       */
       $provide.factory('$immediate', ['$timeout'].concat(identity));
     }
-    if (!$injector.has('FirebaseSimpleLogin') && FirebaseSimpleLogin) {
-      $provide.value('FirebaseSimpleLogin', FirebaseSimpleLogin);
+    if ($injector.has('FirebaseSimpleLogin')) {
+      return;
     }
-  });
+    $provide.value('FirebaseSimpleLogin', CompactFirebaseSimpleLogin);
+  }));
   function extend$(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

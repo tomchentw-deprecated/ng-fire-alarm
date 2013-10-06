@@ -65,9 +65,8 @@ class GetFlow extends InterpolateFlow
     @query.on \value @_callNext, noop, @
 
   execQuery: !(key, args) ->
-    return unless @query
     @[key] = args
-    @_setQuery @query
+    @_setQuery @query if @query
 
   start: !->
     const getValue = !(queryStr) ~>
@@ -232,7 +231,7 @@ class FireCollection extends FireSync
     @_addFlow new FlattenDataFlow
 
   forEach FIREBASE_QUERY_KEYS, !(key) ->
-    @[key] = !(...args) -> @_head!execQuery key, args
+    @[key] = !(args) -> @_head!execQuery key, args
   , @::
 
   syncWithScope: (_scope, iAttrs) ->
@@ -340,10 +339,10 @@ const fbSync = <[
 ]> ++ ($parse) ->
   restrict: \A
   # terminal: true
-  # scope: true
-    # limit
-    # startAt
-    # endAt
+  # scope: false
+    # limit: \=?fbLimit
+    # startAt: \=?fbStartAt
+    # endAt: \=?fbEndAt
   link: !(scope, iElement, iAttrs) ->
     (syncName) <-! forEach iAttrs.fbSync.split(/,\ ?/)
     sync = void
@@ -355,11 +354,11 @@ const fbSync = <[
       #
       if sync instanceof FireCollection
         (key) <-! forEach FIREBASE_QUERY_KEYS
-        const value = iAttrs[key]
+        const value = iAttrs["fb#{ key[0].toUpperCase! }#{ key.substr 1 }"]
         return unless value
-        sync[key] ...that if scope.$eval value
+        sync[key] that if scope.$eval value
         (array) <-! scope.$watchCollection value
-        sync[key] ...array
+        sync[key] array
       #
       const node = sync.syncWithScope scope, iAttrs
       syncGetter.assign scope, node if sync isnt it# not deferred!
