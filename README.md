@@ -82,10 +82,50 @@ You can also specify multiple sync to load ( seperated by comma `,` ) :
 </div>
 ```
 
+### Resolving Dynamic Path 
+Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
+```JavaScript
+app.controller('VipUserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
+  $scope.vip_user = new FireSync('/vip-user'); // 1
+  
+  $scope.user = new FireSync('/user/{{ vip_user.name }}'); // 2, depends on 1
+  
+  $scope.friends_list = new FireSync('/friend-list/{{ user.id }}'); // 3, depends on 2
+}]);
+```
 
-
-
-
+Then in your `/users/show-vip.html` :
+```HTML
+<div ng-controller="VipUserCtrl" fb-sync="vip_user, user, friends_list">
+  <h2> 
+    <i ng-class="{star: vip_user.valid && user.payed, 'star-empty': !vip_user.valid || !user.payed}">
+    {{ user.name }}
+  </h2>
+  <p> {{ user.bio }} </p>
+  <button ng-click="user.$update({payed: true})"> Extend VIP : $USD 500 </button>
+  <ul>
+    <li ng-repeat="(userId, name) in friends_list">
+      <a ng-href="/users/{{ userId }}">
+        {{ name }}
+      </a>
+    </li>
+  </ul>
+</div>
+```
+If executed, it will load `vip_user` first, then `user` next, finally `friends_list`. All paths are automatically resolved.
+#### Important
+**Notice** that the `ng-click` in `button` will be valid once `user` is loaded. This is very important feature of `angular-on-fire`.
+If you use `angularFire`, you can't accomplish this but need to write an extra function then injected to `$scope`, so that the `ng-click` can bind to that function:
+```JavaScript
+// in replacement of user.$update
+$scope.updateUser = function (value){
+  if (!$scope.userRef) {
+    return;
+  }
+  $scope.userRef.update(value);
+}
+```
+This causes lots of extra effort. Thankfully, `angular-on-fire` already do ths for us.
 
 
 
