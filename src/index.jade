@@ -88,6 +88,18 @@ html(ng-app="demo")
             include mixins/3
       section
         .page-header
+          h1 prototype methods
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="4.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/4.jade')
+              tab(heading="4.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/4.ls')
+          .span4(ng-controller="VipUserCtrl")
+            include mixins/4
+      section
+        .page-header
           h1 Easy Button Toolbar
         .row-fluid
           .span8

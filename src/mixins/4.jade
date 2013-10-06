@@ -1,0 +1,11 @@
+div(ng-controller="PrototypeCtrl", fb-sync="visited, user")
+  button.btn.btn-large.btn-primary(ng-click="visited.$increase()") 
+    | Visited Counter : {{ visited.$value }}
+
+  form.form-horizontal
+    label(for="displayName") Display Name :
+    input(type="text", id="displayName", ng-model="user.displayName", ng-change="user.$update({displayName: user.displayName})")
+    label(for="bio") Bio :
+    textarea(rows="6", id="bio", ng-model="user.bio", ng-change="user.$update({bio: user.bio})")
+
+  pre {{ user | json }}
