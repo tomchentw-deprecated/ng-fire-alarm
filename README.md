@@ -20,14 +20,16 @@ So I decide to write my own version.
 
 Usage & APIs
 ----------
+### FirebaseUrl
 First, if you only use one Firebase, put the root url to config:
 ```JavaScript
 var app = angular.module('your-app', ['angular-on-fire']) // declare as app module dependency.
 .value('FirebaseUrl', 'https://YOUR-FIREBASE-NAME.firebaseio.com')
 ```
 
+### FireSync
 Then, let's use `FireSync` :
-```JavaScript
+```JavaScript 
 app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
   var userSync = new FireSync('/users/tom'); // declare sync object
   
@@ -46,4 +48,46 @@ In your `/users/show.html` :
   <p> {{ user.bio }} </p>
 </div>
 ```
+
+### `fb-sync`
+This is the powerful part of `angular-on-fire`.  
+If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
+```JavaScript
+app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
+  $scope.user = new FireSync('/users/tom'); // assign sync object directly to user
+  // it will be replaced by empty object when fb-sync acted
+  
+  // $scope.$on('$destroy', sync.destroy); // no hook here, because fb-sync will do this for you
+}]);
+```
+Then in your `/users/show.html` :
+```HTML
+<div ng-controller="UserCtrl" fb-sync="user">
+  <h2> {{ user.name }} </h2>
+  <p> {{ user.bio }} </p>
+</div>
+```
+
+You can also specify multiple sync to load ( seperated by comma `,` ) :
+```HTML
+<div fb-sync="user, user2">
+  <div ng-controller="UserCtrl">
+    <h2> {{ user.name }} </h2>
+    <p> {{ user.bio }} </p>
+  </div>
+  <div ng-controller="User2Ctrl">
+    <h2> {{ user2.name }} </h2>
+    <p> {{ user2.bio }} </p>
+  </div>
+</div>
+```
+
+
+
+
+
+
+
+
+
 
