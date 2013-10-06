@@ -114,40 +114,18 @@ html(ng-app="demo")
             include mixins/5
       section
         .page-header
-          h1 Easy Button Toolbar
+          h1
+            | Eager Loading on 
+            pre.demo FireCollection
         .row-fluid
           .span8
             tabset
-              tab(heading="btn-toolbar.html")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-toolbar.jade')
-              tab(heading="btn-toolbar.js")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-toolbar.ls')
-          .span4(ng-controller="ButtonToolbarCtrl")
-            include mixins/btn-toolbar
-      section(ng-controller="DelayEvalCtrl")
-        .page-header
-          h1 With Delayed Evaluation at Path('/{{ path }}/state')
-        .row-fluid
-          .span8
-            tabset
-              tab(heading="delay-eval.html")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/delay-eval.jade')
-              tab(heading="delay-eval.js")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/delay-eval.ls')
-          .span4
-            include mixins/delay-eval
-      section
-        .page-header
-          h1 No-More $scope Exposed!
-        .row-fluid
-          .span8
-            tabset
-              tab(heading="fb-sync.html")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/fb-sync.jade')
-              tab(heading="fb-sync.js")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/fb-sync.ls')
-          .span4(ng-controller="FbSyncCtrl")
-            include mixins/fb-sync
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/5.jade')
+              tab(heading="6.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/6.ls')
+          .span4(ng-controller="UsersInAccountCtrl")
+            include mixins/5
     script.
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
