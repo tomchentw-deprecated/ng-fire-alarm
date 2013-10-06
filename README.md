@@ -22,8 +22,28 @@ Usage & APIs
 ----------
 First, if you only use one Firebase, put the root url to config:
 ```JavaScript
-angular.module('your-app', ['angular-on-fire'])
+var app = angular.module('your-app', ['angular-on-fire']) // declare as app module dependency.
 .value('FirebaseUrl', 'https://YOUR-FIREBASE-NAME.firebaseio.com')
 ```
 
+Then, let's use `FireSync` :
+```JavaScript
+app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
+  var userSync = new FireSync('/users/tom'); // declare sync object
+  
+  $scope.user = userSync.sync(); // create a node object where data goes
+  // it is initially an empty object, but with some prototype methods
+  
+  $scope.$on('$destroy', sync.destroy); // when $scope destroyed, stop sync to user object
+  // Notice : sync.destroy is bounded, you don't need to call angular.bind(sync, sync.destroy) again.
+}]);
+```
+
+In your `/users/show.html` :
+```HTML
+<div ng-controller="UserCtrl">
+  <h2> {{ user.name }} </h2>
+  <p> {{ user.bio }} </p>
+</div>
+```
 
