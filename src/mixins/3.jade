@@ -8,7 +8,7 @@ div(ng-controller="VipUserCtrl", fb-sync="vip_user, user, friends_list")
     span(ng-if="user.payed") Extended
     span(ng-if="!user.payed") Extend
     |  VIP : $USD 500
-  h2 {{ user.displayName.split(' ')[0] }}'s Friends
+  h2 Friends of {{ user.displayName.split(" ")[0] }}
   ul
     li(ng-repeat="(userId, displayName) in friends_list")
       a(ng-href="https://wwww.facebook.com/{{ userId }}", target="_blank")

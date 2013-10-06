@@ -13,26 +13,6 @@ function jsWrapper (src) {
   if (src.match(/^\(function\(\)\{/)) { return src; }
   return "(function () {\n" + src + "\n}).call(this);";
 }
-
-function renderMixin (grunt) {
-  var path = require('path');
-  return function (filepath) {
-    // throw new Error(grunt, path, filepath);
-    var segments  = filepath.split('.'),
-        lastSeg   = segments.pop(),
-        taskname  = null;
-    if (lastSeg === 'ls') {
-      taskname  = 'livescript';
-    } else {
-      taskname  = lastSeg;
-    }
-    segments.unshift("./", grunt.config.get(taskname+".mixins.dest"));
-    segments.push(segments.pop() + grunt.config.get(taskname+".mixins.ext"));
-    filepath = path.join.apply(path, segments);
-    return grunt.file.read(filepath);
-  };
-}
-
 /*global module:false*/
 module.exports = function(grunt) {
   
@@ -95,12 +75,9 @@ module.exports = function(grunt) {
       options: { banner: '<%= banner %>' }
     },
     jade: { compile: {
+        template: '<%= fdr.src %>/index.jade.template',
         src: '<%= fdr.src %>/index.jade',
-        dest: '<%= fdr.dest %>/index.html',
-        ext: '.html',
-        options: {
-          data: { renderMixin: renderMixin(grunt) }
-        }
+        dest: '<%= fdr.dest %>/index.html'
       },     mixins: {
         expand: true,
         cwd: '<%= fdr.src %>',
@@ -207,13 +184,27 @@ module.exports = function(grunt) {
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']);
-  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixins:compile', 'jade:compile']);
+  grunt.registerTask('template:jade', function () {
+    var file = grunt.file.read(grunt.config.get('jade.compile.template'));
+    grunt.entityMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': '&quot;',
+      "'": '&#39;',
+      "/": '&#x2F;',
+      "\n": "\\n"
+    };
+    file = grunt.template.process(file, {data: grunt});
+    grunt.file.write(grunt.config.get('jade.compile.src'), file);
+  });
+  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
   //
-  grunt.registerTask('readme', function () {
+  grunt.registerTask('template:readme', function () {
     var readme = grunt.file.read('misc/README.md.template');
     readme = grunt.template.process(readme, {data: grunt});
     grunt.file.write('README.md', readme);
   });
-  grunt.registerTask('release', ['default', /*jshint scripturl:true*/'livescript:release', 'uglify:release', 'readme']);
+  grunt.registerTask('release', ['default', /*jshint scripturl:true*/'livescript:release', 'uglify:release', 'template:readme']);
 };

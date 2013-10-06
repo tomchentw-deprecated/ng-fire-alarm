@@ -1,0 +1,189 @@
+!!! 5
+html(ng-app="demo")
+  head
+    meta(charset="utf-8")
+    base(href="/")
+    title angular-on-fire
+    meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+    link(rel="stylesheet", href="//netdna.bootstrapcdn.com/bootstrap/2.3.2/css/bootstrap.min.css")
+    link(rel="stylesheet", href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css")
+    link(rel="stylesheet", href="style.min.css")      
+    script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
+    script(type="text/javascript", src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.6.0/ui-bootstrap-tpls.min.js")
+    script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase.js")
+    script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase-simple-login.js")
+    script(src="script.js")
+  body
+    .navbar.navbar-inverse.navbar-fixed-top
+      .navbar-inner
+        .container-fluid(ng-controller="AuthCtrl")
+          button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.brand(href="https://github.com/tomchentw/angular-on-fire") angular-on-fire
+          include mixins/8
+    a(href="https://github.com/tomchentw/angular-on-fire")
+      img(style="position: absolute; z-index: 9999; top: 0; right: 0; border: 0;",
+        src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png",
+        alt="Fork me on GitHub")
+    .container-fluid
+      header.page-header
+        .row-fluid
+          .span8(ng-controller="HeroCtrl")
+            include mixins/h
+          .span4
+            tabset
+              tab(heading="hero-unit.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/h.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="hero-unit.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/h.js').replace(/\n/g, '\\n') %>"
+        .row-fluid
+          h1 
+            | See 
+            a.btn.btn-large.btn-info(href="https://angular-on-fire.firebaseio.com/.json", target="_blank")
+              | root.json
+            |  in 
+            pre.demo firebase
+            small to understand how this page interact with it
+        .row-fluid(ng-controller="RootCtrl", fb-sync="root")
+          accordion
+            accordion-group(heading="root.json")
+              pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
+      section
+        .page-header
+          h1
+            pre.demo FireSync
+            | service
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="1.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/1.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="1.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/1.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="UserCtrl1")
+            include mixins/1
+      section
+        .page-header
+          h1
+            pre.demo fb-sync
+            | directive
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="2.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/2.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="2.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/2.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="UserCtrl2")
+            include mixins/2
+      section
+        .page-header
+          h1 Resolving Dynamic Path
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="3.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/3.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="3.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/3.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="VipUserCtrl")
+            include mixins/3
+      section
+        .page-header
+          h1 prototype methods
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="4.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/4.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="4.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/4.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="VipUserCtrl")
+            include mixins/4
+      section
+        .page-header
+          h1
+            pre.demo FireCollection
+            | service
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/5.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="5.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/5.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="UsersCtrl")
+            include mixins/5
+      section
+        .page-header
+          h1
+            | Eager Loading on 
+            pre.demo FireCollection
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/5.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="6.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/6.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="UsersInAccountCtrl")
+            include mixins/5
+      section
+        .page-header
+          h1
+            | Eager Loading on 
+            pre.demo FireCollection
+            | with Multiple Indexes
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/5.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="7.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/7.js').replace(/\n/g, '\\n') %>"
+          .span4(ng-controller="UsersInBookCtrl")
+            include mixins/5
+      section
+        .page-header
+          h1
+            pre.demo FireAuth
+            | service
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="8.html")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != '<%= file.read("dest/mixins/8.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+              tab(heading="8.js")
+                pre.prettyprint.linenums(ng-non-bindable)
+                  != "<%= file.read('dest/mixins/8.js').replace(/\n/g, '\\n') %>"
+          .span4
+            h2 Please refer to the Navbar
+    script.
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-41104589-6', 'tomchentw.com');
+      ga('send', 'pageview');
+
+      prettyPrint();

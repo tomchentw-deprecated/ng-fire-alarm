@@ -117,7 +117,7 @@ Then in your `/users/show-vip.html` :
   <h2><i ng-class="{'icon-star': vip_user.valid &amp;&amp; user.payed, 'icon-star-empty': !vip_user.valid || !user.payed}"> </i>{{ user.displayName }}</h2>
   <p>{{ user.bio }}</p>
   <button ng-click="user.$update({payed: !user.payed})" class="btn btn-large btn-info"><span ng-if="user.payed">Extended</span><span ng-if="!user.payed">Extend</span> VIP : $USD 500</button>
-  <h2>{{ user.displayName.split(' ')[0] }}'s Friends</h2>
+  <h2>Friends of {{ user.displayName.split(" ")[0] }}</h2>
   <ul>
     <li ng-repeat="(userId, displayName) in friends_list"><a ng-href="https://wwww.facebook.com/{{ userId }}" target="_blank">{{ displayName }}</a></li>
   </ul>
@@ -247,11 +247,11 @@ this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(funct
   $scope.auth = new FireAuth();
   $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}');
   $scope.$watch('auth && user.$name', function(){
-    /* We need this to store user auth (like session) into database */
     var ref$;
     if (!($scope.auth && $scope.user.$name)) {
       return;
     }
+    /* We need this to store user auth (like session) into database */
     $scope.user.$setWithPriority({
       id: (ref$ = $scope.auth).id,
       displayName: ref$.displayName,
