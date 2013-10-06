@@ -48,16 +48,32 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/hero-unit.ls')
       section
         .page-header
-          h1 Easy Button Group
+          h1
+            pre.demo FireSync
+            | service
         .row-fluid
           .span8
             tabset
-              tab(heading="btn-group.html")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-group.jade')
-              tab(heading="btn-group.js")
-                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/btn-group.ls')
-          .span4(ng-controller="ButtonGroupCtrl")
-            include mixins/btn-group
+              tab(heading="1.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/1.jade')
+              tab(heading="1.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/1.ls')
+          .span4(ng-controller="UserCtrl1")
+            include mixins/1
+      section
+        .page-header
+          h1
+            pre.demo fb-sync
+            | directive
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="2.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/2.jade')
+              tab(heading="2.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/2.ls')
+          .span4(ng-controller="UserCtrl2")
+            include mixins/1
       section
         .page-header
           h1 Easy Button Toolbar

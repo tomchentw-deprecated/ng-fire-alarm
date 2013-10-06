@@ -1,4 +1,4 @@
-const {module, toJson} = angular
+const {module} = angular
 
 const FirebaseUrl = \https://angular-on-fire.firebaseio.com
 
@@ -10,8 +10,8 @@ const AuthCtrl = <[
 
   $scope.$watch 'auth && user.$name' !->
     return unless $scope.auth && $scope.user.$name
-    $scope.user.$set $scope.auth{id, displayName, profileUrl}
+    $scope.user.$set $scope.auth{id, displayName, profileUrl, bio}
 
-module \demo <[ui.bootstrap angular-on-fire]>
+@demo = module \demo <[ui.bootstrap angular-on-fire]>
 .value {FirebaseUrl}
 .controller {AuthCtrl}

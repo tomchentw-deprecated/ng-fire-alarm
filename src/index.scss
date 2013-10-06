@@ -115,6 +115,11 @@ input {
   @include box-sizing(content-box);
 }
 
+pre.demo {
+  display: inline-block;
+  margin-right: 1em;
+}
+
 @import "vendor/bootstrap-prettyprint";
 
 li.L0,
