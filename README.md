@@ -212,22 +212,28 @@ Easy! Right?
 
 
 ### `FireAuth` service
-This service require [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
-and you need to inject it into `module.value` **before using it**:
-```JavaScript
-app.value('FirebaseSimpleLogin', window.FirebaseSimpleLogin);
-```
+#### Requirement
+*  [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
+*  set `FirebaseUrl` in your app (see above section)
 
 Then, in your `AuthCtrl`:
-
 ```JavaScript
 app.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync', function($scope, FireAuth, FireSync){
-  $scope.auth = new FireAuth
+  $scope.auth = new FireAuth();
+  $scope.user = new FireSync('/users/{{ auth.provider }}/{{ auth.id }}'); // use dynamic path!
 }]);
 ```
 
-
-
+```HTML
+<div class="navbar" fb-sync="user">
+  <a ng-href="/users/{{ auth.provider }}/{{ auth.id }}">
+    {{ user.name }}
+  </a>
+  <a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">
+    Facebook Login 
+  </a>
+</div>
+```
 
 
 
