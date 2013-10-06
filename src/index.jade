@@ -25,7 +25,7 @@ html(ng-app="demo")
 
           ul.nav.pull-right(fb-sync="user")
             li
-              a(ng-href="{{ users.profileUrl }}")
+              a(ng-href="{{ user.profileUrl }}", target="_blank")
                 img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
                 | {{ user.displayName }}
             li

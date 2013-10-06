@@ -10,8 +10,7 @@ const AuthCtrl = <[
 
   $scope.$watch 'auth && user.$name' !->
     return unless $scope.auth && $scope.user.$name
-    console.log $scope.user.$name
-    $scope.user.$set $scope.auth
+    $scope.user.$set $scope.auth{id, displayName, profileUrl}
 
 module \demo <[ui.bootstrap angular-on-fire]>
 .value {FirebaseUrl}
