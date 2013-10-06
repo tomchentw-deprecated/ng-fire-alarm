@@ -73,7 +73,19 @@ html(ng-app="demo")
               tab(heading="2.js")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/2.ls')
           .span4(ng-controller="UserCtrl2")
-            include mixins/1
+            include mixins/2
+      section
+        .page-header
+          h1 Resolving Dynamic Path
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="3.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/3.jade')
+              tab(heading="3.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/3.ls')
+          .span4(ng-controller="VipUserCtrl")
+            include mixins/3
       section
         .page-header
           h1 Easy Button Toolbar
