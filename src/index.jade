@@ -126,6 +126,21 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/6.ls')
           .span4(ng-controller="UsersInAccountCtrl")
             include mixins/5
+      section
+        .page-header
+          h1
+            | Eager Loading on 
+            pre.demo FireCollection
+            | with Multiple Indexes
+        .row-fluid
+          .span8
+            tabset
+              tab(heading="5.html")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/5.jade')
+              tab(heading="7.js")
+                pre.prettyprint.linenums(ng-non-bindable)= renderMixin('mixins/7.ls')
+          .span4(ng-controller="UsersInBookCtrl")
+            include mixins/5
     script.
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
