@@ -24,7 +24,7 @@ Usage & APIs
 * `FireSync` service
 * `fb-sync` directive
 * `FireCollection` service
-* 
+* `FireAuth` service
 
 ### `FirebaseUrl` value
 First, if you only use one Firebase, put the root url to config:
@@ -211,9 +211,20 @@ app.controller('UsersInBookCtrl', ['$scope', 'FireCollection', function($scope, 
 Easy! Right?
 
 
+### `FireAuth` service
+This service require [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
+and you need to inject it into `module.value` **before using it**:
+```JavaScript
+app.value('FirebaseSimpleLogin', window.FirebaseSimpleLogin);
+```
 
+Then, in your `AuthCtrl`:
 
-
+```JavaScript
+app.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync', function($scope, FireAuth, FireSync){
+  $scope.auth = new FireAuth
+}]);
+```
 
 
 
