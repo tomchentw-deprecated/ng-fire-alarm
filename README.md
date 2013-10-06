@@ -37,7 +37,7 @@ var app = angular.module('your-app', ['angular-on-fire']) // declare as app modu
 Then, let's use `FireSync` :
 ```JavaScript 
 app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
-  var userSync = new FireSync('/users/tom'); // declare sync object
+  var userSync = new FireSync().get('/users/tom'); // declare sync object
   
   $scope.user = userSync.sync(); // create a node object where data goes
   // it is initially an empty object, but with some prototype methods
@@ -60,7 +60,7 @@ This is the powerful part of `angular-on-fire`.
 If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
 ```JavaScript
 app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
-  $scope.user = new FireSync('/users/tom'); // assign sync object directly to user
+  $scope.user = new FireSync().get('/users/tom'); // assign sync object directly to user
   // it will be replaced by empty object when fb-sync acted
   
   // $scope.$on('$destroy', sync.destroy); // no hook here, because fb-sync will do this for you
@@ -92,11 +92,11 @@ You can also specify multiple sync to load ( seperated by comma `,` ) :
 Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
 ```JavaScript
 app.controller('VipUserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
-  $scope.vip_user = new FireSync('/vip-user'); // 1
+  $scope.vip_user = new FireSync().get('/vip-user'); // 1
   
-  $scope.user = new FireSync('/user/{{ vip_user.name }}'); // 2, depends on 1
+  $scope.user = new FireSync().get('/user/{{ vip_user.name }}'); // 2, depends on 1
   
-  $scope.friends_list = new FireSync('/friend-list/{{ user.id }}'); // 3, depends on 2
+  $scope.friends_list = new FireSync().get('/friend-list/{{ user.id }}'); // 3, depends on 2
 }]);
 ```
 
@@ -143,7 +143,7 @@ app.controller('UserCtrl', ['$scope', 'FireSync', function($scope, FireSync){
   // but the type of `visited` is object, we store that number to its `$value` property.
   // This transformation applies to all non-object values (string, number ...)
   
-  $scope.user = new FireSync('/users/tom'); 
+  $scope.user = new FireSync().get('/users/tom'); 
 }]);
 ```
 
@@ -167,7 +167,7 @@ With `$index`, you can do a reverse order like this : `ng-repeat="user in users 
 
 ```JavaScript
 app.controller('UsersCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
-  $scope.users = new FireCollection('/users'); // lets assume it's a object with each item created by `push`
+  $scope.users = new FireCollection().get('/users'); // lets assume it's a object with each item created by `push`
 }]);
 ```
 
@@ -191,7 +191,7 @@ The `UsersCtrl` used above can be rewritten as:
 
 ```JavaScript
 app.controller('UsersInAccountCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
-  var collect = new FireCollection('/account/1/userIds'); // { 1: true, 3: true, 7: true } or [1, 3, 7]
+  var collect = new FireCollection().get('/account/1/userIds'); // { 1: true, 3: true, 7: true } or [1, 3, 7]
   $scope.users = collect.map('/users/{{ $name }}'); // or '/users/{{ $value }}' if above is array.
 }]);
 ```
@@ -200,7 +200,7 @@ Moreover, if you need to map indexes twice or above, remember to `flatten` the i
 
 ```JavaScript
 app.controller('UsersInBookCtrl', ['$scope', 'FireCollection', function($scope, FireCollection){
-  var collect = new FireCollection('/books/1/authorAccountIds'); //{ 1: true, 4: true }
+  var collect = new FireCollection().get('/books/1/authorAccountIds'); //{ 1: true, 4: true }
   
   $scope.users = collect
     .map('/accounts/{{ $name }}/userIds') // {1: { 1: true, 3: true, 7: true }, 4: { 5: true, 8: true } }
@@ -220,7 +220,7 @@ Then, in your `AuthCtrl`:
 ```JavaScript
 app.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync', function($scope, FireAuth, FireSync){
   $scope.auth = new FireAuth();
-  $scope.user = new FireSync('/users/{{ auth.provider }}/{{ auth.id }}'); // use dynamic path!
+  $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}'); // use dynamic path!
 }]);
 ```
 
