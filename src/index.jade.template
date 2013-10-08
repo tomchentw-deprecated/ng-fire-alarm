@@ -176,7 +176,10 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)
                   != "<%= file.read('dest/mixins/8.js').replace(/\n/g, '\\n') %>"
           .span4
-            h2 Please refer to the Navbar
+            h2 
+              | See 'navbar'
+            h2
+              small Click 'Facebook Login' for demo!
     footer.footer
       .container-fluid
         p

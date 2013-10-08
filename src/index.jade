@@ -176,7 +176,10 @@ html(ng-app="demo")
                 pre.prettyprint.linenums(ng-non-bindable)
                   != "this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(function($scope, FireAuth, FireSync){\n  $scope.auth = new FireAuth();\n  $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}');\n  $scope.$watch('auth && user.$name', function(){\n    var ref$;\n    if (!($scope.auth && $scope.user.$name)) {\n      return;\n    }\n    /* We need this to store user auth (like session) into database */\n    $scope.user.$setWithPriority({\n      id: (ref$ = $scope.auth).id,\n      displayName: ref$.displayName,\n      profileUrl: ref$.profileUrl,\n      bio: ref$.bio\n    }, Math.round(Math.random() * Math.pow(2, 16)));\n  });\n}));"
           .span4
-            h2 Please refer to the Navbar
+            h2 
+              | See 'navbar'
+            h2
+              small Click 'Facebook Login' for demo!
     footer.footer
       .container-fluid
         p
