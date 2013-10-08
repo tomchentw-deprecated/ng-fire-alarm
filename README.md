@@ -1,4 +1,4 @@
-angular-on-fire
+[angular-on-fire](http://angular-on-fire.tomchentw.com/)
 =========
 ### Alternative Solution to use [AngularJS](http://angularjs.org/) with [Firebase](https://www.firebase.com/)
 
@@ -6,7 +6,7 @@ It gives one way sync of data and make changes using **ref** object methods just
 
 Demo
 ----------
-Visit : [angular-on-fire](http://angular-on-fire.tomchentw.com/)
+Let's burn your site : [angular-on-fire](http://angular-on-fire.tomchentw.com/)
 
 
 Motivation
@@ -16,6 +16,11 @@ Let's see the services provided by [angularFire](https://github.com/firebase/ang
 * `angularFireCollection` : it only sync collection but not **plain object**. Plus, it's not ordered with **native Firebase order** (Need to sort manually). 
 
 So I decide to write my own version.
+
+
+License
+----------
+[MIT Licensed](http://tomchentw.mit-license.org/).
 
 
 Usage & APIs
@@ -272,6 +277,8 @@ and then, in your `/partials/auth.html`:
 ```
 
 
-
+Author
+----------
+Thanks [@tomchentw](https://twitter.com/tomchentw) !!
 
 
