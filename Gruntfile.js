@@ -15,7 +15,7 @@ function jsWrapper (src) {
 }
 /*global module:false*/
 module.exports = function(grunt) {
-  
+  /*jshint scripturl:true*/
   // Project configuration.
   grunt.initConfig({
     // Metadata.
@@ -143,13 +143,17 @@ module.exports = function(grunt) {
         files: ['<%= fdr.src %>/**/*.scss', '<%= fdr.vendor %>/**/*.scss'],
         tasks: ['css:compile']
       },
+      template: {
+        files: ['<%= fdr.src %>/*.jade.template'],
+        tasks: ['template:jade']
+      },
       jade: {
         files: ['<%= fdr.src %>/*.jade'],
         tasks: ['jade:compile']
       },
       mixins: {
         files: ['<%= fdr.src %>/mixins/*'],
-        tasks: [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins', 'jade:compile']
+        tasks: ['livescript:mixins', 'jade:mixins', 'jade:compile']
       },
       lib_test: {
         files: ['<%= jshint.lib_test.src %>'],
@@ -180,10 +184,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // 
-  grunt.registerTask('ls:compile', ['concat:ls', /*jshint scripturl:true*/'livescript:compile']);
+  grunt.registerTask('ls:compile', ['concat:ls', 'livescript:compile']);
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
-  grunt.registerTask('mixins:compile', [/*jshint scripturl:true*/'livescript:mixins', 'jade:mixins']);
+  grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
   grunt.registerTask('template:jade', function () {
     var file = grunt.file.read(grunt.config.get('jade.compile.template'));
     grunt.entityMap = {
@@ -206,5 +210,5 @@ module.exports = function(grunt) {
     readme = grunt.template.process(readme, {data: grunt});
     grunt.file.write('README.md', readme);
   });
-  grunt.registerTask('release', ['default', /*jshint scripturl:true*/'livescript:release', 'uglify:release', 'template:readme']);
+  grunt.registerTask('release', ['default', 'livescript:release', 'uglify:release', 'template:readme']);
 };
