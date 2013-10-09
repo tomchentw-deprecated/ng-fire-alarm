@@ -1,7 +1,7 @@
 require 'shelljs/global'
 
 const REV = exec 'git describe --always' .output.trim!
-const SRC_DIR = 'client/dest/'
+const SRC_DIR = 'dest/'
 const OTHERS = 'misc/gh-pages/*'
 const TEMPDIR = "#{ tempdir! }/#{ REV }/"
 
