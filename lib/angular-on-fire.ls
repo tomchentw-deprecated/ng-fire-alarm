@@ -96,6 +96,7 @@ class MapFlow extends InterpolateFlow
     throw new TypeError 'Map require result is array' unless isArray result
     const {sync, stopWatches, queries, mappedResult, queryFuncs} = @
     mappedResult.length = result.length
+    return @next.start mappedResult if result.length is 0
 
     (value, index) <~! forEach result
     stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
@@ -258,7 +259,7 @@ class FireNode
     @$ref = -> ref # store ref in closure
     @$_setFireProperties = (nodeOrSnap, index) ~>
       if nodeOrSnap
-        ref := nodeOrSnap.ref?! || nodeOrSnap.$ref?!
+        ref := nodeOrSnap.ref?! || nodeOrSnap.$ref?! || ref
         # update ref in closure
       FireNode::$_setFireProperties.call @, nodeOrSnap, index
 
