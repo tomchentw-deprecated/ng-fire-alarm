@@ -50,7 +50,7 @@ html(ng-app="demo")
             small to understand how this page interact with it
         .row-fluid(ng-controller="RootCtrl", fb-sync="root")
           accordion
-            accordion-group(heading="root.json")
+            accordion-group(heading="root.json (click me to open and see what's happening)")
               pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
       section
         .page-header
