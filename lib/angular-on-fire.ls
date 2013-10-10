@@ -3,160 +3,180 @@ const {noop, identity, forEach, bind, copy, extend, module} = angular
 
 const FIREBASE_QUERY_KEYS = <[limit startAt endAt]>
 
+#
+# Internal APIs
+#
 class DataFlow
+
   (config) ->
     extend @, config
-    @next = void
+    @next = noopFlow
 
-  _clone: ->
+  cloneChained: ->
     const cloned = new @constructor @
-    cloned.next = that._clone! if @next
+    cloned.next = @next.cloneChained!
     cloned
   
-  _setSync: !(@sync, prev) ->
-    that._setSync sync, @ if @next
+  setSync: !(@sync, prev) ->
+    @next.setSync sync, @
+
+  start: noop
   
-  stop: !->
-    @next.stop! if @next
+  stop: !-> @next.stop!
+
+  const noopFlow = {}
+  for key of @::
+    noopFlow[key] = noop
 
 class InterpolateFlow extends DataFlow
 
-  @createFirebase = (queryStr || '') ->
-    queryStr = @FirebaseUrl + queryStr if queryStr.substr(0, 4) isnt 'http'
-    new @Firebase queryStr
+  @createFirebase = (path || '') ->
+    const url = if path.substr(0, 4) isnt 'http' then @FirebaseUrl + path else path
+    new @Firebase url
 
   const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
   ->
-    super ...&
-    @queryFuncs = []
+    super ...
     const {interpolate} = DataFlow
-    forEach @queryStr.split(interpolateMatcher), !(str, index) ->
-      @queryFuncs.push if index % 2
-        interpolate "{{ #str }}"
-      else
-        str
-    , @ if @queryStr.match interpolateMatcher
+    @queryFuncs = for str, index in @queryString.split interpolateMatcher
+      if index % 2 then interpolate "{{ #str }}" else str
 
   _buildWatchFn: (value) -> 
     const {queryFuncs} = @
     (scope) ->
-      url = ''
-      forEach queryFuncs, !(str, index) ->
+      paths = for str, index in queryFuncs
         if index % 2
-          path = str(scope) || str(value)
-          return url := void unless isString(path) && path.length
-        else
-          path = str
-        url += path if isString url
-      url
+          str = str(scope) || str(value)
+          return void unless isString(str) && str.length
+        str
+      paths.join ''
 
 class GetFlow extends InterpolateFlow
 
-  _callNext: !(snap) ->
-    @next.start @sync@@createNode snap
+  const noopQuery = do
+    on: noop
+    off: noop
 
-  _setQuery: !->
-    const {query} = @
-    query.off \value void, @ if query
-    for key in FIREBASE_QUERY_KEYS when key of @
-      it = it[key] ...@[key]
-    @query = it
-    @query.on \value noop unless query # cache
-    @query.on \value @_callNext, noop, @
+  ->
+    super ...
+    @query = noopQuery
+    @stopWatch = noop
+
+  start: !->
+    const getPath = !(path) ~>
+      @_updateQuery InterpolateFlow.createFirebase path if path
+
+    if @queryFuncs.length > 1
+      @stopWatch = @sync._watch @_buildWatchFn({}), getPath
+    else
+      getPath @queryString
 
   execQuery: !(key, args) ->
     @[key] = args
-    @_setQuery @query if @query
-
-  start: !->
-    const getValue = !(queryStr) ~>
-      return unless queryStr
-      @_setQuery InterpolateFlow.createFirebase queryStr
-
-    if @queryFuncs.length
-      @stopWatch = @sync._watch @_buildWatchFn({}), getValue
-    else
-      getValue @queryStr
+    @_updateQuery @query
 
   stop: !->
-    DataFlow.immediate that if @stopWatch
-    that.off \value void, @ if @query
-    super!
+    DataFlow.immediate @stopWatch
+    @query.off \value void, @
+    super ...
+
+  _onSuccess: !(snap) ->
+    @next.start @sync@@createNode snap
+
+  _onError: !(error) ->
+    @next.start void
+
+  _updateQuery: !(newQuery) ->
+    @query.off \value void, @
+    for key in FIREBASE_QUERY_KEYS when (value = @[key])
+      newQuery = newQuery[key] ...value
+    newQuery.on \value noop # enable cache behavior
+    @query.off \value noop # disable old cache
+    newQuery.on \value @_onSuccess, @_onError, @
+    @query = newQuery
 
 class MapFlow extends InterpolateFlow
 
   ->
-    super ...&
-    @stopWatches  = []
+    super ...
+    @stopWatchFns = []
     @queries      = []
     @mappedResult = []
 
   start: !(result) ->
     @stop!
     throw new TypeError 'Map require result is array' unless isArray result
-    const {sync, stopWatches, queries, mappedResult, queryFuncs} = @
+    const {sync, queries, mappedResult} = @
     mappedResult.length = result.length
     return @next.start mappedResult if result.length is 0
 
-    (value, index) <~! forEach result
-    stopWatches.push sync._watch @_buildWatchFn(value), !(queryStr) ~>
-      return unless queryStr
-      that.off \value void, @ if queries[index]
-      const query = InterpolateFlow.createFirebase queryStr
-      query.on \value noop unless queries[index]# cache
-
-      query.on \value !(snap) ->
+    @stopWatchFns = for let value, index in result
+      const _onSuccess = !(snap) ->
         mappedResult[index] = (if @flatten then FireCollection else FireSync).createNode snap, index
         allResolved = true
         for value in mappedResult when not value
           allResolved = false
         @next.start mappedResult if allResolved
-      , noop, @
-      queries[index] = query
+
+      (path) <~! sync._watch @_buildWatchFn(value)
+      return unless path
+      that.off \value void, @ if queries[index]
+      const newQuery = InterpolateFlow.createFirebase path
+      newQuery.on \value noop # enable cache
+      that.off \value noop if that # disable old cache
+      queries[index] = newQuery
+      #
+      newQuery.on \value _onSuccess, noop, @
   
   stop: !->
-    const {stopWatches} = @
-    @stopWatches = []
+    const {stopWatchFns, queries} = @
     DataFlow.immediate !->
-      for that in stopWatches by -1
+      for that in stopWatchFns by -1
         that!
-    while @queries.shift!
-      that.off!
+    for query in queries when query
+      query.off \value void, @
     @mappedResult = []
-    super!
+    @queries = []
+    super ...
 
 class FlattenDataFlow extends DataFlow
 
-  _setSync: !(sync, prev) ->
-    throw new TypeError "Flatten require prev is map" unless prev instanceof MapFlow
+  setSync: !(sync, prev) ->
+    throw new TypeError 'Flatten require prev is map' unless prev instanceof MapFlow
     prev.flatten = true
-    super ...&
+    super ...
 
   start: !(result) ->
     throw new TypeError 'Flatten require result is array' unless isArray result
-    const results = []
+    const flattenedResult = []
 
-    forEach result, !(value) ->
-      (item) <-! forEach value
-      item.$extend void, results.push item
-    @next.start results
+    for array in result
+      for value in array
+        value.$extend void, flattenedResult.push value # update index!
+    @next.start flattenedResult
 
 class ToSyncFlow extends DataFlow
+
+  ->
+    super ...
+    @resolve = noop
 
   start: !(result) ->
     <~! DataFlow.immediate
     @sync._extend result
-    return unless @resolve
     @resolve @sync.$node
-    @resolve = void
+    @resolve = noop
 
 class FireSync
   @createNode = (snap, index) ->
-    node = new FireNode!
-    node = ^^node
-    node.$extend snap, index
+    (^^ new FireNode!).$extend snap, index
 
-  -> @$head = @$tail = @$scope = @$node = void
+  const noopDefer = do
+    resolve: noop
+    reject: noop
+
+  -> 
+    @$head = @$tail = @$scope = @$node = void
 
   _addFlow: (flow) ->
     @_head = (-> flow) unless @_head
@@ -164,15 +184,15 @@ class FireSync
     @$tail = flow
     @
 
-  get: (queryStrOrPath) ->
-    @_addFlow new GetFlow {queryStr: queryStrOrPath}
+  get: (queryUrlOrPath) ->
+    @_addFlow new GetFlow {queryString: queryUrlOrPath}
 
   clone: ->
-    return @ if @$deferred
+    return @ if @$deferred?promise
     #
     const cloned = new @constructor
     if @_head?!
-      const flow = that._clone!
+      const flow = that.cloneChained!
       cloned._head = -> flow
       #
       next = flow
@@ -184,12 +204,12 @@ class FireSync
   sync: ->
     return that if @$node
     @_addFlow new ToSyncFlow @$deferred?{resolve}
-    @_head!_setSync @
+    @_head!setSync @
 
     @destroy = !~>
       @$deferred?reject!
       @_head!stop!
-      @_head!_setSync void
+      @_head!setSync void
       #
       DataFlow.immediate delete @$offDestroy
       delete! @$scope
@@ -202,7 +222,7 @@ class FireSync
     @$node
 
   defer: ->
-    @$deferred = FireSync.q.defer! unless @$defer
+    @$deferred = FireSync.q.defer! unless @$deferred
     @
 
   promise: -> @$deferred.promise
@@ -225,8 +245,8 @@ class FireCollection extends FireSync
     FireNode.call node
     node.$extend snap
 
-  map: (queryStrOrPath) ->
-    @_addFlow new MapFlow {queryStr: queryStrOrPath}
+  map: (queryUrlOrPath) ->
+    @_addFlow new MapFlow {queryString: queryUrlOrPath}
 
   flatten: ->
     @_addFlow new FlattenDataFlow
@@ -240,11 +260,11 @@ class FireCollection extends FireSync
     for key in FIREBASE_QUERY_KEYS
       const array = _scope.$eval iAttrs[key]
       head[key] = array if isArray array
-    super ...&
+    super ...
 
 class FireNode
 
-  @noopRef = do
+  const noopRef = do
     set: noop
     update: noop
     push: noop
@@ -254,7 +274,7 @@ class FireNode
     setWithPriority: noop
 
   ->
-    ref = @@noopRef
+    ref = noopRef
     # to prevent ref trigger angular.copy event, we need to wrap it!
     @$ref = -> ref # store ref in closure
     @$_setFireProperties = (nodeOrSnap, index) ~>
@@ -263,7 +283,7 @@ class FireNode
         # update ref in closure
       FireNode::$_setFireProperties.call @, nodeOrSnap, index
 
-  $ref: noop # just for placeholder!
+  $ref: noop # just for placeholder because FireCollection.createNode will call `extend node, FireNode::`
 
   $_setFireProperties: (nodeOrSnap, index) ->
     @$index       = index if isNumber index
@@ -274,9 +294,8 @@ class FireNode
     isSnap
 
   $extend: (nodeOrSnap, index) ->
-    if nodeOrSnap
-      for own key of @ when not FireNode::[key]
-        delete! @[key]
+    for key in [key for key of @ when not FireNode::[key]]
+      delete! @[key]
 
     if @$_setFireProperties nodeOrSnap, index
       const val = nodeOrSnap.val!
@@ -291,14 +310,14 @@ class FireNode
         @[key] = value
     @
 
-  forEach @noopRef, !(value, key) ->
+  forEach noopRef, !(value, key) ->
     @["$#{ key }"] = !-> @$ref![key] ...&
   , @::
 
-  $increase: (byNumber || 1) ->
+  $increase: !(byNumber || 1) ->
     @$ref!transaction -> it + byNumber
 
-  $decrease: (byNumber || 1) ->
+  $decrease: !(byNumber || 1) ->
     @$ref!transaction -> it - byNumber
 
 class FireAuth
@@ -311,7 +330,7 @@ class FireAuth
       copy auth || {}, cloned
     
     forEach <[login logout]> !(key) ->
-      @[key] = -> ref[key] ...&
+      @[key] = !-> ref[key] ...&
     , @
     return cloned
 #
@@ -362,7 +381,10 @@ const fbSync = <[
         sync[key] array
       #
       const node = sync.syncWithScope scope, iAttrs
-      syncGetter.assign scope, node if sync isnt it# not deferred!
+      if sync isnt it
+        # see sync.clone.
+        # if sync has a real deferred object, then don't assign
+        syncGetter.assign scope, node
 
 const FireAuthFactory = <[
       $q $immediate Firebase FirebaseUrl FirebaseSimpleLogin

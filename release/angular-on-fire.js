@@ -5,227 +5,237 @@
   FIREBASE_QUERY_KEYS = ['limit', 'startAt', 'endAt'];
   DataFlow = (function(){
     DataFlow.displayName = 'DataFlow';
-    var prototype = DataFlow.prototype, constructor = DataFlow;
+    var noopFlow, key, prototype = DataFlow.prototype, constructor = DataFlow;
     function DataFlow(config){
       extend(this, config);
-      this.next = void 8;
+      this.next = noopFlow;
     }
-    prototype._clone = function(){
-      var cloned, that;
+    prototype.cloneChained = function(){
+      var cloned;
       cloned = new this.constructor(this);
-      if (that = this.next) {
-        cloned.next = that._clone();
-      }
+      cloned.next = this.next.cloneChained();
       return cloned;
     };
-    prototype._setSync = function(sync, prev){
-      var that;
+    prototype.setSync = function(sync, prev){
       this.sync = sync;
-      if (that = this.next) {
-        that._setSync(sync, this);
-      }
+      this.next.setSync(sync, this);
     };
+    prototype.start = noop;
     prototype.stop = function(){
-      if (this.next) {
-        this.next.stop();
-      }
+      this.next.stop();
     };
+    noopFlow = {};
+    for (key in DataFlow.prototype) {
+      noopFlow[key] = noop;
+    }
     return DataFlow;
   }());
   InterpolateFlow = (function(superclass){
     var interpolateMatcher, prototype = extend$((import$(InterpolateFlow, superclass).displayName = 'InterpolateFlow', InterpolateFlow), superclass).prototype, constructor = InterpolateFlow;
-    InterpolateFlow.createFirebase = function(queryStr){
-      queryStr || (queryStr = '');
-      if (queryStr.substr(0, 4) !== 'http') {
-        queryStr = this.FirebaseUrl + queryStr;
-      }
-      return new this.Firebase(queryStr);
+    InterpolateFlow.createFirebase = function(path){
+      var url;
+      path || (path = '');
+      url = path.substr(0, 4) !== 'http' ? this.FirebaseUrl + path : path;
+      return new this.Firebase(url);
     };
     interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
     function InterpolateFlow(){
-      var interpolate;
+      var interpolate, res$, i$, ref$, len$, index, str;
       InterpolateFlow.superclass.apply(this, arguments);
-      this.queryFuncs = [];
       interpolate = DataFlow.interpolate;
-      if (this.queryStr.match(interpolateMatcher)) {
-        forEach(this.queryStr.split(interpolateMatcher), function(str, index){
-          this.queryFuncs.push(index % 2 ? interpolate("{{ " + str + " }}") : str);
-        }, this);
+      res$ = [];
+      for (i$ = 0, len$ = (ref$ = this.queryString.split(interpolateMatcher)).length; i$ < len$; ++i$) {
+        index = i$;
+        str = ref$[i$];
+        if (index % 2) {
+          res$.push(interpolate("{{ " + str + " }}"));
+        } else {
+          res$.push(str);
+        }
       }
+      this.queryFuncs = res$;
     }
     prototype._buildWatchFn = function(value){
       var queryFuncs;
       queryFuncs = this.queryFuncs;
       return function(scope){
-        var url;
-        url = '';
-        forEach(queryFuncs, function(str, index){
-          var path;
+        var paths, res$, i$, ref$, len$, index, str;
+        res$ = [];
+        for (i$ = 0, len$ = (ref$ = queryFuncs).length; i$ < len$; ++i$) {
+          index = i$;
+          str = ref$[i$];
           if (index % 2) {
-            path = str(scope) || str(value);
-            if (!(isString(path) && path.length)) {
-              return url = void 8;
+            str = str(scope) || str(value);
+            if (!(isString(str) && str.length)) {
+              return;
             }
-          } else {
-            path = str;
           }
-          if (isString(url)) {
-            url += path;
-          }
-        });
-        return url;
+          res$.push(str);
+        }
+        paths = res$;
+        return paths.join('');
       };
     };
     return InterpolateFlow;
   }(DataFlow));
   GetFlow = (function(superclass){
-    var prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
-    prototype._callNext = function(snap){
-      this.next.start(this.sync.constructor.createNode(snap));
-    };
-    prototype._setQuery = function(it){
-      var query, i$, ref$, len$, key;
-      query = this.query;
-      if (query) {
-        query.off('value', void 8, this);
-      }
-      for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
-        key = ref$[i$];
-        if (key in this) {
-          it = it[key].apply(it, this[key]);
-        }
-      }
-      this.query = it;
-      if (!query) {
-        this.query.on('value', noop);
-      }
-      this.query.on('value', this._callNext, noop, this);
-    };
-    prototype.execQuery = function(key, args){
-      this[key] = args;
-      if (this.query) {
-        this._setQuery(this.query);
-      }
-    };
-    prototype.start = function(){
-      var getValue, this$ = this;
-      getValue = function(queryStr){
-        if (!queryStr) {
-          return;
-        }
-        this$._setQuery(InterpolateFlow.createFirebase(queryStr));
-      };
-      if (this.queryFuncs.length) {
-        this.stopWatch = this.sync._watch(this._buildWatchFn({}), getValue);
-      } else {
-        getValue(this.queryStr);
-      }
-    };
-    prototype.stop = function(){
-      var that;
-      if (that = this.stopWatch) {
-        DataFlow.immediate(that);
-      }
-      if (that = this.query) {
-        that.off('value', void 8, this);
-      }
-      superclass.prototype.stop.call(this);
+    var noopQuery, prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
+    noopQuery = {
+      on: noop,
+      off: noop
     };
     function GetFlow(){
       GetFlow.superclass.apply(this, arguments);
+      this.query = noopQuery;
+      this.stopWatch = noop;
     }
+    prototype.start = function(){
+      var getPath, this$ = this;
+      getPath = function(path){
+        if (path) {
+          this$._updateQuery(InterpolateFlow.createFirebase(path));
+        }
+      };
+      if (this.queryFuncs.length > 1) {
+        this.stopWatch = this.sync._watch(this._buildWatchFn({}), getPath);
+      } else {
+        getPath(this.queryString);
+      }
+    };
+    prototype.execQuery = function(key, args){
+      this[key] = args;
+      this._updateQuery(this.query);
+    };
+    prototype.stop = function(){
+      DataFlow.immediate(this.stopWatch);
+      this.query.off('value', void 8, this);
+      superclass.prototype.stop.apply(this, arguments);
+    };
+    prototype._onSuccess = function(snap){
+      this.next.start(this.sync.constructor.createNode(snap));
+    };
+    prototype._onError = function(error){
+      this.next.start(void 8);
+    };
+    prototype._updateQuery = function(newQuery){
+      var i$, ref$, len$, key, value;
+      this.query.off('value', void 8, this);
+      for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
+        key = ref$[i$];
+        if (value = this[key]) {
+          newQuery = newQuery[key].apply(newQuery, value);
+        }
+      }
+      newQuery.on('value', noop);
+      this.query.off('value', noop);
+      newQuery.on('value', this._onSuccess, this._onError, this);
+      this.query = newQuery;
+    };
     return GetFlow;
   }(InterpolateFlow));
   MapFlow = (function(superclass){
     var prototype = extend$((import$(MapFlow, superclass).displayName = 'MapFlow', MapFlow), superclass).prototype, constructor = MapFlow;
     function MapFlow(){
       MapFlow.superclass.apply(this, arguments);
-      this.stopWatches = [];
+      this.stopWatchFns = [];
       this.queries = [];
       this.mappedResult = [];
     }
     prototype.start = function(result){
-      var sync, stopWatches, queries, mappedResult, queryFuncs, this$ = this;
+      var sync, queries, mappedResult, res$, i$, len$;
       this.stop();
       if (!isArray(result)) {
         throw new TypeError('Map require result is array');
       }
-      sync = this.sync, stopWatches = this.stopWatches, queries = this.queries, mappedResult = this.mappedResult, queryFuncs = this.queryFuncs;
+      sync = this.sync, queries = this.queries, mappedResult = this.mappedResult;
       mappedResult.length = result.length;
       if (result.length === 0) {
         return this.next.start(mappedResult);
       }
-      forEach(result, function(value, index){
-        stopWatches.push(sync._watch(this$._buildWatchFn(value), function(queryStr){
-          var that, query;
-          if (!queryStr) {
+      res$ = [];
+      for (i$ = 0, len$ = result.length; i$ < len$; ++i$) {
+        res$.push((fn$.call(this, i$, result[i$])));
+      }
+      this.stopWatchFns = res$;
+      function fn$(index, value){
+        var _onSuccess, this$ = this;
+        _onSuccess = function(snap){
+          var allResolved, i$, ref$, len$, value;
+          mappedResult[index] = (this.flatten ? FireCollection : FireSync).createNode(snap, index);
+          allResolved = true;
+          for (i$ = 0, len$ = (ref$ = mappedResult).length; i$ < len$; ++i$) {
+            value = ref$[i$];
+            if (!value) {
+              allResolved = false;
+            }
+          }
+          if (allResolved) {
+            this.next.start(mappedResult);
+          }
+        };
+        return sync._watch(this._buildWatchFn(value), function(path){
+          var that, newQuery;
+          if (!path) {
             return;
           }
           if (that = queries[index]) {
             that.off('value', void 8, this$);
           }
-          query = InterpolateFlow.createFirebase(queryStr);
-          if (!queries[index]) {
-            query.on('value', noop);
+          newQuery = InterpolateFlow.createFirebase(path);
+          newQuery.on('value', noop);
+          if (that) {
+            that.off('value', noop);
           }
-          query.on('value', function(snap){
-            var allResolved, i$, ref$, len$, value;
-            mappedResult[index] = (this.flatten ? FireCollection : FireSync).createNode(snap, index);
-            allResolved = true;
-            for (i$ = 0, len$ = (ref$ = mappedResult).length; i$ < len$; ++i$) {
-              value = ref$[i$];
-              if (!value) {
-                allResolved = false;
-              }
-            }
-            if (allResolved) {
-              this.next.start(mappedResult);
-            }
-          }, noop, this$);
-          queries[index] = query;
-        }));
-      });
+          queries[index] = newQuery;
+          newQuery.on('value', _onSuccess, noop, this$);
+        });
+      }
     };
     prototype.stop = function(){
-      var stopWatches, that;
-      stopWatches = this.stopWatches;
-      this.stopWatches = [];
+      var stopWatchFns, queries, i$, len$, query;
+      stopWatchFns = this.stopWatchFns, queries = this.queries;
       DataFlow.immediate(function(){
         var i$, ref$, that;
-        for (i$ = (ref$ = stopWatches).length - 1; i$ >= 0; --i$) {
+        for (i$ = (ref$ = stopWatchFns).length - 1; i$ >= 0; --i$) {
           that = ref$[i$];
           that();
         }
       });
-      while (that = this.queries.shift()) {
-        that.off();
+      for (i$ = 0, len$ = queries.length; i$ < len$; ++i$) {
+        query = queries[i$];
+        if (query) {
+          query.off('value', void 8, this);
+        }
       }
       this.mappedResult = [];
-      superclass.prototype.stop.call(this);
+      this.queries = [];
+      superclass.prototype.stop.apply(this, arguments);
     };
     return MapFlow;
   }(InterpolateFlow));
   FlattenDataFlow = (function(superclass){
     var prototype = extend$((import$(FlattenDataFlow, superclass).displayName = 'FlattenDataFlow', FlattenDataFlow), superclass).prototype, constructor = FlattenDataFlow;
-    prototype._setSync = function(sync, prev){
+    prototype.setSync = function(sync, prev){
       if (!(prev instanceof MapFlow)) {
-        throw new TypeError("Flatten require prev is map");
+        throw new TypeError('Flatten require prev is map');
       }
       prev.flatten = true;
-      superclass.prototype._setSync.apply(this, arguments);
+      superclass.prototype.setSync.apply(this, arguments);
     };
     prototype.start = function(result){
-      var results;
+      var flattenedResult, i$, len$, array, j$, len1$, value;
       if (!isArray(result)) {
         throw new TypeError('Flatten require result is array');
       }
-      results = [];
-      forEach(result, function(value){
-        forEach(value, function(item){
-          item.$extend(void 8, results.push(item));
-        });
-      });
-      this.next.start(results);
+      flattenedResult = [];
+      for (i$ = 0, len$ = result.length; i$ < len$; ++i$) {
+        array = result[i$];
+        for (j$ = 0, len1$ = array.length; j$ < len1$; ++j$) {
+          value = array[j$];
+          value.$extend(void 8, flattenedResult.push(value));
+        }
+      }
+      this.next.start(flattenedResult);
     };
     function FlattenDataFlow(){
       FlattenDataFlow.superclass.apply(this, arguments);
@@ -234,30 +244,29 @@
   }(DataFlow));
   ToSyncFlow = (function(superclass){
     var prototype = extend$((import$(ToSyncFlow, superclass).displayName = 'ToSyncFlow', ToSyncFlow), superclass).prototype, constructor = ToSyncFlow;
+    function ToSyncFlow(){
+      ToSyncFlow.superclass.apply(this, arguments);
+      this.resolve = noop;
+    }
     prototype.start = function(result){
       var this$ = this;
       DataFlow.immediate(function(){
         this$.sync._extend(result);
-        if (!this$.resolve) {
-          return;
-        }
         this$.resolve(this$.sync.$node);
-        this$.resolve = void 8;
+        this$.resolve = noop;
       });
     };
-    function ToSyncFlow(){
-      ToSyncFlow.superclass.apply(this, arguments);
-    }
     return ToSyncFlow;
   }(DataFlow));
   FireSync = (function(){
     FireSync.displayName = 'FireSync';
-    var prototype = FireSync.prototype, constructor = FireSync;
+    var noopDefer, prototype = FireSync.prototype, constructor = FireSync;
     FireSync.createNode = function(snap, index){
-      var node;
-      node = new FireNode();
-      node = clone$(node);
-      return node.$extend(snap, index);
+      return clone$(new FireNode()).$extend(snap, index);
+    };
+    noopDefer = {
+      resolve: noop,
+      reject: noop
     };
     function FireSync(){
       this.$head = this.$tail = this.$scope = this.$node = void 8;
@@ -275,19 +284,19 @@
       this.$tail = flow;
       return this;
     };
-    prototype.get = function(queryStrOrPath){
+    prototype.get = function(queryUrlOrPath){
       return this._addFlow(new GetFlow({
-        queryStr: queryStrOrPath
+        queryString: queryUrlOrPath
       }));
     };
     prototype.clone = function(){
-      var cloned, that, flow, next;
-      if (this.$deferred) {
+      var ref$, cloned, that, flow, next;
+      if ((ref$ = this.$deferred) != null && ref$.promise) {
         return this;
       }
       cloned = new this.constructor;
       if (that = typeof this._head === 'function' ? this._head() : void 8) {
-        flow = that._clone();
+        flow = that.cloneChained();
         cloned._head = function(){
           return flow;
         };
@@ -307,14 +316,14 @@
       this._addFlow(new ToSyncFlow((ref$ = this.$deferred) != null ? {
         resolve: ref$.resolve
       } : void 8));
-      this._head()._setSync(this);
+      this._head().setSync(this);
       this.destroy = function(){
         var ref$;
         if ((ref$ = this$.$deferred) != null) {
           ref$.reject();
         }
         this$._head().stop();
-        this$._head()._setSync(void 8);
+        this$._head().setSync(void 8);
         DataFlow.immediate((ref$ = this$.$offDestroy, delete this$.$offDestroy, ref$));
         delete this$.$scope;
       };
@@ -328,7 +337,7 @@
       return this.$node;
     };
     prototype.defer = function(){
-      if (!this.$defer) {
+      if (!this.$deferred) {
         this.$deferred = FireSync.q.defer();
       }
       return this;
@@ -358,9 +367,9 @@
       FireNode.call(node);
       return node.$extend(snap);
     };
-    prototype.map = function(queryStrOrPath){
+    prototype.map = function(queryUrlOrPath){
       return this._addFlow(new MapFlow({
-        queryStr: queryStrOrPath
+        queryString: queryUrlOrPath
       }));
     };
     prototype.flatten = function(){
@@ -390,8 +399,8 @@
   }(FireSync));
   FireNode = (function(){
     FireNode.displayName = 'FireNode';
-    var prototype = FireNode.prototype, constructor = FireNode;
-    FireNode.noopRef = {
+    var noopRef, prototype = FireNode.prototype, constructor = FireNode;
+    noopRef = {
       set: noop,
       update: noop,
       push: noop,
@@ -402,7 +411,7 @@
     };
     function FireNode(){
       var ref, this$ = this;
-      ref = constructor.noopRef;
+      ref = noopRef;
       this.$ref = function(){
         return ref;
       };
@@ -431,13 +440,10 @@
       return isSnap;
     };
     prototype.$extend = function(nodeOrSnap, index){
-      var key, val, counter, value, own$ = {}.hasOwnProperty, this$ = this;
-      if (nodeOrSnap) {
-        for (key in this) if (own$.call(this, key)) {
-          if (!FireNode.prototype[key]) {
-            delete this[key];
-          }
-        }
+      var i$, ref$, key, len$, val, counter, value, this$ = this, own$ = {}.hasOwnProperty;
+      for (i$ = 0, len$ = (ref$ = (fn$.call(this))).length; i$ < len$; ++i$) {
+        key = ref$[i$];
+        delete this[key];
       }
       if (this.$_setFireProperties(nodeOrSnap, index)) {
         val = nodeOrSnap.val();
@@ -460,8 +466,17 @@
         }
       }
       return this;
+      function fn$(){
+        var results$ = [];
+        for (key in this) {
+          if (!FireNode.prototype[key]) {
+            results$.push(key);
+          }
+        }
+        return results$;
+      }
     };
-    forEach(FireNode.noopRef, function(value, key){
+    forEach(noopRef, function(value, key){
       this["$" + key] = function(){
         var ref$;
         (ref$ = this.$ref())[key].apply(ref$, arguments);
@@ -469,13 +484,13 @@
     }, FireNode.prototype);
     prototype.$increase = function(byNumber){
       byNumber || (byNumber = 1);
-      return this.$ref().transaction(function(it){
+      this.$ref().transaction(function(it){
         return it + byNumber;
       });
     };
     prototype.$decrease = function(byNumber){
       byNumber || (byNumber = 1);
-      return this.$ref().transaction(function(it){
+      this.$ref().transaction(function(it){
         return it - byNumber;
       });
     };
@@ -497,7 +512,7 @@
       });
       forEach(['login', 'logout'], function(key){
         this[key] = function(){
-          return ref[key].apply(ref, arguments);
+          ref[key].apply(ref, arguments);
         };
       }, this);
       return cloned;
