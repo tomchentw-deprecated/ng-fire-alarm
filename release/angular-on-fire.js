@@ -152,6 +152,9 @@
       }
       sync = this.sync, stopWatches = this.stopWatches, queries = this.queries, mappedResult = this.mappedResult, queryFuncs = this.queryFuncs;
       mappedResult.length = result.length;
+      if (result.length === 0) {
+        return this.next.start(mappedResult);
+      }
       forEach(result, function(value, index){
         stopWatches.push(sync._watch(this$._buildWatchFn(value), function(queryStr){
           var that, query;
@@ -405,7 +408,7 @@
       };
       this.$_setFireProperties = function(nodeOrSnap, index){
         if (nodeOrSnap) {
-          ref = (typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8) || (typeof nodeOrSnap.$ref === 'function' ? nodeOrSnap.$ref() : void 8);
+          ref = (typeof nodeOrSnap.ref === 'function' ? nodeOrSnap.ref() : void 8) || (typeof nodeOrSnap.$ref === 'function' ? nodeOrSnap.$ref() : void 8) || ref;
         }
         return FireNode.prototype.$_setFireProperties.call(this$, nodeOrSnap, index);
       };
