@@ -56,6 +56,9 @@ class GetFlow extends InterpolateFlow
   const noopQuery = do
     on: noop
     off: noop
+  const selfChaining = -> noopQuery
+  for key in FIREBASE_QUERY_KEYS
+    noopQuery[key] = selfChaining
 
   ->
     super ...

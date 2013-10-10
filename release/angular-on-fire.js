@@ -79,11 +79,18 @@
     return InterpolateFlow;
   }(DataFlow));
   GetFlow = (function(superclass){
-    var noopQuery, prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
+    var noopQuery, selfChaining, i$, ref$, len$, key, prototype = extend$((import$(GetFlow, superclass).displayName = 'GetFlow', GetFlow), superclass).prototype, constructor = GetFlow;
     noopQuery = {
       on: noop,
       off: noop
     };
+    selfChaining = function(){
+      return noopQuery;
+    };
+    for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
+      key = ref$[i$];
+      noopQuery[key] = selfChaining;
+    }
     function GetFlow(){
       GetFlow.superclass.apply(this, arguments);
       this.query = noopQuery;
