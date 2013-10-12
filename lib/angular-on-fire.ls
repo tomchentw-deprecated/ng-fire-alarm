@@ -115,7 +115,7 @@ class MapFlow extends InterpolateFlow
 
     @stopWatchFns = for let value, index in result
       const _onSuccess = !(snap) ->
-        mappedResult[index] = (if @flatten then FireCollection else FireSync).createNode snap, index
+        mappedResult[index] = (if @flatten || isArray(snap.val!) then FireCollection else FireSync).createNode snap, index
         allResolved = true
         for value in mappedResult when not value
           allResolved = false
@@ -155,7 +155,7 @@ class FlattenDataFlow extends DataFlow
 
     for array in result
       for value in array
-        value.$extend void, flattenedResult.push value # update index!
+        value.$_setFireProperties void, flattenedResult.push value # update index!
     @next.start flattenedResult
 
 class ToSyncFlow extends DataFlow
@@ -172,7 +172,7 @@ class ToSyncFlow extends DataFlow
 
 class FireSync
   @createNode = (snap, index) ->
-    (^^ new FireNode!).$extend snap, index
+    (^^ new FireNode!).$_extend snap, index
 
   const noopDefer = do
     resolve: noop
@@ -231,7 +231,7 @@ class FireSync
   promise: -> @$deferred.promise
 
   _extend: !(result) ->
-    @$node.$extend result
+    @$node.$_extend result
 
   /*
     angular specifiy code...
@@ -246,7 +246,7 @@ class FireCollection extends FireSync
     const node = []
     extend node, FireNode::
     FireNode.call node
-    node.$extend snap
+    node.$_extend snap
 
   map: (queryUrlOrPath) ->
     @_addFlow new MapFlow {queryString: queryUrlOrPath}
@@ -296,7 +296,7 @@ class FireNode
       @$priority    = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
     isSnap
 
-  $extend: (nodeOrSnap, index) ->
+  $_extend: (nodeOrSnap, index) ->
     for key in [key for key of @ when not FireNode::[key]]
       delete! @[key]
 

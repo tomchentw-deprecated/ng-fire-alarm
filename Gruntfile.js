@@ -144,7 +144,7 @@ module.exports = function(grunt) {
         tasks: ['css:compile']
       },
       template: {
-        files: ['<%= fdr.src %>/*.jade.template'],
+        files: ['<%= fdr.dest %>/mixins/*.html', '<%= fdr.src %>/*.jade.template'],
         tasks: ['template:jade']
       },
       jade: {

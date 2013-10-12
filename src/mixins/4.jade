@@ -8,4 +8,4 @@ div(ng-controller="PrototypeCtrl", fb-sync="visited, user")
     label(for="bio") Bio :
     textarea(rows="6", id="bio", ng-model="user.bio", ng-change="user.$update({bio: user.bio})")
 
-  pre {{ user | json }}
+  pre {{ user | njson }}

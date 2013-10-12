@@ -1,7 +1,11 @@
-div(fb-sync="users")
+div(fb-sync="authorAccountIds, userIds, flattenUIds, users")
   ul
     li(ng-repeat="user in users | orderBy:'$index':true")
       a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")
         {{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})
       p {{ user.bio | limitTo:100 }}...
-  pre users: {{ users | njson }}
+  pre 
+    | authorAccountIds: {{ authorAccountIds | njson }}
+    | userIds: {{ userIds | njson }}
+    | flattenUIds: {{ flattenUIds | njson }}
+    | users: {{ users | njson }}

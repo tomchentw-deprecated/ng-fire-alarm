@@ -13,3 +13,7 @@ div(ng-controller="VipUserCtrl", fb-sync="vip_user, user, friends_list")
     li(ng-repeat="(userId, displayName) in friends_list")
       a(ng-href="https://wwww.facebook.com/{{ userId }}", target="_blank")
         {{ displayName }}
+  pre 
+    | vip_user: {{ vip_user | njson }}
+    | user: {{ user | njson }}
+    | friends_list: {{ friends_list | njson }}

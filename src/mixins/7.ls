@@ -1,12 +1,12 @@
 @demo.controller \UsersInBookCtrl <[
         $scope FireCollection
 ]> ++ !($scope, FireCollection) ->
-  collect = new FireCollection!get '/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds'
+  const authorAccountIds = new FireCollection!get '/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds'
   
-  collect.map '/accounts/{{ $name }}/userIds'
+  const userIds = authorAccountIds.clone!.map '/accounts/{{ $name }}/userIds'
   /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */
-  collect.flatten! 
+  const flattenUIds = userIds.clone!.flatten! 
   /* [100001053090034] */
-  collect.map '/users/facebook/{{ $value }}'
+  const users = flattenUIds.clone!.map '/users/facebook/{{ $value }}'
   /* [{id: 100001053090034}] */
-  $scope.users = collect
+  $scope <<< {authorAccountIds, userIds, flattenUIds, users}
