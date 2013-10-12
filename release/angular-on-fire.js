@@ -168,7 +168,7 @@
         var _onSuccess, this$ = this;
         _onSuccess = function(snap){
           var allResolved, i$, ref$, len$, value;
-          mappedResult[index] = (this.flatten ? FireCollection : FireSync).createNode(snap, index);
+          mappedResult[index] = (this.flatten || isArray(snap.val()) ? FireCollection : FireSync).createNode(snap, index);
           allResolved = true;
           for (i$ = 0, len$ = (ref$ = mappedResult).length; i$ < len$; ++i$) {
             value = ref$[i$];
@@ -239,7 +239,7 @@
         array = result[i$];
         for (j$ = 0, len1$ = array.length; j$ < len1$; ++j$) {
           value = array[j$];
-          value.$extend(void 8, flattenedResult.push(value));
+          value.$_setFireProperties(void 8, flattenedResult.push(value));
         }
       }
       this.next.start(flattenedResult);
@@ -269,7 +269,7 @@
     FireSync.displayName = 'FireSync';
     var noopDefer, prototype = FireSync.prototype, constructor = FireSync;
     FireSync.createNode = function(snap, index){
-      return clone$(new FireNode()).$extend(snap, index);
+      return clone$(new FireNode()).$_extend(snap, index);
     };
     noopDefer = {
       resolve: noop,
@@ -353,7 +353,7 @@
       return this.$deferred.promise;
     };
     prototype._extend = function(result){
-      this.$node.$extend(result);
+      this.$node.$_extend(result);
     };
     /*
       angular specifiy code...
@@ -372,7 +372,7 @@
       node = [];
       extend(node, FireNode.prototype);
       FireNode.call(node);
-      return node.$extend(snap);
+      return node.$_extend(snap);
     };
     prototype.map = function(queryUrlOrPath){
       return this._addFlow(new MapFlow({
@@ -446,7 +446,7 @@
       }
       return isSnap;
     };
-    prototype.$extend = function(nodeOrSnap, index){
+    prototype.$_extend = function(nodeOrSnap, index){
       var i$, ref$, key, len$, val, counter, value, this$ = this, own$ = {}.hasOwnProperty;
       for (i$ = 0, len$ = (ref$ = (fn$.call(this))).length; i$ < len$; ++i$) {
         key = ref$[i$];

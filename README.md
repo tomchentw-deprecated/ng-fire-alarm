@@ -39,6 +39,43 @@ this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']);
 this.demo.value({
   FirebaseUrl: 'https://angular-on-fire.firebaseio.com'
 });
+this.demo.controller('RootCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){
+  $scope.root = new FireSync().get('/');
+}));
+this.demo.filter('njson', function(){
+  var getPrototypeOf, stringify, toJson, isObject, isArray, extend, extendRef;
+  getPrototypeOf = Object.getPrototypeOf;
+  stringify = JSON.stringify;
+  toJson = angular.toJson, isObject = angular.isObject, isArray = angular.isArray, extend = angular.extend;
+  if (!(getPrototypeOf != null && stringify != null)) {
+    return toJson;
+  }
+  extendRef = {
+    $ref: '[function]'
+  };
+  function nativeToJsonFilter(it){
+    var item, args;
+    if (!isObject(it)) {
+      throw new TypeError('Require object');
+    }
+    return stringify(isArray(it)
+      ? (function(){
+        var i$, ref$, len$, results$ = [];
+        for (i$ = 0, len$ = (ref$ = it).length; i$ < len$; ++i$) {
+          item = ref$[i$];
+          args = [
+            isArray(item)
+              ? []
+              : {}, getPrototypeOf(item)
+          ].concat([item, extendRef]);
+          results$.push(extend.apply(null, args));
+        }
+        return results$;
+      }())
+      : extend({}, getPrototypeOf(it), it, extendRef), null, 2);
+  }
+  return nativeToJsonFilter;
+});
 ```
 
 ### `FireSync` service
@@ -66,6 +103,7 @@ In your `/users/show.html` :
 <div ng-controller="UserCtrl1">
   <h2>{{ user.displayName }}</h2>
   <p>{{ user.bio }}</p>
+  <pre>user: {{ user | njson }}</pre>
 </div>
 ```
 
@@ -91,6 +129,7 @@ Then in your `/users/show.html` :
 <div ng-controller="UserCtrl2" fb-sync="user">
   <h2>{{ user.displayName }}</h2>
   <p>{{ user.bio }}</p>
+  <pre>user: {{ user | njson }}</pre>
 </div>
 ```
 
@@ -126,6 +165,10 @@ Then in your `/users/show-vip.html` :
   <ul>
     <li ng-repeat="(userId, displayName) in friends_list"><a ng-href="https://wwww.facebook.com/{{ userId }}" target="_blank">{{ displayName }}</a></li>
   </ul>
+  <pre> 
+vip_user: {{ vip_user | njson }}
+user: {{ user | njson }}
+friends_list: {{ friends_list | njson }}</pre>
 </div>
 ```
 If executed, it will load `vip_user` first, then `user` next, finally `friends_list`. All paths are automatically resolved.
@@ -174,7 +217,7 @@ In your `/users/edit.html` :
     <label for="bio">Bio :</label>
     <textarea rows="6" id="bio" ng-model="user.bio" ng-change="user.$update({bio: user.bio})"></textarea>
   </form>
-  <pre>{{ user | json }}</pre>
+  <pre>{{ user | njson }}</pre>
 </div>
 ```
 
@@ -196,11 +239,14 @@ this.demo.controller('UsersCtrl', ['$scope', 'FireCollection'].concat(function($
 In your `/users/edit.html` : 
 ```HTML
 
-<ul fb-sync="users">
-  <li ng-repeat="user in users | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
-    <p>{{ user.bio | limitTo:100 }}...</p>
-  </li>
-</ul>
+<div fb-sync="users">
+  <ul>
+    <li ng-repeat="user in users | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
+      <p>{{ user.bio | limitTo:100 }}...</p>
+    </li>
+  </ul>
+  <pre>users: {{ users | njson }}</pre>
+</div>
 ```
 
 
@@ -227,15 +273,18 @@ Moreover, if you need to map indexes twice or above, remember to `flatten` the i
 
 ```JavaScript
 this.demo.controller('UsersInBookCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){
-  var collect;
-  collect = new FireCollection().get('/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds');
-  collect.map('/accounts/{{ $name }}/userIds');
+  var authorAccountIds, userIds, flattenUIds, users;
+  authorAccountIds = new FireCollection().get('/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds');
+  userIds = authorAccountIds.clone().map('/accounts/{{ $name }}/userIds');
   /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */
-  collect.flatten();
+  flattenUIds = userIds.clone().flatten();
   /* [100001053090034] */
-  collect.map('/users/facebook/{{ $value }}');
+  users = flattenUIds.clone().map('/users/facebook/{{ $value }}');
   /* [{id: 100001053090034}] */
-  $scope.users = collect;
+  $scope.authorAccountIds = authorAccountIds;
+  $scope.userIds = userIds;
+  $scope.flattenUIds = flattenUIds;
+  $scope.users = users;
 }));
 ```
 Easy! Right?
