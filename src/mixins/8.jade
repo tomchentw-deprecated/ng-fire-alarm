@@ -1,8 +1,9 @@
-ul.nav.pull-right(fb-sync="user")
-  li
-    a(ng-href="{{ user.profileUrl }}", target="_blank")
-      img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
-      | {{ user.displayName }}
-  li
-    a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
-      | Facebook Login 
+.nav-collapse(collapse="isCollapse")
+  ul.nav.pull-right(fb-sync="user")
+    li
+      a(ng-href="{{ user.profileUrl }}", target="_blank")
+        img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
+        | {{ user.displayName }}
+    li
+      a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
+        | Facebook Login 

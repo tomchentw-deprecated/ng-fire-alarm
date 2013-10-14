@@ -95,6 +95,9 @@ body {
   > .navbar-inner {
     padding-right: 150px;
   }
+  .btn-navbar {
+    float: left;
+  }
   .nav > li > a {
     padding: 8px 15px 7px;
 
@@ -103,7 +106,7 @@ body {
     
       width: $length;
       height: $length;
-    }  
+    }
   }
 }
 // http://stackoverflow.com/questions/15405837/using-box-sizing-border-box-with-twitter-bootstrap-can-we-do-it-easily-withou
@@ -118,6 +121,20 @@ input {
 pre.demo {
   display: inline-block;
   margin-right: 1em;
+}
+
+.social-buttons {
+  margin-left: 0;
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+  text-align: center;
+
+  li {
+    display: inline-block;
+    padding: 5px 8px;
+    line-height: 1;
+  }
 }
 
 .footer {

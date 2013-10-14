@@ -40,9 +40,20 @@ html(ng-app="demo")
                 tab(heading="hero-unit.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'FireSync'].concat(function($log, $scope, FireSync){\n  var clickCounterSync;\n  clickCounterSync = new FireSync().get('/visited');\n  $scope.counter = clickCounterSync.sync();\n  $log.log('HeroCtrl', $scope);\n  $scope.$on('$destroy', clickCounterSync.destroy);\n}));"
-          //- .row-fluid
-          //-   iframe(src="http://ghbtns.com/github-btn.html?user=tomchentw&repo=angular-on-fire&type=watch&count=true",
-          //-     allowtransparency="true", frameborder="0", scrolling="0", width="110", height="20")
+          .row-fluid
+            ul.social-buttons
+              li
+                <iframe src="http://ghbtns.com/github-btn.html?user=tomchentw&repo=angular-on-fire&type=fork" allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe>
+              li
+                <iframe src="http://ghbtns.com/github-btn.html?user=tomchentw&repo=angular-on-fire&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+              li
+                <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://angular-on-fire.tomchentw.com/" data-text="The greatest way to use Firebase with AngularJS!" data-via="tomchentw" data-hashtags="angular-on-fire">Tweet</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+              li
+                <!-- Place this tag where you want the +1 button to render. -->
+                <div class="g-plusone" data-size="medium" data-annotation="inline" data-width="150"></div>
+                <!-- Place this tag after the last +1 button tag. -->
+                <script type="text/javascript">(function() { var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true; po.src = 'https://apis.google.com/js/plusone.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s); })();</script>
           .row-fluid
             h1 
               | See 
@@ -182,7 +193,7 @@ html(ng-app="demo")
               tabset
                 tab(heading="8.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;ul fb-sync=&quot;user&quot; class=&quot;nav pull-right&quot;&gt;\n  &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;li&gt;&lt;a ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n&lt;&#x2F;ul&gt;'
+                    != '\n&lt;div collapse=&quot;isCollapse&quot;&gt;\n  &lt;ul fb-sync=&quot;user&quot; class=&quot;nav pull-right&quot;&gt;\n    &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li&gt;&lt;a ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="8.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(function($scope, FireAuth, FireSync){\n  $scope.auth = new FireAuth();\n  $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}');\n  $scope.$watch('auth && user.$name', function(){\n    var ref$;\n    if (!($scope.auth && $scope.user.$name)) {\n      return;\n    }\n    /* We need this to store user auth (like session) into database */\n    $scope.user.$setWithPriority({\n      id: (ref$ = $scope.auth).id,\n      displayName: ref$.displayName,\n      profileUrl: ref$.profileUrl,\n      bio: ref$.bio\n    }, Math.round(Math.random() * Math.pow(2, 16)));\n  });\n}));"
