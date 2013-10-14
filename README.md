@@ -34,48 +34,10 @@ Usage & APIs
 ### `FirebaseUrl` value
 First, if you only use one Firebase, put the root url to config:
 ```JavaScript
-this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']);
 /* declare as app module dependency. */
-this.demo.value({
+this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']).value({
   FirebaseUrl: 'https://angular-on-fire.firebaseio.com'
-});
-this.demo.controller('RootCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){
-  $scope.root = new FireSync().get('/');
-}));
-this.demo.filter('njson', function(){
-  var getPrototypeOf, stringify, toJson, isObject, isArray, extend, extendRef;
-  getPrototypeOf = Object.getPrototypeOf;
-  stringify = JSON.stringify;
-  toJson = angular.toJson, isObject = angular.isObject, isArray = angular.isArray, extend = angular.extend;
-  if (!(getPrototypeOf != null && stringify != null)) {
-    return toJson;
-  }
-  extendRef = {
-    $ref: '[function]'
-  };
-  function nativeToJsonFilter(it){
-    var item, args;
-    if (!isObject(it)) {
-      throw new TypeError('Require object');
-    }
-    return stringify(isArray(it)
-      ? (function(){
-        var i$, ref$, len$, results$ = [];
-        for (i$ = 0, len$ = (ref$ = it).length; i$ < len$; ++i$) {
-          item = ref$[i$];
-          args = [
-            isArray(item)
-              ? []
-              : {}, getPrototypeOf(item)
-          ].concat([item, extendRef]);
-          results$.push(extend.apply(null, args));
-        }
-        return results$;
-      }())
-      : extend({}, getPrototypeOf(it), it, extendRef), null, 2);
-  }
-  return nativeToJsonFilter;
-});
+})
 ```
 
 ### `FireSync` service

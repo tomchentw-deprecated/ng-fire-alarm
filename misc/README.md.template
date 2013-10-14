@@ -34,7 +34,10 @@ Usage & APIs
 ### `FirebaseUrl` value
 First, if you only use one Firebase, put the root url to config:
 ```JavaScript
-<%= file.read('dest/mixins/0.js') %>
+/* declare as app module dependency. */
+this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']).value({
+  FirebaseUrl: 'https://angular-on-fire.firebaseio.com'
+})
 ```
 
 ### `FireSync` service

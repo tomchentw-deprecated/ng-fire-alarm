@@ -160,6 +160,7 @@ module.exports = function(grunt) {
         tasks: ['jshint:lib_test', 'qunit']
       }
     },
+    clean: ['<%= fdr.tmp %>', '<%= fdr.dest %>'],
     qunit: { files: ['test/**/*.html'] },
     connect: {
       server: {
@@ -182,6 +183,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // 
   grunt.registerTask('ls:compile', ['concat:ls', 'livescript:compile']);
@@ -202,7 +204,7 @@ module.exports = function(grunt) {
     file = grunt.template.process(file, {data: grunt});
     grunt.file.write(grunt.config.get('jade.compile.src'), file);
   });
-  grunt.registerTask('default', ['jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
+  grunt.registerTask('default', ['clean', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
   //
   grunt.registerTask('template:readme', function () {
