@@ -21,10 +21,11 @@ module.exports = function(grunt) {
     // Metadata.
     pkg: grunt.file.readJSON('package.json'),
     fdr: {
-      src:    'src',
-      dest:   'dest',
-      lib:    'lib',
-      vendor: 'vendor'
+      src:    'src/',
+      dest:   'dest/',
+      lib:    'lib/',
+      tmp:    'tmp/',
+      vendor: 'vendor/'
     },
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
@@ -34,23 +35,18 @@ module.exports = function(grunt) {
     // Task configuration.
     concat: { 
       ls: {
-        src: ['<%= fdr.lib %>/**/*.ls',  '<%= fdr.src %>/index.ls', '<%= fdr.src %>/**/*.ls'],
-        dest: 'tmp/.ls-cache/<%= pkg.name %>.ls',
+        src: ['<%= fdr.lib %>**/*.ls',  '<%= fdr.src %>index.ls', '<%= fdr.src %>**/*.ls'],
+        dest: '<%= fdr.tmp %>.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       },
       js: {
-        src: [
-          '<%= fdr.vendor %>/scripts/angular.js',
-          '<%= fdr.vendor %>/scripts/firebase.js', '<%= fdr.vendor %>/scripts/firebase-simple-login.js',
-          '<%= fdr.vendor %>/**/*.js',
-          '<%= livescript.compile.dest %>'
-        ],
-        dest: '<%= fdr.dest %>/script.js',
+        src: ['<%= fdr.vendor %>**/*.js', '<%= livescript.compile.dest %>'],
+        dest: '<%= fdr.dest %>script.js',
         options: { process: jsWrapper }
       },
       css: {
-        src: ['<%= fdr.vendor %>/**/*.css', 'tmp/.sass-cache/<%= pkg.name %>.css'],
-        dest: '<%= fdr.dest %>/style.css'
+        src: ['<%= fdr.vendor %>**/*.css', '<%= sass.compile.dest %>'],
+        dest: '<%= fdr.dest %>style.css'
       }
     },
     livescript: { compile: {
@@ -64,7 +60,7 @@ module.exports = function(grunt) {
         ext: '.js',
         options: { bare: true }
       },          release: {
-        src: 'lib/<%= pkg.name %>.ls',
+        src: '<%= fdr.lib %><%= pkg.name %>.ls',
         dest: 'release/<%= pkg.name %>.js'
       }
     },
@@ -75,9 +71,9 @@ module.exports = function(grunt) {
       options: { banner: '<%= banner %>' }
     },
     jade: { compile: {
-        template: '<%= fdr.src %>/index.jade.template',
-        src: '<%= fdr.src %>/index.jade',
-        dest: '<%= fdr.dest %>/index.html'
+        template: '<%= fdr.src %>index.jade.template',
+        src: '<%= fdr.src %>index.jade',
+        dest: '<%= fdr.dest %>index.html'
       },     mixins: {
         expand: true,
         cwd: '<%= fdr.src %>',
@@ -89,9 +85,9 @@ module.exports = function(grunt) {
       }
     },
     sass: { compile: {
-        src: '<%= fdr.src %>/index.scss',
-        dest: 'tmp/.sass-cache/<%= pkg.name %>.css',
-        options: { cacheLocation: 'tmp/.sass-cache' }
+        src: '<%= fdr.src %>index.scss',
+        dest: '<%= fdr.tmp %>.sass-cache/<%= pkg.name %>.css',
+        options: { cacheLocation: '<%= fdr.tmp %>.sass-cache' }
       }
     },
     cssmin: {
@@ -132,35 +128,37 @@ module.exports = function(grunt) {
         tasks: ['jshint:gruntfile']
       },
       livereload: {
-        files: ['<%= fdr.dest %>/**/*'],
+        files: ['<%= fdr.dest %>*'],
         options: { livereload: true }
       },
       js: {
-        files: ['<%= fdr.src %>/**/*.ls', '<%= fdr.lib %>/**/*.ls', '<%= fdr.vendor %>/**/*.js'],
+        files: ['<%= fdr.src %>**/*.ls', '<%= fdr.lib %>**/*.ls', '<%= fdr.vendor %>**/*.js'],
         tasks: ['js:compile']
       },
       sass: {
-        files: ['<%= fdr.src %>/**/*.scss', '<%= fdr.vendor %>/**/*.scss'],
+        files: ['<%= fdr.src %>**/*.scss', '<%= fdr.vendor %>**/*.scss'],
         tasks: ['css:compile']
       },
       template: {
-        files: ['<%= fdr.dest %>/mixins/*.html', '<%= fdr.src %>/*.jade.template'],
+        files: ['<%= fdr.dest %>mixins/*.html', '<%= fdr.src %>*.jade.template'],
         tasks: ['template:jade']
       },
       jade: {
-        files: ['<%= fdr.src %>/*.jade'],
+        files: ['<%= fdr.src %>*.jade'],
         tasks: ['jade:compile']
       },
       mixins: {
-        files: ['<%= fdr.src %>/mixins/*'],
-        tasks: ['livescript:mixins', 'jade:mixins', 'jade:compile']
+        files: ['<%= fdr.src %>mixins/*'],
+        tasks: ['livescript:mixins', 'jade:mixins']
       },
       lib_test: {
         files: ['<%= jshint.lib_test.src %>'],
         tasks: ['jshint:lib_test', 'qunit']
       }
     },
-    clean: ['<%= fdr.tmp %>', '<%= fdr.dest %>'],
+    clean: {
+      release: ['<%= fdr.tmp %>', '<%= fdr.dest %>']
+    },
     qunit: { files: ['test/**/*.html'] },
     connect: {
       server: {
@@ -204,7 +202,7 @@ module.exports = function(grunt) {
     file = grunt.template.process(file, {data: grunt});
     grunt.file.write(grunt.config.get('jade.compile.src'), file);
   });
-  grunt.registerTask('default', ['clean', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
+  grunt.registerTask('default', ['clean:release', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
   //
   grunt.registerTask('template:readme', function () {
