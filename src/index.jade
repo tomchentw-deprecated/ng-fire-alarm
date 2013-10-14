@@ -13,7 +13,7 @@ html(ng-app="demo")
     script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase-simple-login.js")
     script(src="script.js")
   body
-    header.navbar.navbar-inverse.navbar-fixed-top
+    .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
         .container-fluid(ng-controller="AuthCtrl")
           button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
@@ -57,7 +57,7 @@ html(ng-app="demo")
                 pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               pre.demo FireSync
               | service
@@ -74,7 +74,7 @@ html(ng-app="demo")
               include mixins/1
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               pre.demo fb-sync
               | directive
@@ -91,7 +91,7 @@ html(ng-app="demo")
               include mixins/2
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1 Resolving Dynamic Path
           .row-fluid
             .span6
@@ -106,7 +106,7 @@ html(ng-app="demo")
               include mixins/3
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1 prototype methods
           .row-fluid
             .span6
@@ -121,7 +121,7 @@ html(ng-app="demo")
               include mixins/4
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               pre.demo FireCollection
               | service
@@ -138,7 +138,7 @@ html(ng-app="demo")
               include mixins/5
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               | Eager Loading on 
               pre.demo FireCollection
@@ -155,7 +155,7 @@ html(ng-app="demo")
               include mixins/5
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               | Eager Loading on 
               pre.demo FireCollection
@@ -173,7 +173,7 @@ html(ng-app="demo")
               include mixins/7
       section
         .container-fluid
-          header.page-header
+          .page-header
             h1
               pre.demo FireAuth
               | service
