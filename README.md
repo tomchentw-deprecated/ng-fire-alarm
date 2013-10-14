@@ -319,10 +319,12 @@ this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(funct
 and then, in your `/partials/auth.html`:
 ```HTML
 
-<ul fb-sync="user" class="nav pull-right">
-  <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
-  <li><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a></li>
-</ul>
+<div collapse="isCollapse" class="nav-collapse">
+  <ul fb-sync="user" class="nav pull-right">
+    <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
+    <li><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a></li>
+  </ul>
+</div>
 ```
 
 

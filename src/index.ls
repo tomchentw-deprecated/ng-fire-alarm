@@ -10,7 +10,7 @@
   const {stringify} = JSON
   const {toJson, isObject, isArray, extend} = angular
   return toJson unless getPrototypeOf? && stringify?
-  const extendRef = {$ref: '[function]'}
+  const extendRef = {$ref: '[object Function]'}
 
   function nativeToJsonFilter
     throw new TypeError 'Require object' unless isObject it
