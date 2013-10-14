@@ -34,7 +34,7 @@ module.exports = function(grunt) {
     // Task configuration.
     concat: { 
       ls: {
-        src: ['<%= fdr.lib %>/**/*.ls', '<%= fdr.src %>/**/*.ls'],
+        src: ['<%= fdr.lib %>/**/*.ls',  '<%= fdr.src %>/index.ls', '<%= fdr.src %>/**/*.ls'],
         dest: 'tmp/.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       },

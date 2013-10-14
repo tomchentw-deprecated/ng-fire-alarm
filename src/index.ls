@@ -1,11 +1,11 @@
-@demo = angular.module \demo <[ui.bootstrap angular-on-fire]>
 /* declare as app module dependency. */
-@demo.value {FirebaseUrl: \https://angular-on-fire.firebaseio.com}
-@demo.controller 'RootCtrl' <[
+@demo = angular.module \demo <[ui.bootstrap angular-on-fire]>
+.value {FirebaseUrl: \https://angular-on-fire.firebaseio.com}
+.controller 'RootCtrl' <[
         $scope FireSync
 ]> ++ !($scope, FireSync) ->
   $scope.root = new FireSync!.get '/'
-@demo.filter 'njson' ->
+.filter 'njson' ->
   const {getPrototypeOf} = Object
   const {stringify} = JSON
   const {toJson, isObject, isArray, extend} = angular
