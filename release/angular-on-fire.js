@@ -253,7 +253,7 @@
     var prototype = extend$((import$(ToSyncFlow, superclass).displayName = 'ToSyncFlow', ToSyncFlow), superclass).prototype, constructor = ToSyncFlow;
     function ToSyncFlow(){
       ToSyncFlow.superclass.apply(this, arguments);
-      this.resolve = noop;
+      this.resolve || (this.resolve = noop);
     }
     prototype.start = function(result){
       var this$ = this;

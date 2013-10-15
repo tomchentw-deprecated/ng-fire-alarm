@@ -162,7 +162,7 @@ class ToSyncFlow extends DataFlow
 
   ->
     super ...
-    @resolve = noop
+    @resolve ||= noop
 
   start: !(result) ->
     <~! DataFlow.immediate
