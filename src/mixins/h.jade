@@ -1,15 +1,16 @@
 .hero-unit
-  h1 Hello,
-  h1 angular-on-fire!!
+  h1 angular-on-fire
   p
     a(href="http://angularjs.org/") angularjs
     , binding, 
     a(href="https://www.firebase.com/") firebase
-  p
+    br
     | The greatest way to use Firebase with AngularJS!
-  a.btn.btn-primary.btn-large(href="", ng-click="counter.$increase()")
-    | Click to Increase Counter : 
-    span(ng-bind="counter.$value")
+      
+  p
+    a.btn.btn-primary.btn-large(href="", ng-click="counter.$increase()")
+      | Click to Increase Counter : 
+      span(ng-bind="counter.$value")
 
-  a.btn.btn-danger.btn-large.pull-right(href="", ng-click="counter.$decrease()")
-    | Decrease
+    a.btn.btn-danger.btn-large.pull-right(href="", ng-click="counter.$decrease()")
+      | Decrease

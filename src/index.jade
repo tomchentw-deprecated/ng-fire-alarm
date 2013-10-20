@@ -36,24 +36,12 @@ html(ng-app="demo")
               tabset
                 tab(heading="hero-unit.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;div class=&quot;hero-unit&quot;&gt;\n  &lt;h1&gt;Hello,&lt;&#x2F;h1&gt;\n  &lt;h1&gt;angular-on-fire!!&lt;&#x2F;h1&gt;\n  &lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;angularjs.org&#x2F;&quot;&gt;angularjs&lt;&#x2F;a&gt;, binding, &lt;a href=&quot;https:&#x2F;&#x2F;www.firebase.com&#x2F;&quot;&gt;firebase&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;\n  &lt;p&gt;The greatest way to use Firebase with AngularJS!&lt;&#x2F;p&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$increase()&quot; class=&quot;btn btn-primary btn-large&quot;&gt;Click to Increase Counter : &lt;span ng-bind=&quot;counter.$value&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;a&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$decrease()&quot; class=&quot;btn btn-danger btn-large pull-right&quot;&gt;Decrease&lt;&#x2F;a&gt;\n&lt;&#x2F;div&gt;'
+                    != '\n&lt;div class=&quot;hero-unit&quot;&gt;\n  &lt;h1&gt;angular-on-fire&lt;&#x2F;h1&gt;\n  &lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;angularjs.org&#x2F;&quot;&gt;angularjs&lt;&#x2F;a&gt;, binding, &lt;a href=&quot;https:&#x2F;&#x2F;www.firebase.com&#x2F;&quot;&gt;firebase&lt;&#x2F;a&gt;&lt;br&#x2F;&gt;The greatest way to use Firebase with AngularJS!&lt;&#x2F;p&gt;\n  &lt;p&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$increase()&quot; class=&quot;btn btn-primary btn-large&quot;&gt;Click to Increase Counter : &lt;span ng-bind=&quot;counter.$value&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;a&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$decrease()&quot; class=&quot;btn btn-danger btn-large pull-right&quot;&gt;Decrease&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="hero-unit.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'FireSync'].concat(function($log, $scope, FireSync){\n  var clickCounterSync;\n  clickCounterSync = new FireSync().get('/visited');\n  $scope.counter = clickCounterSync.sync();\n  $log.log('HeroCtrl', $scope);\n  $scope.$on('$destroy', clickCounterSync.destroy);\n}));"
           .row-fluid
-            ul.social-buttons
-              li
-                <iframe src="http://ghbtns.com/github-btn.html?user=tomchentw&repo=angular-on-fire&type=fork" allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe>
-              li
-                <iframe src="http://ghbtns.com/github-btn.html?user=tomchentw&repo=angular-on-fire&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
-              li
-                <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://angular-on-fire.tomchentw.com/" data-text="The greatest way to use Firebase with AngularJS!" data-via="tomchentw" data-hashtags="angular-on-fire">Tweet</a>
-                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-              li
-                <!-- Place this tag where you want the +1 button to render. -->
-                <div class="g-plusone" data-size="medium" data-annotation="inline" data-width="150"></div>
-                <!-- Place this tag after the last +1 button tag. -->
-                <script type="text/javascript">(function() { var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true; po.src = 'https://apis.google.com/js/plusone.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s); })();</script>
+            include partials/social-buttons
           .row-fluid
             h1 
               | See 
