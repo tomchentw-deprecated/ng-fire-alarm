@@ -259,17 +259,19 @@ Easy! Right?
 
 Then, in controller:
 ```JavaScript
-this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(function($scope, FireAuth, FireSync){
-  $scope.auth = new FireAuth();
-  $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}');
-  $scope.$watch('auth && user.$name', function(){
+this.demo.run(['$log', '$rootScope', 'FireAuth', 'FireSync', 'Firebase', 'FirebaseUrl'].concat(function($log, $rootScope, FireAuth, FireSync, Firebase, FirebaseUrl){
+  $rootScope.auth = new FireAuth();
+  $rootScope.root = new FireSync().get('/');
+  $rootScope.user = new FireSync().get('/users/{{ auth.id }}');
+  $rootScope.$watch('auth && user.$name', function(){
     var ref$;
-    if (!($scope.auth && $scope.user.$name)) {
+    if (!($rootScope.auth && $rootScope.user.$name)) {
       return;
     }
+    $log.log($rootScope.auth);
     /* We need this to store user auth (like session) into database */
-    $scope.user.$setWithPriority({
-      id: (ref$ = $scope.auth).id,
+    $rootScope.user.$setWithPriority({
+      id: (ref$ = $rootScope.auth).id,
       displayName: ref$.displayName,
       profileUrl: ref$.profileUrl,
       bio: ref$.bio
@@ -282,8 +284,9 @@ and then, in your `/partials/auth.html`:
 ```HTML
 
 <div collapse="isCollapse" class="nav-collapse">
-  <ul fb-sync="user" class="nav pull-right">
+  <ul class="nav pull-right">
     <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
+    <li><a ng-if="user.$name == '100001053090034'" href="" ng-click="resetFB()">Reset FB</a></li>
     <li><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a></li>
   </ul>
 </div>

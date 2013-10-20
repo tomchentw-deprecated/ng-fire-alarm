@@ -257,11 +257,18 @@
     }
     prototype.start = function(result){
       var this$ = this;
-      DataFlow.immediate(function(){
+      this.promise = DataFlow.immediate(function(){
         this$.sync._extend(result);
         this$.resolve(this$.sync.$node);
         this$.resolve = noop;
       });
+    };
+    prototype.stop = function(){
+      var that;
+      if (that = this.promise) {
+        DataFlow.immediate.cancel(that);
+      }
+      return superclass.prototype.stop.apply(this, arguments);
     };
     return ToSyncFlow;
   }(DataFlow));
