@@ -7,7 +7,7 @@
   /* 
     2
     depends on 1 */
-  $scope.user = new FireSync!get '/users/{{ vip_user.provider }}/{{ vip_user.id }}'
+  $scope.user = new FireSync!get '/users/{{ vip_user.id }}'
   /*
     3
     depends on 2 */

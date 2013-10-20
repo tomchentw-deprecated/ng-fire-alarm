@@ -46,7 +46,7 @@ Then, let's use `FireSync` :
 this.demo.controller('UserCtrl1', ['$scope', 'FireSync'].concat(function($scope, FireSync){
   /* declare sync object */
   var userSync;
-  userSync = new FireSync().get('/users/facebook/100001053090034');
+  userSync = new FireSync().get('/users/100001053090034');
   /* 
     sync() will create a node object where data goes
     it is initially an empty object, but with some prototype methods */
@@ -78,7 +78,7 @@ this.demo.controller('UserCtrl2', ['$scope', 'FireSync'].concat(function($scope,
     assign sync object directly to user
     it will be replaced by empty object when fb-sync acted 
   */
-  $scope.user = new FireSync().get('/users/facebook/100001053090034');
+  $scope.user = new FireSync().get('/users/100001053090034');
   /* 
     $scope.$on('$destroy', userSync.destroy); 
     // no hook here, because fb-sync will do this for you 
@@ -108,7 +108,7 @@ this.demo.controller('VipUserCtrl', ['$scope', 'FireSync'].concat(function($scop
   /* 
     2
     depends on 1 */
-  $scope.user = new FireSync().get('/users/{{ vip_user.provider }}/{{ vip_user.id }}');
+  $scope.user = new FireSync().get('/users/{{ vip_user.id }}');
   /*
     3
     depends on 2 */
@@ -156,10 +156,10 @@ We also add another two common used functions : `$increase`, `$decrease` , which
 ```JavaScript
 this.demo.controller('PrototypeCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){
   /* this node points to a number,
-    but the type of `visited` is object, we store that number to its `$value` property.
+    but the type of `click-count` is object, we store that number to its `$value` property.
     This transformation applies to all non-object values (string, number ...)
   */
-  $scope.visited = new FireSync().get('/visited');
+  $scope.clickCount = new FireSync().get('/click-count');
   /* the-test-user */
   $scope.user = new FireSync().get('/users/the-test-user');
 }));
@@ -168,10 +168,10 @@ this.demo.controller('PrototypeCtrl', ['$scope', 'FireSync'].concat(function($sc
 In your `/users/edit.html` : 
 ```HTML
 
-<div ng-controller="PrototypeCtrl" fb-sync="visited, user">
-  <button ng-click="visited.$increase()" class="btn btn-large btn-primary">
+<div ng-controller="PrototypeCtrl" fb-sync="clickCount, user">
+  <button ng-click="clickCount.$increase()" class="btn btn-large btn-primary">
      
-    Visited Counter : {{ visited.$value }}
+    Visited Counter : {{ clickCount.$value }}
   </button>
   <form class="form-horizontal">
     <label for="displayName">Display Name :</label>
@@ -194,7 +194,7 @@ With `$index`, you can do a reverse order like this : `ng-repeat="user in users 
 this.demo.controller('UsersCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){
   /*
     lets assume it's a object with each item created by `push`*/
-  $scope.users = new FireCollection().get('/users/facebook');
+  $scope.users = new FireCollection().get('/users');
 }));
 ```
 
@@ -226,7 +226,7 @@ this.demo.controller('UsersInAccountCtrl', ['$scope', 'FireCollection'].concat(f
     [1, 3, 7]
     or 
     { 1: true, 3: true, 7: true }  */
-  $scope.users = collect.map('/users/facebook/{{ $value }}');
+  $scope.users = collect.map('/users/{{ $value }}');
   /* or '/users/{{ $name }}' if above is object. */
 }));
 ```
@@ -241,7 +241,7 @@ this.demo.controller('UsersInBookCtrl', ['$scope', 'FireCollection'].concat(func
   /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */
   flattenUIds = userIds.clone().flatten();
   /* [100001053090034] */
-  users = flattenUIds.clone().map('/users/facebook/{{ $value }}');
+  users = flattenUIds.clone().map('/users/{{ $value }}');
   /* [{id: 100001053090034}] */
   $scope.authorAccountIds = authorAccountIds;
   $scope.userIds = userIds;

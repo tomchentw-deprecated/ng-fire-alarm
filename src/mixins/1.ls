@@ -2,7 +2,7 @@
         $scope FireSync
 ]> ++ !($scope, FireSync) ->
   /* declare sync object */
-  const userSync = new FireSync!.get '/users/facebook/100001053090034'
+  const userSync = new FireSync!.get '/users/100001053090034'
   /* 
     sync() will create a node object where data goes
     it is initially an empty object, but with some prototype methods */
