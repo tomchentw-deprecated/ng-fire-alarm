@@ -165,10 +165,14 @@ class ToSyncFlow extends DataFlow
     @resolve ||= noop
 
   start: !(result) ->
-    <~! DataFlow.immediate
-    @sync._extend result
-    @resolve @sync.$node
-    @resolve = noop
+    @promise = DataFlow.immediate !~>
+      @sync._extend result
+      @resolve @sync.$node
+      @resolve = noop
+
+  stop: ->
+    DataFlow.immediate.cancel that if @promise
+    super ...
 
 class FireSync
   @createNode = (snap, index) ->

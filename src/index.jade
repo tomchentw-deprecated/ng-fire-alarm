@@ -1,5 +1,5 @@
 !!! 5
-html(ng-app="demo")
+html(ng-app="demo", fb-sync="root, user")
   head
     meta(charset="utf-8")
     base(href="/")
@@ -15,7 +15,7 @@ html(ng-app="demo")
   body
     .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
-        .container-fluid(ng-controller="AuthCtrl")
+        .container-fluid
           button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
             span.icon-bar
             span.icon-bar
@@ -30,16 +30,16 @@ html(ng-app="demo")
       header.page-header
         .container-fluid
           .row-fluid
-            .span8(ng-controller="HeroCtrl")
+            .span8
               include mixins/h
             .span4
               tabset
                 tab(heading="hero-unit.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;div class=&quot;hero-unit&quot;&gt;\n  &lt;h1&gt;angular-on-fire&lt;&#x2F;h1&gt;\n  &lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;angularjs.org&#x2F;&quot;&gt;angularjs&lt;&#x2F;a&gt;, binding, &lt;a href=&quot;https:&#x2F;&#x2F;www.firebase.com&#x2F;&quot;&gt;firebase&lt;&#x2F;a&gt;&lt;br&#x2F;&gt;The greatest way to use Firebase with AngularJS!&lt;&#x2F;p&gt;\n  &lt;p&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$increase()&quot; class=&quot;btn btn-primary btn-large&quot;&gt;Click to Increase Counter : &lt;span ng-bind=&quot;counter.$value&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;a&gt;&lt;a href=&quot;&quot; ng-click=&quot;counter.$decrease()&quot; class=&quot;btn btn-danger btn-large pull-right&quot;&gt;Decrease&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;\n&lt;&#x2F;div&gt;'
+                    != '\n&lt;div ng-controller=&quot;HeroCtrl&quot; fb-sync=&quot;counter, posts&quot; class=&quot;hero-unit&quot;&gt;\n  &lt;h1&gt;angular-on-fire&lt;small&gt; counter : &lt;span ng-bind=&quot;counter.$value&quot;&gt;&lt;&#x2F;span&gt; &lt;a href=&quot;&quot; ng-click=&quot;counter.$increase()&quot;&gt;&lt;i class=&quot;icon-plus&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;a&gt; &lt;a href=&quot;&quot; ng-click=&quot;counter.$decrease()&quot;&gt;&lt;i class=&quot;icon-minus&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;a&gt;&lt;&#x2F;small&gt;&lt;&#x2F;h1&gt;\n  &lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;angularjs.org&#x2F;&quot;&gt;angularjs&lt;&#x2F;a&gt;, binding, &lt;a href=&quot;https:&#x2F;&#x2F;www.firebase.com&#x2F;&quot;&gt;firebase&lt;&#x2F;a&gt;&lt;br&#x2F;&gt;The greatest way to use Firebase with AngularJS!&lt;&#x2F;p&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="hero-unit.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'FireSync'].concat(function($log, $scope, FireSync){\n  var clickCounterSync;\n  clickCounterSync = new FireSync().get('/visited');\n  $scope.counter = clickCounterSync.sync();\n  $log.log('HeroCtrl', $scope);\n  $scope.$on('$destroy', clickCounterSync.destroy);\n}));"
+                    != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'FireSync', 'FireCollection'].concat(function($log, $scope, FireSync, FireCollection){\n  $scope.counter = new FireSync().get('/click-count');\n}));"
           .row-fluid
             include partials/social-buttons
           .row-fluid
@@ -50,10 +50,10 @@ html(ng-app="demo")
               |  in 
               pre.demo firebase
               small to understand how this page interact with it
-          .row-fluid(ng-controller="RootCtrl", fb-sync="root")
+          .row-fluid
             accordion
               accordion-group(heading="root.json (click me to open and see what's happening)")
-                pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
+                pre.prettyprint.noborder(ng-bind="root | json")
       section
         .container-fluid
           .page-header
@@ -69,7 +69,7 @@ html(ng-app="demo")
                 tab(heading="1.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('UserCtrl1', ['$scope', 'FireSync'].concat(function($scope, FireSync){\n  /* declare sync object */\n  var userSync;\n  userSync = new FireSync().get('/users/facebook/100001053090034');\n  /* \n    sync() will create a node object where data goes\n    it is initially an empty object, but with some prototype methods */\n  $scope.user = userSync.sync();\n  /* \n    when $scope destroyed, stop sync data to user object */\n  $scope.$on('$destroy', userSync.destroy);\n  /* Notice : sync.destroy is bounded, \n    you don't need to call angular.bind(sync, sync.destroy) again. */\n}));"
-            .span6(ng-controller="UserCtrl1")
+            .span6
               include mixins/1
       section
         .container-fluid
@@ -86,7 +86,7 @@ html(ng-app="demo")
                 tab(heading="2.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('UserCtrl2', ['$scope', 'FireSync'].concat(function($scope, FireSync){\n  /* \n    assign sync object directly to user\n    it will be replaced by empty object when fb-sync acted \n  */\n  $scope.user = new FireSync().get('/users/facebook/100001053090034');\n  /* \n    $scope.$on('$destroy', userSync.destroy); \n    // no hook here, because fb-sync will do this for you \n  */\n}));"
-            .span6(ng-controller="UserCtrl2")
+            .span6
               include mixins/2
       section
         .container-fluid
@@ -101,7 +101,7 @@ html(ng-app="demo")
                 tab(heading="3.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('VipUserCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){\n  /* \n    1 */\n  $scope.vip_user = new FireSync().get('/vip-user');\n  /* \n    2\n    depends on 1 */\n  $scope.user = new FireSync().get('/users/{{ vip_user.provider }}/{{ vip_user.id }}');\n  /*\n    3\n    depends on 2 */\n  $scope.friends_list = new FireSync().get('/friend-list/{{ user.displayName }}');\n}));"
-            .span6(ng-controller="VipUserCtrl")
+            .span6
               include mixins/3
       section
         .container-fluid
@@ -116,7 +116,7 @@ html(ng-app="demo")
                 tab(heading="4.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('PrototypeCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){\n  /* this node points to a number,\n    but the type of `visited` is object, we store that number to its `$value` property.\n    This transformation applies to all non-object values (string, number ...)\n  */\n  $scope.visited = new FireSync().get('/visited');\n  /* the-test-user */\n  $scope.user = new FireSync().get('/users/the-test-user');\n}));"
-            .span6(ng-controller="VipUserCtrl")
+            .span6
               include mixins/4
       section
         .container-fluid
@@ -164,11 +164,11 @@ html(ng-app="demo")
               tabset
                 tab(heading="7.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;div fb-sync=&quot;authorAccountIds, userIds, flattenUIds, users&quot;&gt;\n  &lt;ul&gt;\n    &lt;li ng-repeat=&quot;user in users | orderBy:&#39;$index&#39;:true&quot;&gt;&lt;a ng-href=&quot;https:&#x2F;&#x2F;wwww.facebook.com&#x2F;{{ user.$name }}&quot; target=&quot;_blank&quot;&gt;{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})&lt;&#x2F;a&gt;\n      &lt;p&gt;{{ user.bio | limitTo:100 }}...&lt;&#x2F;p&gt;\n    &lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n  &lt;pre&gt; \nauthorAccountIds: {{ authorAccountIds | njson }}\nuserIds: {{ userIds | njson }}\nflattenUIds: {{ flattenUIds | njson }}\nusers: {{ users | njson }}&lt;&#x2F;pre&gt;\n&lt;&#x2F;div&gt;'
+                    != '\n&lt;div ng-controller=&quot;UsersInBookCtrl&quot; fb-sync=&quot;authorAccountIds, userIds, flattenUIds, users&quot;&gt;\n  &lt;ul&gt;\n    &lt;li ng-repeat=&quot;user in users | orderBy:&#39;$index&#39;:true&quot;&gt;&lt;a ng-href=&quot;https:&#x2F;&#x2F;wwww.facebook.com&#x2F;{{ user.$name }}&quot; target=&quot;_blank&quot;&gt;{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})&lt;&#x2F;a&gt;\n      &lt;p&gt;{{ user.bio | limitTo:100 }}...&lt;&#x2F;p&gt;\n    &lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n  &lt;pre&gt; \nauthorAccountIds: {{ authorAccountIds | njson }}\nuserIds: {{ userIds | njson }}\nflattenUIds: {{ flattenUIds | njson }}\nusers: {{ users | njson }}&lt;&#x2F;pre&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="7.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.controller('UsersInBookCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){\n  var authorAccountIds, userIds, flattenUIds, users;\n  authorAccountIds = new FireCollection().get('/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds');\n  userIds = authorAccountIds.clone().map('/accounts/{{ $name }}/userIds');\n  /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */\n  flattenUIds = userIds.clone().flatten();\n  /* [100001053090034] */\n  users = flattenUIds.clone().map('/users/facebook/{{ $value }}');\n  /* [{id: 100001053090034}] */\n  $scope.authorAccountIds = authorAccountIds;\n  $scope.userIds = userIds;\n  $scope.flattenUIds = flattenUIds;\n  $scope.users = users;\n}));"
-            .span6(ng-controller="UsersInBookCtrl")
+            .span6
               include mixins/7
       section
         .container-fluid
@@ -181,10 +181,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="8.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;div collapse=&quot;isCollapse&quot; class=&quot;nav-collapse&quot;&gt;\n  &lt;ul fb-sync=&quot;user&quot; class=&quot;nav pull-right&quot;&gt;\n    &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li&gt;&lt;a ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n&lt;&#x2F;div&gt;'
+                    != '\n&lt;div collapse=&quot;isCollapse&quot; class=&quot;nav-collapse&quot;&gt;\n  &lt;ul class=&quot;nav pull-right&quot;&gt;\n    &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li&gt;&lt;a ng-if=&quot;user.$name == &#39;100001053090034&#39;&quot; href=&quot;&quot; ng-click=&quot;resetFB()&quot;&gt;Reset FB&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li&gt;&lt;a ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="8.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "this.demo.controller('AuthCtrl', ['$scope', 'FireAuth', 'FireSync'].concat(function($scope, FireAuth, FireSync){\n  $scope.auth = new FireAuth();\n  $scope.user = new FireSync().get('/users/{{ auth.provider }}/{{ auth.id }}');\n  $scope.$watch('auth && user.$name', function(){\n    var ref$;\n    if (!($scope.auth && $scope.user.$name)) {\n      return;\n    }\n    /* We need this to store user auth (like session) into database */\n    $scope.user.$setWithPriority({\n      id: (ref$ = $scope.auth).id,\n      displayName: ref$.displayName,\n      profileUrl: ref$.profileUrl,\n      bio: ref$.bio\n    }, Math.round(Math.random() * Math.pow(2, 16)));\n  });\n}));"
+                    != "this.demo.run(['$log', '$rootScope', 'FireAuth', 'FireSync', 'Firebase', 'FirebaseUrl'].concat(function($log, $rootScope, FireAuth, FireSync, Firebase, FirebaseUrl){\n  $rootScope.auth = new FireAuth();\n  $rootScope.root = new FireSync().get('/');\n  $rootScope.user = new FireSync().get('/users/{{ auth.id }}');\n  $rootScope.$watch('auth && user.$name', function(){\n    var ref$;\n    if (!($rootScope.auth && $rootScope.user.$name)) {\n      return;\n    }\n    $log.log($rootScope.auth);\n    /* We need this to store user auth (like session) into database */\n    $rootScope.user.$setWithPriority({\n      id: (ref$ = $rootScope.auth).id,\n      displayName: ref$.displayName,\n      profileUrl: ref$.profileUrl,\n      bio: ref$.bio\n    }, Math.round(Math.random() * Math.pow(2, 16)));\n  });\n}));"
             .span6
               h2 
                 | See 'navbar'

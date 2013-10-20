@@ -1,4 +1,5 @@
-div(fb-sync="authorAccountIds, userIds, flattenUIds, users")
+div(ng-controller="UsersInBookCtrl",
+  fb-sync="authorAccountIds, userIds, flattenUIds, users")
   ul
     li(ng-repeat="user in users | orderBy:'$index':true")
       a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")

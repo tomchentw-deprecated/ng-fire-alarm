@@ -1,5 +1,5 @@
 !!! 5
-html(ng-app="demo")
+html(ng-app="demo", fb-sync="root, user")
   head
     meta(charset="utf-8")
     base(href="/")
@@ -15,7 +15,7 @@ html(ng-app="demo")
   body
     .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
-        .container-fluid(ng-controller="AuthCtrl")
+        .container-fluid
           button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
             span.icon-bar
             span.icon-bar
@@ -30,7 +30,7 @@ html(ng-app="demo")
       header.page-header
         .container-fluid
           .row-fluid
-            .span8(ng-controller="HeroCtrl")
+            .span8
               include mixins/h
             .span4
               tabset
@@ -50,10 +50,10 @@ html(ng-app="demo")
               |  in 
               pre.demo firebase
               small to understand how this page interact with it
-          .row-fluid(ng-controller="RootCtrl", fb-sync="root")
+          .row-fluid
             accordion
               accordion-group(heading="root.json (click me to open and see what's happening)")
-                pre.prettyprint.noborder(fb-sync="root", ng-bind="root | json")
+                pre.prettyprint.noborder(ng-bind="root | json")
       section
         .container-fluid
           .page-header
@@ -69,7 +69,7 @@ html(ng-app="demo")
                 tab(heading="1.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/1.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="UserCtrl1")
+            .span6
               include mixins/1
       section
         .container-fluid
@@ -86,7 +86,7 @@ html(ng-app="demo")
                 tab(heading="2.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/2.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="UserCtrl2")
+            .span6
               include mixins/2
       section
         .container-fluid
@@ -101,7 +101,7 @@ html(ng-app="demo")
                 tab(heading="3.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/3.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="VipUserCtrl")
+            .span6
               include mixins/3
       section
         .container-fluid
@@ -116,7 +116,7 @@ html(ng-app="demo")
                 tab(heading="4.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/4.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="VipUserCtrl")
+            .span6
               include mixins/4
       section
         .container-fluid
@@ -168,7 +168,7 @@ html(ng-app="demo")
                 tab(heading="7.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/7.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="UsersInBookCtrl")
+            .span6
               include mixins/7
       section
         .container-fluid
