@@ -25,9 +25,9 @@
 
   $rootScope.$watch '!!auth.id && !!user.$name' !->
     return unless it
-    $log.log 'logined! update user!', $rootScope.user
+    $log.log 'logined! update user!', $rootScope
     /* We need this to store user auth (like session) into database */
-    $rootScope.user.$setWithPriority $rootScope.auth{id, displayName, profileUrl, bio}, Math.round(Math.random!*2^16)
+    $rootScope.user.$setWithPriority $rootScope.auth{id, displayName, profileUrl, bio, updated_time}, Math.round(Math.random!*2^16)
 
   autoInjectDSL $rootScope .resolve {auth, root, user}
 

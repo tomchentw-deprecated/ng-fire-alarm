@@ -5,8 +5,8 @@
         img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
         | {{ user.displayName }}
     li(ng-if="!auth.id")
-      a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
+      a(ng-click="auth.$login('facebook', {rememberMe: true, scope: 'email'})")
         | Facebook Login
     li(ng-if="auth.id")
-      a(ng-click="auth.logout()")
+      a(ng-click="auth.$logout()")
         | Logout

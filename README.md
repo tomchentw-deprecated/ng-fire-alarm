@@ -257,13 +257,14 @@ this.demo.run(['$log', '$rootScope', 'fireAuthDSL', 'fireObjectDSL', 'autoInject
     if (!it) {
       return;
     }
-    $log.log('logined! update user!', $rootScope.user);
+    $log.log('logined! update user!', $rootScope);
     /* We need this to store user auth (like session) into database */
     $rootScope.user.$setWithPriority({
       id: (ref$ = $rootScope.auth).id,
       displayName: ref$.displayName,
       profileUrl: ref$.profileUrl,
-      bio: ref$.bio
+      bio: ref$.bio,
+      updated_time: ref$.updated_time
     }, Math.round(Math.random() * Math.pow(2, 16)));
   });
   autoInjectDSL($rootScope).resolve({
@@ -280,8 +281,8 @@ and then, in your `/partials/auth.html`:
 <div collapse="isCollapse" class="nav-collapse collapse">
   <ul class="nav pull-right">
     <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
-    <li ng-if="!auth.id"><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login</a></li>
-    <li ng-if="auth.id"><a ng-click="auth.logout()">Logout</a></li>
+    <li ng-if="!auth.id"><a ng-click="auth.$login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login</a></li>
+    <li ng-if="auth.id"><a ng-click="auth.$logout()">Logout</a></li>
   </ul>
 </div>
 ```

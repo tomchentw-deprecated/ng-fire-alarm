@@ -4,7 +4,7 @@ DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebas
     const values = []
     for result in results
       (value, key) <-! forEach result
-      return if key.0 is '$'
+      return if key.match /^\$/
       value = regularizeObject value
       value.$name = key
       value.$index = -1+values.push value

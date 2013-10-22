@@ -1,5 +1,5 @@
 (function(){
-  var noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals, noopNode, interpolateMatcher, createUrlGetter, DSLs, DSL, FireAuthDSL, FireObjectDSL, FireCollectionDSL, FireObject, regularizeObject, regularizeFireObject, FireCollection, autoInjectDSL, CompactFirebaseSimpleLogin;
+  var noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals, noopNode, interpolateMatcher, createUrlGetter, DSLs, DSL, FireAuthDSL, FireObjectDSL, FireCollectionDSL, FireAuth, regularizeAuth, FireObject, regularizeObject, regularizeFireObject, FireCollection, autoInjectDSL, CompactFirebaseSimpleLogin, slice$ = [].slice;
   noop = angular.noop, identity = angular.identity, bind = angular.bind, forEach = angular.forEach, copy = angular.copy, isObject = angular.isObject, isFunction = angular.isFunction, isString = angular.isString, isNumber = angular.isNumber, equals = angular.equals;
   noopNode = {
     on: noop,
@@ -44,11 +44,14 @@
   DSLs = {};
   DSLs.auth = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
     return function($scope, arg$){
-      var root, next, ref, this$ = this;
+      var root, next, simpleLoginRef, this$ = this;
       root = arg$.root, next = arg$.next;
-      ref = new FirebaseSimpleLogin(new Firebase(root), function(error, auth){
+      simpleLoginRef = new FirebaseSimpleLogin(new Firebase(root), function(error, auth){
+        if (error || !auth) {
+          auth = {};
+        }
         $immediate(function(){
-          next(copy(error || !auth ? {} : auth, clone$(ref)));
+          next(regularizeAuth(auth, simpleLoginRef));
         });
       });
     };
@@ -98,28 +101,25 @@
   FireObjectDSL = (function(superclass){
     var prototype = extend$((import$(FireObjectDSL, superclass).displayName = 'FireObjectDSL', FireObjectDSL), superclass).prototype, constructor = FireObjectDSL;
     prototype._build = function($scope, lastNext){
-      var steps, length, step;
-      steps = this.steps;
-      length = steps.length;
-      step = steps[0];
-      step.regularize = this.constructor.regularize;
-      if (length === 1) {
-        step.next = lastNext;
-      } else {
-        forEach(steps, function(step, index){
-          var nextStep;
-          step.next = index !== length - 1 ? (nextStep = steps[index + 1], function(results){
-            return DSLs[nextStep.type]($scope, (nextStep.results = results, nextStep));
-          }) : lastNext;
-        });
-      }
-      DSLs[step.type]($scope, step);
+      var ref$, i$, steps, lastStep, firstStep;
+      ref$ = this.steps, steps = 0 < (i$ = ref$.length - 1) ? slice$.call(ref$, 0, i$) : (i$ = 0, []), lastStep = ref$[i$];
+      firstStep = steps[0] || lastStep;
+      lastStep.next = lastNext;
+      forEach(steps, function(step, index){
+        var nextStep;
+        nextStep = steps[index + 1] || lastStep;
+        step.next = function(results){
+          DSLs[nextStep.type]($scope, (nextStep.results = results, nextStep));
+        };
+      });
+      DSLs[firstStep.type]($scope, firstStep);
       superclass.prototype._build.apply(this, arguments);
     };
     prototype.get = function(interpolateUrl){
       return this._cloneThenPush({
         type: 'get',
-        interpolateUrl: interpolateUrl
+        interpolateUrl: interpolateUrl,
+        regularize: this.constructor.regularize
       });
     };
     function FireObjectDSL(){
@@ -158,7 +158,7 @@
         next(values);
       });
       function fn$(value, key){
-        if (key[0] === '$') {
+        if (key.match(/^\$/)) {
           return;
         }
         value = regularizeObject(value);
@@ -270,6 +270,28 @@
       $scope.$watchCollection(watchListener, watchAction);
       $scope.$on('$destroy', destroyListeners);
     };
+  };
+  FireAuth = (function(){
+    FireAuth.displayName = 'FireAuth';
+    var prototype = FireAuth.prototype, constructor = FireAuth;
+    function FireAuth(auth, simpleLoginRef){
+      auth.$auth = function(){
+        return simpleLoginRef;
+      };
+    }
+    prototype.$login = function(){
+      var ref$;
+      (ref$ = this.$auth()).login.apply(ref$, arguments);
+    };
+    prototype.$logout = function(){
+      var ref$;
+      (ref$ = this.$auth()).logout.apply(ref$, arguments);
+    };
+    return FireAuth;
+  }());
+  regularizeAuth = function(auth, simpleLoginRef){
+    FireAuth(auth, simpleLoginRef);
+    return import$(auth, FireAuth.prototype);
   };
   FireObject = (function(){
     FireObject.displayName = 'FireObject';
@@ -409,10 +431,6 @@
     }
     $provide.value('FirebaseSimpleLogin', CompactFirebaseSimpleLogin);
   }));
-  function clone$(it){
-    function fun(){} fun.prototype = it;
-    return new fun;
-  }
   function extend$(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

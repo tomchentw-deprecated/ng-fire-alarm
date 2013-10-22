@@ -28,9 +28,10 @@ const DSLs = {}
 DSLs.auth = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {root, next}) ->
-    const ref = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+    const simpleLoginRef = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+      auth = {} if error or not auth
       <~! $immediate
-      next copy if error or not auth then {} else auth, ^^ref
+      next regularizeAuth auth, simpleLoginRef
 
 class DSL
 
@@ -61,25 +62,19 @@ class FireAuthDSL extends DSL
 class FireObjectDSL extends DSL
   
   _build: !($scope, lastNext) ->
-    const {steps} = @
-    const {length} = steps
-    const step = steps.0
-    step <<< @constructor{regularize}
-    #
-    if length is 1
-      step.next = lastNext
-    else
-      (step, index) <-! forEach steps
-      step.next = if index isnt length-1
-        const nextStep = steps[index+1]
-        (results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
-      else
-        lastNext
-    DSLs[step.type] $scope, step
+    const [...steps, lastStep] = @steps
+    const firstStep = steps.0 || lastStep
+    lastStep.next = lastNext
+
+    forEach steps, !(step, index) ->
+      const nextStep = steps[index+1] || lastStep
+      step.next = !(results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
+
+    DSLs[firstStep.type] $scope, firstStep
     super ...
 
   get: (interpolateUrl) ->
-    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl
+    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, regularize: @constructor.regularize
 
 class FireCollectionDSL extends FireObjectDSL
 
@@ -97,7 +92,7 @@ DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebas
     const values = []
     for result in results
       (value, key) <-! forEach result
-      return if key.0 is '$'
+      return if key.match /^\$/
       value = regularizeObject value
       value.$name = key
       value.$index = -1+values.push value
@@ -175,6 +170,19 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
 
     $scope.$on '$destroy' destroyListeners
 
+class FireAuth
+
+  (auth, simpleLoginRef) -> 
+    auth.$auth = -> simpleLoginRef
+
+  $login: !-> @$auth!login ...&
+  $logout: !-> @$auth!logout ...&
+
+
+const regularizeAuth = (auth, simpleLoginRef) ->
+  FireAuth auth, simpleLoginRef
+  auth <<< FireAuth::
+  
 class FireObject
 
   (value, snap) ->

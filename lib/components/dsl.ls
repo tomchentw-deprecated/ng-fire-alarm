@@ -27,25 +27,19 @@ class FireAuthDSL extends DSL
 class FireObjectDSL extends DSL
   
   _build: !($scope, lastNext) ->
-    const {steps} = @
-    const {length} = steps
-    const step = steps.0
-    step <<< @constructor{regularize}
-    #
-    if length is 1
-      step.next = lastNext
-    else
-      (step, index) <-! forEach steps
-      step.next = if index isnt length-1
-        const nextStep = steps[index+1]
-        (results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
-      else
-        lastNext
-    DSLs[step.type] $scope, step
+    const [...steps, lastStep] = @steps
+    const firstStep = steps.0 || lastStep
+    lastStep.next = lastNext
+
+    forEach steps, !(step, index) ->
+      const nextStep = steps[index+1] || lastStep
+      step.next = !(results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
+
+    DSLs[firstStep.type] $scope, firstStep
     super ...
 
   get: (interpolateUrl) ->
-    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl
+    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, regularize: @constructor.regularize
 
 class FireCollectionDSL extends FireObjectDSL
 

@@ -1,6 +1,7 @@
 DSLs.auth = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {root, next}) ->
-    const ref = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+    const simpleLoginRef = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+      auth = {} if error or not auth
       <~! $immediate
-      next copy if error or not auth then {} else auth, ^^ref
+      next regularizeAuth auth, simpleLoginRef
