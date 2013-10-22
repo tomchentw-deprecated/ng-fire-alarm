@@ -1,26 +1,15 @@
 !!! 5
-html(ng-app="demo", fb-sync="root, user")
+html(ng-app="demo")
   head
     meta(charset="utf-8")
     base(href="/")
     title angular-on-fire
     meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
     link(rel="stylesheet", href="style.min.css")      
-    script(async, src="script.js")
+    script(defer, src="script.js")
   body
-    .navbar.navbar-inverse.navbar-fixed-top
-      .navbar-inner
-        .container-fluid
-          button.btn.btn-navbar(type="button", ng-init="isCollapse = true", ng-click="isCollapse = !isCollapse")
-            span.icon-bar
-            span.icon-bar
-            span.icon-bar
-          a.brand(href="https://github.com/tomchentw/angular-on-fire") angular-on-fire
-          include mixins/8
-    a(href="https://github.com/tomchentw/angular-on-fire")
-      img(style="position: absolute; z-index: 9999; top: 0; right: 0; border: 0;",
-        src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png",
-        alt="Fork me on GitHub")
+    header
+      include partials/header
     div(role="main")
       header.page-header
         .container-fluid
@@ -151,32 +140,5 @@ html(ng-app="demo", fb-sync="root, user")
                 | See 'navbar'
               h2
                 small Click 'Facebook Login' for demo!
-    footer.footer
-      .container-fluid
-        p
-          | Created by
-          a(href="https://twitter.com/tomchentw", target="_blank") @tomchentw
-          | released with
-          a(href="http://tomchentw.mit-license.org/", target="_blank") MIT License
-          | .
-        p
-          | Design and build with all the love in
-          a(href="http://angularjs.org/", target="_blank") @angularjs
-          | and
-          a(href="https://www.firebase.com/", target="_blank") @firebase
-          | .
-        p
-          | Big thanks to
-          a(href="http://getbootstrap.com/", target="_blank") @bootstrap
-          | .
-        ul.footer-links
-          li
-            a(href="http://blog.tomchentw.com/", target="_blank") Blog
-          li.muted
-            | ·
-          li
-            a(href="http://www.linkedin.com/in/tomchentw", target="_blank") LinkedIn
-          li.muted
-            | ·
-          li
-            a(href="https://www.facebook.com/tomchentw", target="_blank") Facebook
+    footer
+      include partials/footer

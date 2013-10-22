@@ -43,7 +43,10 @@ module.exports = function(grunt) {
           // no order ...
           'http://getbootstrap.com/2.3.2/assets/js/google-code-prettify/prettify.js',
           'http://www.google-analytics.com/analytics.js',
-          'https://raw.github.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.6.0.min.js'
+          'https://raw.github.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.6.0.min.js',
+          // social plugins ...
+          'http://platform.twitter.com/widgets.js',
+          'https://apis.google.com/js/plusone.js'
         ],
         dest: '<%= fdr.vendor %>scripts/'
       }, styles: {
@@ -174,7 +177,7 @@ module.exports = function(grunt) {
         tasks: ['template:jade']
       },
       jade: {
-        files: ['<%= fdr.src %>*.jade'],
+        files: ['<%= fdr.src %>**/*.jade'],
         tasks: ['jade:compile']
       },
       mixins: {
