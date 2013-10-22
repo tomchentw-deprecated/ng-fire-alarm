@@ -1,7 +1,6 @@
-div(ng-controller="UsersInBookCtrl",
-  fb-sync="authorAccountIds, userIds, flattenUIds, users")
+div(ng-controller="BookAuthorsCtrl")
   ul
-    li(ng-repeat="user in users | orderBy:'$index':true")
+    li(ng-repeat="user in authors | orderBy:'$index':true")
       a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")
         {{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})
       p {{ user.bio | limitTo:100 }}...
@@ -9,4 +8,4 @@ div(ng-controller="UsersInBookCtrl",
     | authorAccountIds: {{ authorAccountIds | njson }}
     | userIds: {{ userIds | njson }}
     | flattenUIds: {{ flattenUIds | njson }}
-    | users: {{ users | njson }}
+    | authors: {{ authors | njson }}

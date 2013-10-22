@@ -43,83 +43,58 @@ this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']).value({
 ### `FireSync` service
 Then, let's use `FireSync` :
 ```JavaScript 
-this.demo.controller('UserCtrl1', ['$scope', 'FireSync'].concat(function($scope, FireSync){
+this.demo.controller('UserShowCtrl', ['$scope', 'fireObjectDSL', 'autoInjectDSL'].concat(function($scope, fireObjectDSL, autoInjectDSL){
   /* declare sync object */
-  var userSync;
-  userSync = new FireSync().get('/users/100001053090034');
-  /* 
-    sync() will create a node object where data goes
-    it is initially an empty object, but with some prototype methods */
-  $scope.user = userSync.sync();
-  /* 
-    when $scope destroyed, stop sync data to user object */
-  $scope.$on('$destroy', userSync.destroy);
-  /* Notice : sync.destroy is bounded, 
-    you don't need to call angular.bind(sync, sync.destroy) again. */
+  var user;
+  user = fireObjectDSL.get('/users/100001053090034');
+  /*
+   * pass $scope to `autoInjectDSL`, it'll automatically detatch listeners
+   * when the $scope is destroyed.
+   */
+  autoInjectDSL($scope).resolve({
+    user: user
+  });
 }));
 ```
 
 In your `/users/show.html` :
 ```HTML
 
-<div ng-controller="UserCtrl1">
+<div ng-controller="UserShowCtrl">
   <h2>{{ user.displayName }}</h2>
   <p>{{ user.bio }}</p>
   <pre>user: {{ user | njson }}</pre>
 </div>
 ```
-
-### `fb-sync` directive
-This is the powerful part of `angular-on-fire`.  
-If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
-```JavaScript
-this.demo.controller('UserCtrl2', ['$scope', 'FireSync'].concat(function($scope, FireSync){
-  /* 
-    assign sync object directly to user
-    it will be replaced by empty object when fb-sync acted 
-  */
-  $scope.user = new FireSync().get('/users/100001053090034');
-  /* 
-    $scope.$on('$destroy', userSync.destroy); 
-    // no hook here, because fb-sync will do this for you 
-  */
-}));
-```
-Then in your `/users/show.html` :
-```HTML
-
-<div ng-controller="UserCtrl2" fb-sync="user">
-  <h2>{{ user.displayName }}</h2>
-  <p>{{ user.bio }}</p>
-  <pre>user: {{ user | njson }}</pre>
-</div>
-```
-
-You can also specify multiple sync to load like this:  
-`fb-sync="user, account, book"` ( seperated by comma `,` )
 
 ### Resolving Dynamic Path 
 Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
 ```JavaScript
-this.demo.controller('VipUserCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){
+this.demo.controller('VipUserCtrl', ['$scope', 'fireObjectDSL', 'autoInjectDSL'].concat(function($scope, fireObjectDSL, autoInjectDSL){
   /* 
     1 */
-  $scope.vip_user = new FireSync().get('/vip-user');
+  var vip_user, user, friends_list;
+  vip_user = fireObjectDSL.get('/vip-user');
   /* 
     2
     depends on 1 */
-  $scope.user = new FireSync().get('/users/{{ vip_user.id }}');
+  user = fireObjectDSL.get('/users/{{ vip_user.id }}');
   /*
     3
     depends on 2 */
-  $scope.friends_list = new FireSync().get('/friend-list/{{ user.displayName }}');
+  friends_list = fireObjectDSL.get('/friend-list/{{ user.displayName }}');
+  autoInjectDSL($scope).resolve({
+    vip_user: vip_user,
+    user: user,
+    friends_list: friends_list
+  });
 }));
 ```
 
 Then in your `/users/show-vip.html` :
 ```HTML
 
-<div ng-controller="VipUserCtrl" fb-sync="vip_user, user, friends_list">
+<div ng-controller="VipUserCtrl">
   <h2><i ng-class="{'icon-star': vip_user.valid &amp;&amp; user.payed, 'icon-star-empty': !vip_user.valid || !user.payed}"> </i>{{ user.displayName }}</h2>
   <p>{{ user.bio }}</p>
   <button ng-click="user.$update({payed: !user.payed})" class="btn btn-large btn-info"><span ng-if="user.payed">Extended</span><span ng-if="!user.payed">Extend</span> VIP : $USD 500</button>
@@ -154,24 +129,29 @@ We expose `set`, `update`, `push`, `transaction`, `remove`, `setPriority`, `setW
 We also add another two common used functions : `$increase`, `$decrease` , which make great use of `transaction`.
 
 ```JavaScript
-this.demo.controller('PrototypeCtrl', ['$scope', 'FireSync'].concat(function($scope, FireSync){
+this.demo.controller('UserEditCtrl', ['$scope', 'fireObjectDSL', 'autoInjectDSL'].concat(function($scope, fireObjectDSL, autoInjectDSL){
   /* this node points to a number,
     but the type of `click-count` is object, we store that number to its `$value` property.
     This transformation applies to all non-object values (string, number ...)
   */
-  $scope.clickCount = new FireSync().get('/click-count');
+  var visited, user;
+  visited = fireObjectDSL.get('/click-count');
   /* the-test-user */
-  $scope.user = new FireSync().get('/users/the-test-user');
+  user = fireObjectDSL.get('/users/the-test-user');
+  autoInjectDSL($scope).resolve({
+    visited: visited,
+    user: user
+  });
 }));
 ```
 
 In your `/users/edit.html` : 
 ```HTML
 
-<div ng-controller="PrototypeCtrl" fb-sync="clickCount, user">
-  <button ng-click="clickCount.$increase()" class="btn btn-large btn-primary">
+<div ng-controller="UserEditCtrl">
+  <button ng-click="visited.$increase()" class="btn btn-large btn-primary">
      
-    Visited Counter : {{ clickCount.$value }}
+    Visited Counter : {{ visited.$value }}
   </button>
   <form class="form-horizontal">
     <label for="displayName">Display Name :</label>
@@ -191,17 +171,21 @@ With `$index`, you can do a reverse order like this : `ng-repeat="user in users 
 
 
 ```JavaScript
-this.demo.controller('UsersCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){
+this.demo.controller('UsersCtrl', ['$scope', 'fireCollectionDSL', 'autoInjectDSL'].concat(function($scope, fireCollectionDSL, autoInjectDSL){
   /*
     lets assume it's a object with each item created by `push`*/
-  $scope.users = new FireCollection().get('/users');
+  var users;
+  users = fireCollectionDSL.get('/users');
+  autoInjectDSL($scope).resolve({
+    users: users
+  });
 }));
 ```
 
-In your `/users/edit.html` : 
+In your `/users/list.html` : 
 ```HTML
 
-<div fb-sync="users">
+<div ng-controller="UsersCtrl">
   <ul>
     <li ng-repeat="user in users | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
       <p>{{ user.bio | limitTo:100 }}...</p>
@@ -215,39 +199,43 @@ In your `/users/edit.html` :
 ### Eager Loading on `FireCollection`
 The another powerful part of `angular-on-fire`.
 Let's say you have an indexes set, and each of tme can be mapped to a list of items in certain urls.
-Then `FireCollection` can map these keys to a collection of actual items. For example:
-The `UsersCtrl` used above can be rewritten as:
-
-```JavaScript
-this.demo.controller('UsersInAccountCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){
-  var collect;
-  collect = new FireCollection().get('/accounts/-J5CWTKiETYuTe7WWWkZ/userIds');
-  /*
-    [1, 3, 7]
-    or 
-    { 1: true, 3: true, 7: true }  */
-  $scope.users = collect.map('/users/{{ $value }}');
-  /* or '/users/{{ $name }}' if above is object. */
-}));
-```
-
+Then `FireCollection` can map these keys to a collection of actual items.  
 Moreover, if you need to map indexes twice or above, remember to `flatten` the indexes:
 
 ```JavaScript
-this.demo.controller('UsersInBookCtrl', ['$scope', 'FireCollection'].concat(function($scope, FireCollection){
-  var authorAccountIds, userIds, flattenUIds, users;
-  authorAccountIds = new FireCollection().get('/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds');
-  userIds = authorAccountIds.clone().map('/accounts/{{ $name }}/userIds');
+this.demo.controller('BookAuthorsCtrl', ['$scope', 'fireCollectionDSL', 'autoInjectDSL'].concat(function($scope, fireCollectionDSL, autoInjectDSL){
+  var authorAccountIds, userIds, flattenUIds, authors;
+  authorAccountIds = fireCollectionDSL.get('/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds');
+  userIds = authorAccountIds.map('/accounts/{{ $name }}/userIds');
   /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */
-  flattenUIds = userIds.clone().flatten();
+  flattenUIds = userIds.flatten();
   /* [100001053090034] */
-  users = flattenUIds.clone().map('/users/{{ $value }}');
+  authors = flattenUIds.map('/users/{{ $name }}');
   /* [{id: 100001053090034}] */
-  $scope.authorAccountIds = authorAccountIds;
-  $scope.userIds = userIds;
-  $scope.flattenUIds = flattenUIds;
-  $scope.users = users;
+  autoInjectDSL($scope).resolve({
+    authorAccountIds: authorAccountIds,
+    userIds: userIds,
+    flattenUIds: flattenUIds,
+    authors: authors
+  });
 }));
+```
+
+In your `/book/authors.html` : 
+```HTML
+
+<div ng-controller="BookAuthorsCtrl">
+  <ul>
+    <li ng-repeat="user in authors | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
+      <p>{{ user.bio | limitTo:100 }}...</p>
+    </li>
+  </ul>
+  <pre> 
+authorAccountIds: {{ authorAccountIds | njson }}
+userIds: {{ userIds | njson }}
+flattenUIds: {{ flattenUIds | njson }}
+authors: {{ authors | njson }}</pre>
+</div>
 ```
 Easy! Right?
 
@@ -257,18 +245,19 @@ Easy! Right?
 *  [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
 *  set `FirebaseUrl` in your app (see above section)
 
-Then, in controller:
+Then, if I want current `user/auth` be globally accessible via `$rootScope`, use `run` :
 ```JavaScript
-this.demo.run(['$log', '$rootScope', 'FireAuth', 'FireSync', 'Firebase', 'FirebaseUrl'].concat(function($log, $rootScope, FireAuth, FireSync, Firebase, FirebaseUrl){
-  $rootScope.auth = new FireAuth();
-  $rootScope.root = new FireSync().get('/');
-  $rootScope.user = new FireSync().get('/users/{{ auth.id }}');
-  $rootScope.$watch('auth && user.$name', function(){
+this.demo.run(['$log', '$rootScope', 'fireAuthDSL', 'fireObjectDSL', 'autoInjectDSL', 'Firebase', 'FirebaseUrl'].concat(function($log, $rootScope, fireAuthDSL, fireObjectDSL, autoInjectDSL, Firebase, FirebaseUrl){
+  var auth, root, user;
+  auth = fireAuthDSL.root(FirebaseUrl);
+  root = fireObjectDSL.get('/');
+  user = fireObjectDSL.get('/users/{{ auth.id }}');
+  $rootScope.$watch('!!auth.id && !!user.$name', function(it){
     var ref$;
-    if (!($rootScope.auth && $rootScope.user.$name)) {
+    if (!it) {
       return;
     }
-    $log.log($rootScope.auth);
+    $log.log('logined! update user!', $rootScope.user);
     /* We need this to store user auth (like session) into database */
     $rootScope.user.$setWithPriority({
       id: (ref$ = $rootScope.auth).id,
@@ -276,6 +265,11 @@ this.demo.run(['$log', '$rootScope', 'FireAuth', 'FireSync', 'Firebase', 'Fireba
       profileUrl: ref$.profileUrl,
       bio: ref$.bio
     }, Math.round(Math.random() * Math.pow(2, 16)));
+  });
+  autoInjectDSL($rootScope).resolve({
+    auth: auth,
+    root: root,
+    user: user
   });
 }));
 ```
@@ -286,8 +280,7 @@ and then, in your `/partials/auth.html`:
 <div collapse="isCollapse" class="nav-collapse">
   <ul class="nav pull-right">
     <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
-    <li><a ng-if="user.$name == '100001053090034'" href="" ng-click="resetFB()">Reset FB</a></li>
-    <li><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a></li>
+    <li><a ng-if="!auth.id" ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a><a ng-if="auth.id" ng-click="auth.logout()">Logout</a></li>
   </ul>
 </div>
 ```

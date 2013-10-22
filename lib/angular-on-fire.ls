@@ -1,419 +1,252 @@
-const {isString, isArray, isFunction, isObject, isNumber} = angular
-const {noop, identity, forEach, bind, copy, extend, module} = angular
+const {noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals} = angular
 
-const FIREBASE_QUERY_KEYS = <[limit startAt endAt]>
+const noopNode = 
+  on: noop
+  off: noop
 
-#
-# Internal APIs
-#
-class DataFlow
+const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
 
-  (config) ->
-    extend @, config
-    @next = noopFlow
+const createUrlGetter = ($scope, $parse, interpolateUrl) ->
 
-  cloneChained: ->
-    const cloned = new @constructor @
-    cloned.next = @next.cloneChained!
-    cloned
-  
-  setSync: !(@sync, prev) ->
-    @next.setSync sync, @
-
-  start: noop
-  
-  stop: !-> @next.stop!
-
-  const noopFlow = {}
-  for key of @::
-    noopFlow[key] = noop
-
-class InterpolateFlow extends DataFlow
-
-  @createFirebase = (path || '') ->
-    const url = if path.substr(0, 4) isnt 'http' then @FirebaseUrl + path else path
-    new @Firebase url
-
-  const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
-  ->
-    super ...
-    const {interpolate} = DataFlow
-    @queryFuncs = for str, index in @queryString.split interpolateMatcher
-      if index % 2 then interpolate "{{ #str }}" else str
-
-  _buildWatchFn: (value) -> 
-    const {queryFuncs} = @
-    (scope) ->
-      paths = for str, index in queryFuncs
-        if index % 2
-          str = str(scope) || str(value)
-          return void unless isString(str) && str.length
-        str
-      paths.join ''
-
-class GetFlow extends InterpolateFlow
-
-  const noopQuery = do
-    on: noop
-    off: noop
-  const selfChaining = -> noopQuery
-  for key in FIREBASE_QUERY_KEYS
-    noopQuery[key] = selfChaining
-
-  ->
-    super ...
-    @query = noopQuery
-    @stopWatch = noop
-
-  start: !->
-    const getPath = !(path) ~>
-      @_updateQuery InterpolateFlow.createFirebase path if path
-
-    if @queryFuncs.length > 1
-      @stopWatch = @sync._watch @_buildWatchFn({}), getPath
-    else
-      getPath @queryString
-
-  execQuery: !(key, args) ->
-    @[key] = args
-    @_updateQuery @query
-
-  stop: !->
-    DataFlow.immediate @stopWatch
-    @query.off \value void, @
-    super ...
-
-  _onSuccess: !(snap) ->
-    @next.start @sync@@createNode snap
-
-  _onError: !(error) ->
-    @next.start void
-
-  _updateQuery: !(newQuery) ->
-    @query.off \value void, @
-    for key in FIREBASE_QUERY_KEYS when (value = @[key])
-      newQuery = newQuery[key] ...value
-    newQuery.on \value noop # enable cache behavior
-    @query.off \value noop # disable old cache
-    newQuery.on \value @_onSuccess, @_onError, @
-    @query = newQuery
-
-class MapFlow extends InterpolateFlow
-
-  ->
-    super ...
-    @stopWatchFns = []
-    @queries      = []
-    @mappedResult = []
-
-  start: !(result) ->
-    @stop!
-    throw new TypeError 'Map require result is array' unless isArray result
-    const {sync, queries, mappedResult} = @
-    mappedResult.length = result.length
-    return @next.start mappedResult if result.length is 0
-
-    @stopWatchFns = for let value, index in result
-      const _onSuccess = !(snap) ->
-        mappedResult[index] = (if @flatten || isArray(snap.val!) then FireCollection else FireSync).createNode snap, index
-        allResolved = true
-        for value in mappedResult when not value
-          allResolved = false
-        @next.start mappedResult if allResolved
-
-      (path) <~! sync._watch @_buildWatchFn(value)
-      return unless path
-      that.off \value void, @ if queries[index]
-      const newQuery = InterpolateFlow.createFirebase path
-      newQuery.on \value noop # enable cache
-      that.off \value noop if that # disable old cache
-      queries[index] = newQuery
-      #
-      newQuery.on \value _onSuccess, noop, @
-  
-  stop: !->
-    const {stopWatchFns, queries} = @
-    DataFlow.immediate !->
-      for that in stopWatchFns by -1
-        that!
-    for query in queries when query
-      query.off \value void, @
-    @mappedResult = []
-    @queries = []
-    super ...
-
-class FlattenDataFlow extends DataFlow
-
-  setSync: !(sync, prev) ->
-    throw new TypeError 'Flatten require prev is map' unless prev instanceof MapFlow
-    prev.flatten = true
-    super ...
-
-  start: !(result) ->
-    throw new TypeError 'Flatten require result is array' unless isArray result
-    const flattenedResult = []
-
-    for array in result
-      for value in array
-        value.$_setFireProperties void, flattenedResult.push value # update index!
-    @next.start flattenedResult
-
-class ToSyncFlow extends DataFlow
-
-  ->
-    super ...
-    @resolve ||= noop
-
-  start: !(result) ->
-    @promise = DataFlow.immediate !~>
-      @sync._extend result
-      @resolve @sync.$node
-      @resolve = noop
-
-  stop: ->
-    DataFlow.immediate.cancel that if @promise
-    super ...
-
-class FireSync
-  @createNode = (snap, index) ->
-    (^^ new FireNode!).$_extend snap, index
-
-  const noopDefer = do
-    resolve: noop
-    reject: noop
-
-  -> 
-    @$head = @$tail = @$scope = @$node = void
-
-  _addFlow: (flow) ->
-    @_head = (-> flow) unless @_head
-    that.next = flow if @$tail
-    @$tail = flow
-    @
-
-  get: (queryUrlOrPath) ->
-    @_addFlow new GetFlow {queryString: queryUrlOrPath}
-
-  clone: ->
-    return @ if @$deferred?promise
-    #
-    const cloned = new @constructor
-    if @_head?!
-      const flow = that.cloneChained!
-      cloned._head = -> flow
-      #
-      next = flow
-      while next.next
-        next = that
-      cloned.$tail = next
-    cloned
-
-  sync: ->
-    return that if @$node
-    @_addFlow new ToSyncFlow @$deferred?{resolve}
-    @_head!setSync @
-
-    @destroy = !~>
-      @$deferred?reject!
-      @_head!stop!
-      @_head!setSync void
-      #
-      DataFlow.immediate delete @$offDestroy
-      delete! @$scope
-    @_head!start!
-    @$node = @constructor.createNode!
-  
-  syncWithScope: (@$scope) ->
-    @sync!
-    @$offDestroy = @$scope.$on \$destroy @destroy
-    @$node
-
-  defer: ->
-    @$deferred = FireSync.q.defer! unless @$deferred
-    @
-
-  promise: -> @$deferred.promise
-
-  _extend: !(result) ->
-    @$node.$_extend result
-
-  /*
-    angular specifiy code...
-    http://docs.angularjs.org/api/ng.$rootScope.Scope
-  */
-  _watch: ->
-    @$scope.$watch ...&
-
-class FireCollection extends FireSync
-
-  @createNode = (snap) ->
-    const node = []
-    extend node, FireNode::
-    FireNode.call node
-    node.$_extend snap
-
-  map: (queryUrlOrPath) ->
-    @_addFlow new MapFlow {queryString: queryUrlOrPath}
-
-  flatten: ->
-    @_addFlow new FlattenDataFlow
-
-  forEach FIREBASE_QUERY_KEYS, !(key) ->
-    @[key] = !(args) -> @_head!execQuery key, args
-  , @::
-
-  syncWithScope: (_scope, iAttrs) ->
-    const head = @_head!
-    for key in FIREBASE_QUERY_KEYS
-      const array = _scope.$eval iAttrs[key]
-      head[key] = array if isArray array
-    super ...
-
-class FireNode
-
-  const noopRef = do
-    set: noop
-    update: noop
-    push: noop
-    transaction: noop
-    remove: noop
-    setPriority: noop
-    setWithPriority: noop
-
-  ->
-    ref = noopRef
-    # to prevent ref trigger angular.copy event, we need to wrap it!
-    @$ref = -> ref # store ref in closure
-    @$_setFireProperties = (nodeOrSnap, index) ~>
-      if nodeOrSnap
-        ref := nodeOrSnap.ref?! || nodeOrSnap.$ref?! || ref
-        # update ref in closure
-      FireNode::$_setFireProperties.call @, nodeOrSnap, index
-
-  $ref: noop # just for placeholder because FireCollection.createNode will call `extend node, FireNode::`
-
-  $_setFireProperties: (nodeOrSnap, index) ->
-    @$index       = index if isNumber index
-    if nodeOrSnap
-      const isSnap  = isFunction nodeOrSnap.val
-      @$name        = if isSnap then nodeOrSnap.name!         else nodeOrSnap.$name
-      @$priority    = if isSnap then nodeOrSnap.getPriority!  else nodeOrSnap.$priority
-    isSnap
-
-  $_extend: (nodeOrSnap, index) ->
-    for key in [key for key of @ when not FireNode::[key]]
-      delete! @[key]
-
-    if @$_setFireProperties nodeOrSnap, index
-      const val = nodeOrSnap.val!
-      if isArray @
-        counter = -1
-        nodeOrSnap.forEach !(snap) ~>
-          @[counter += 1] = FireSync.createNode snap, counter
-      else
-        extend @, if isObject val then val else $value: val
-    else
-      for own key, value of nodeOrSnap
-        @[key] = value
-    @
-
-  forEach noopRef, !(value, key) ->
-    @["$#{ key }"] = !-> @$ref![key] ...&
-  , @::
-
-  $increase: !(byNumber || 1) ->
-    @$ref!transaction -> it + byNumber
-
-  $decrease: !(byNumber || 1) ->
-    @$ref!transaction -> it - byNumber
-
-class FireAuth
-
-  ->
-    const cloned = ^^@
-    const ref = new @@FirebaseSimpleLogin @@root, !(error, auth) ~>
-      <~! @@immediate
-      return copy {}, cloned if error
-      copy auth || {}, cloned
+  const urlGetters = for interpolateStr, index in interpolateUrl.split interpolateMatcher
+    if index % 2 then $parse interpolateStr else interpolateStr
     
-    forEach <[login logout]> !(key) ->
-      @[key] = !-> ref[key] ...&
-    , @
-    return cloned
-#
-# angular module definition
-#
-const DataFlowFactory = <[
-      $interpolate $immediate Firebase FirebaseUrl
-]> ++ ($interpolate, $immediate, Firebase, FirebaseUrl) ->
-  DataFlow <<< {interpolate: $interpolate, immediate: $immediate}
-  InterpolateFlow <<< {Firebase, FirebaseUrl}
-  true
+  return (result) ->
+    url = ''
+    for urlGetter, index in urlGetters
+      if index % 2
+        value = urlGetter $scope or urlGetter result
+        value = "#value" if isNumber value
+        return void unless isString value and value.length
+      else
+        value = urlGetter
+      url += value
+    url
 
-const FireSyncFactory = <[
-      $q AngularOnFireDataFlow
-]> ++ ($q, AngularOnFireDataFlow) ->
-  FireSync.q = $q
-  FireSync
+const DSLs = {}
 
-const FireCollectionFactory = <[
-      FireSync
-]> ++ (FireSync) ->
-  FireCollection
+DSLs.auth = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
-const fbSync = <[
-      $parse
-]> ++ ($parse) ->
-  restrict: \A
-  # terminal: true
-  # scope: false
-    # limit: \=?fbLimit
-    # startAt: \=?fbStartAt
-    # endAt: \=?fbEndAt
-  link: !(scope, iElement, iAttrs) ->
-    (syncName) <-! forEach iAttrs.fbSync.split(/,\ ?/)
-    sync = void
-    const syncGetter = $parse syncName
-    scope.$watch syncGetter, !->
-      return unless it?clone?
-      sync.destroy! if sync
-      sync := it.clone!
+  return !($scope, {root, next}) ->
+    const ref = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+      <~! $immediate
+      next copy if error or not auth then {} else auth, ^^ref
+
+class DSL
+
+  _cloneThenPush: (step) ->
+    const cloned = new @constructor!
+    const steps = []
+    if @steps
+      for s in @steps
+        steps.push copy s, {}
+    steps.push step
+    cloned <<< {steps}
+    cloned
+
+  _build: !-> delete! @steps
+
+class FireAuthDSL extends DSL
+
+  root: ->
+    @[]steps.{}0.root = it
+    @
+
+  _build: !($scope, lastNext) ->
+    const step = @steps.0
+    step.next = lastNext
+    DSLs.auth $scope, step
+    super ...
+
+class FireObjectDSL extends DSL
+  
+  _build: !($scope, lastNext) ->
+    const {steps} = @
+    const {length} = steps
+    const step = steps.0
+    step <<< @constructor{regularize}
+    #
+    if length is 1
+      step.next = lastNext
+    else
+      (step, index) <-! forEach steps
+      step.next = if index isnt length-1
+        const nextStep = steps[index+1]
+        (results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
+      else
+        lastNext
+    DSLs[step.type] $scope, step
+    super ...
+
+  get: (interpolateUrl) ->
+    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl
+
+class FireCollectionDSL extends FireObjectDSL
+
+  map: (interpolateUrl) ->
+    @_cloneThenPush type: 'map', interpolateUrl: interpolateUrl
+
+  flatten: ->      
+    @_cloneThenPush type: 'flatten'
+
+
+
+DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+
+  return !($scope, {results, next}) ->
+    const values = []
+    for result in results
+      (value, key) <-! forEach result
+      return if key.0 is '$'
+      value = regularizeObject value
+      value.$name = key
+      value.$index = -1+values.push value
+
+    $immediate !-> next values
+DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+
+  return !($scope, {interpolateUrl, regularize, next}) ->
+    const watchListener = createUrlGetter $scope, $parse, interpolateUrl    
+    #
+    firenode = noopNode
+    #
+    const watchAction = !(firebaseUrl) ->
+      return if firenode.toString! is firebaseUrl
+      destroyListener!
+      return next void unless isString firebaseUrl# cleanup
       #
-      if sync instanceof FireCollection
-        (key) <-! forEach FIREBASE_QUERY_KEYS
-        const value = iAttrs["fb#{ key[0].toUpperCase! }#{ key.substr 1 }"]
-        return unless value
-        sync[key] that if scope.$eval value
-        (array) <-! scope.$watchCollection value
-        sync[key] array
+      firenode := createFirebaseFrom firebaseUrl
+      firenode.on 'value' noop, void, noopNode # cache!
+      firenode.on 'value' valueRetrieved, void, firenode
+
+    const destroyListener = !->
+      firenode.off 'value' void, firenode
+    #
+    value = null
+    #
+    const valueRetrieved = !(snap) ->
+      <-! $immediate
+      snap |> regularize |> next
+    
+    $scope.$watch watchListener, watchAction
+
+    $scope.$on '$destroy' destroyListener
+
+DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+  const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
+
+  return !($scope, {interpolateUrl, results, next}) ->
+    const getUrlFrom = createUrlGetter $scope, $parse, interpolateUrl
+
+    const watchListener = (results, $scope) -->
+      for result in results
+        getUrlFrom result
+    #
+    firenodes = [noopNode]
+    #
+    const watchAction = !(firebaseUrls) ->
+      const nodeUrls = [firenode.toString! for firenode in firenodes]
+      return if equals nodeUrls, firebaseUrls
       #
-      const node = sync.syncWithScope scope, iAttrs
-      if sync isnt it
-        # see sync.clone.
-        # if sync has a real deferred object, then don't assign
-        syncGetter.assign scope, node
+      destroyListeners!
+      firenodes := for let firebaseUrl, index in firebaseUrls
+        return noopNode unless firebaseUrl
+        const firenode = createFirebaseFrom firebaseUrl
+        firenode.on 'value' noop, void, noopNode # cache!
+        firenode.on 'value' valueRetrieved(index), void, firenode
+        firenode
 
-const FireAuthFactory = <[
-      $q $immediate Firebase FirebaseUrl FirebaseSimpleLogin
-]> ++ ($q, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin) ->
-  const root = new Firebase FirebaseUrl
-  FireAuth <<< {immediate: $immediate, root, FirebaseSimpleLogin}
-  FireAuth
+    const destroyListeners = !->
+      for firenode in firenodes
+        firenode.off 'value' void, firenode
+    #
+    snaps = []
+    snaps.forEach ||= bind snaps, forEach
+    #
+    const valueRetrieved = !(index, childSnap) -->
+      snaps[index] = childSnap
+      for i from 0 til snaps.length when not snaps[i]
+        return
+      const values = FireCollectionDSL.regularize snaps
+      <-! $immediate
+      next values
 
-const CompactFirebaseSimpleLogin = @FirebaseSimpleLogin || noop
+    $scope.$watchCollection watchListener(results), watchAction
 
-module \angular-on-fire <[]>
-.value do
-  Firebase: Firebase
-  FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/'
-.factory do
-  AngularOnFireDataFlow: DataFlowFactory# internal used only
-  FireSync: FireSyncFactory
-  FireCollection: FireCollectionFactory
-  FireAuth: FireAuthFactory
-.directive {fbSync}
+    $scope.$on '$destroy' destroyListeners
+
+class FireObject
+
+  (value, snap) ->
+    value.$ref = bind snap, snap.ref
+    value.$name = snap.ref!name!
+    value.$priority = snap.getPriority!
+
+  $set: !-> @$ref!set ...&
+  $update: !-> @$ref!update ...&
+  $transaction: !-> @$ref!transaction it
+  $increase: !-> @$transaction -> it+1
+  $decrease: !-> @$transaction -> it-1
+  $setPriority: !-> @$ref!setPriority ...&
+  $setWithPriority: !-> @$ref!setWithPriority ...&
+
+
+const regularizeObject = (val) ->
+  if isObject val then val else {$value: val}
+
+const regularizeFireObject = (snap) ->
+  const value = regularizeObject snap.val!
+  FireObject value, snap
+  value <<< FireObject::
+
+FireObjectDSL.regularize = regularizeFireObject
+
+class FireCollection extends FireObject
+
+  $push: !-> @$ref!push it
+
+
+FireCollectionDSL.regularize = (snap) ->
+  const values = []
+  snap.forEach !(childSnap) ->
+    const value = regularizeFireObject childSnap
+    value.$index = -1+values.push value
+  if isFunction snap.ref
+    FireCollection values, snap
+    values <<< FireCollection::
+  values
+
+const autoInjectDSL = <[
+       $q  $parse  $immediate  Firebase  FirebaseUrl  FirebaseSimpleLogin
+]> ++ ($q, $parse, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin) ->
+  const createFirebaseFrom = (firebaseUrl || '') ->
+    new Firebase if firebaseUrl.substr(0, 4) is 'http'
+      firebaseUrl
+    else
+      FirebaseUrl + firebaseUrl
+
+  for type in [type for type of DSLs]
+    DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
+
+  const dslResolved = !($scope, dsls) -->
+    (dsl, name) <-! forEach dsls
+    dsl._build $scope, !($scope[name]) ->
+        
+  return ($scope) ->
+    const deferred = $q.defer!
+    const {promise} = deferred
+    delete! deferred.promise
+    promise.then dslResolved($scope)
+    deferred
+
+const CompactFirebaseSimpleLogin = FirebaseSimpleLogin || noop
+
+angular.module 'angular-on-fire' <[]>
+.value {FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/', Firebase: Firebase}
+.service {fireAuthDSL: FireAuthDSL, fireObjectDSL: FireObjectDSL, fireCollectionDSL: FireCollectionDSL}
+.factory {autoInjectDSL} 
 .config <[
-        $provide $injector
+        $provide  $injector
 ]> ++ !($provide, $injector) ->
   unless $injector.has \$immediate
     /*

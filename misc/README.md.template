@@ -51,20 +51,6 @@ In your `/users/show.html` :
 <%= file.read('dest/mixins/1.html') %>
 ```
 
-### `fb-sync` directive
-This is the powerful part of `angular-on-fire`.  
-If you feel its annoying to call `$scope.$on('$destroy', sync.destroy);` on every sync resource, then you should try `fb-sync` directive.
-```JavaScript
-<%= file.read('dest/mixins/2.js') %>
-```
-Then in your `/users/show.html` :
-```HTML
-<%= file.read('dest/mixins/2.html') %>
-```
-
-You can also specify multiple sync to load like this:  
-`fb-sync="user, account, book"` ( seperated by comma `,` )
-
 ### Resolving Dynamic Path 
 Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
 ```JavaScript
@@ -115,7 +101,7 @@ With `$index`, you can do a reverse order like this : `ng-repeat="user in users 
 <%= file.read('dest/mixins/5.js') %>
 ```
 
-In your `/users/edit.html` : 
+In your `/users/list.html` : 
 ```HTML
 <%= file.read('dest/mixins/5.html') %>
 ```
@@ -124,17 +110,16 @@ In your `/users/edit.html` :
 ### Eager Loading on `FireCollection`
 The another powerful part of `angular-on-fire`.
 Let's say you have an indexes set, and each of tme can be mapped to a list of items in certain urls.
-Then `FireCollection` can map these keys to a collection of actual items. For example:
-The `UsersCtrl` used above can be rewritten as:
-
-```JavaScript
-<%= file.read('dest/mixins/6.js') %>
-```
-
+Then `FireCollection` can map these keys to a collection of actual items.  
 Moreover, if you need to map indexes twice or above, remember to `flatten` the indexes:
 
 ```JavaScript
 <%= file.read('dest/mixins/7.js') %>
+```
+
+In your `/book/authors.html` : 
+```HTML
+<%= file.read('dest/mixins/7.html') %>
 ```
 Easy! Right?
 
@@ -144,7 +129,7 @@ Easy! Right?
 *  [`FirebaseSimpleLogin`](https://www.firebase.com/docs/security/authentication.html)
 *  set `FirebaseUrl` in your app (see above section)
 
-Then, in controller:
+Then, if I want current `user/auth` be globally accessible via `$rootScope`, use `run` :
 ```JavaScript
 <%= file.read('dest/mixins/8.js') %>
 ```

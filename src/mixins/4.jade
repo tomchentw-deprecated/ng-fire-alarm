@@ -1,7 +1,7 @@
-div(ng-controller="PrototypeCtrl", fb-sync="clickCount, user")
-  button.btn.btn-large.btn-primary(ng-click="clickCount.$increase()") 
-    | Visited Counter : {{ clickCount.$value }}
-
+div(ng-controller="UserEditCtrl")
+  button.btn.btn-large.btn-primary(ng-click="visited.$increase()") 
+    | Visited Counter : {{ visited.$value }}
+  
   form.form-horizontal
     label(for="displayName") Display Name :
     input(type="text", id="displayName", ng-model="user.displayName", ng-change="user.$update({displayName: user.displayName})")

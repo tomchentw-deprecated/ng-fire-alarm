@@ -9,7 +9,7 @@
   const extendRef = {$ref: '[object Function]'}
 
   function nativeToJsonFilter
-    throw new TypeError 'Require object' unless isObject it
+    return unless isObject it
 
     stringify if isArray it
       for item in it
