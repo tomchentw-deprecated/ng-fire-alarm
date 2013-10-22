@@ -276,9 +276,10 @@
     FireAuth.displayName = 'FireAuth';
     var prototype = FireAuth.prototype, constructor = FireAuth;
     function FireAuth(auth, simpleLoginRef){
-      auth.$auth = function(){
+      this.$auth = function(){
         return simpleLoginRef;
       };
+      return copy(auth, clone$(this));
     }
     prototype.$login = function(){
       var ref$;
@@ -291,8 +292,7 @@
     return FireAuth;
   }());
   regularizeAuth = function(auth, simpleLoginRef){
-    FireAuth(auth, simpleLoginRef);
-    return import$(auth, FireAuth.prototype);
+    return new FireAuth(auth, simpleLoginRef);
   };
   FireObject = (function(){
     FireObject.displayName = 'FireObject';
@@ -455,5 +455,9 @@
       } : f;
     };
     return _curry();
+  }
+  function clone$(it){
+    function fun(){} fun.prototype = it;
+    return new fun;
   }
 }).call(this);

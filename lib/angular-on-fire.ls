@@ -173,16 +173,16 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
 
 class FireAuth
 
-  (auth, simpleLoginRef) -> 
-    auth.$auth = -> simpleLoginRef
+  (auth, simpleLoginRef) ->
+    @$auth = -> simpleLoginRef
+    return copy auth, ^^@
 
   $login: !-> @$auth!login ...&
   $logout: !-> @$auth!logout ...&
 
 
 const regularizeAuth = (auth, simpleLoginRef) ->
-  FireAuth auth, simpleLoginRef
-  auth <<< FireAuth::
+  new FireAuth auth, simpleLoginRef
   
 class FireObject
 
