@@ -74,23 +74,6 @@ html(ng-app="demo", fb-sync="root, user")
       section
         .container-fluid
           .page-header
-            h1
-              pre.demo fb-sync
-              | directive
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="2.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/2.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
-                tab(heading="2.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/2.js').replace(/\n/g, '\\n') %>"
-            .span6
-              include mixins/2
-      section
-        .container-fluid
-          .page-header
             h1 Resolving Dynamic Path
           .row-fluid
             .span6
@@ -133,24 +116,7 @@ html(ng-app="demo", fb-sync="root, user")
                 tab(heading="5.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "<%= file.read('dest/mixins/5.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="UsersCtrl")
-              include mixins/5
-      section
-        .container-fluid
-          .page-header
-            h1
-              | Eager Loading on 
-              pre.demo FireCollection
-          .row-fluid
             .span6
-              tabset
-                tab(heading="5.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/5.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
-                tab(heading="6.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/6.js').replace(/\n/g, '\\n') %>"
-            .span6(ng-controller="UsersInAccountCtrl")
               include mixins/5
       section
         .container-fluid

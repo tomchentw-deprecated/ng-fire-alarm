@@ -1,4 +1,8 @@
 @demo.controller \HeroCtrl <[
-        $log $scope FireSync FireCollection
-]> ++ !($log, $scope, FireSync, FireCollection) ->
-  $scope.counter = new FireSync!get '/click-count'
+        $log  $scope  fireObjectDSL  autoInjectDSL
+]> ++ !($log, $scope, fireObjectDSL, autoInjectDSL) ->
+  # $scope.counter = new FireSync!get '/click-count'
+  const counter = fireObjectDSL.get '/click-count'
+
+  $log.log fireObjectDSL
+  autoInjectDSL $scope .resolve {counter}

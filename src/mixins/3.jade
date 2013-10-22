@@ -1,4 +1,4 @@
-div(ng-controller="VipUserCtrl", fb-sync="vip_user, user, friends_list")
+div(ng-controller="VipUserCtrl")
   h2
     i(ng-class="{'icon-star': vip_user.valid && user.payed, 'icon-star-empty': !vip_user.valid || !user.payed}")
       | 

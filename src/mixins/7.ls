@@ -1,12 +1,12 @@
-@demo.controller \UsersInBookCtrl <[
-        $scope FireCollection
-]> ++ !($scope, FireCollection) ->
-  const authorAccountIds = new FireCollection!get '/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds'
+@demo.controller \BookAuthorsCtrl <[
+        $scope  fireCollectionDSL  autoInjectDSL
+]> ++ !($scope, fireCollectionDSL, autoInjectDSL) ->
+  const authorAccountIds = fireCollectionDSL.get '/books/-J5Cw4OCANLhxyKoU1nI/authorAccountIds'
   
-  const userIds = authorAccountIds.clone!.map '/accounts/{{ $name }}/userIds'
+  const userIds = authorAccountIds.map '/accounts/{{ $name }}/userIds'
   /* { -J5Cw4OCANLhxyKoU1nI: [100001053090034] } */
-  const flattenUIds = userIds.clone!.flatten! 
+  const flattenUIds = userIds.flatten! 
   /* [100001053090034] */
-  const users = flattenUIds.clone!.map '/users/facebook/{{ $value }}'
+  const authors = flattenUIds.map '/users/{{ $name }}'
   /* [{id: 100001053090034}] */
-  $scope <<< {authorAccountIds, userIds, flattenUIds, users}
+  autoInjectDSL $scope .resolve {authorAccountIds, userIds, flattenUIds, authors}

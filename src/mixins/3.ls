@@ -1,15 +1,16 @@
 @demo.controller 'VipUserCtrl' <[
-        $scope FireSync
-]> ++ !($scope, FireSync) ->
+        $scope  fireObjectDSL  autoInjectDSL
+]> ++ !($scope, fireObjectDSL, autoInjectDSL) ->
   /* 
     1 */
-  $scope.vip_user = new FireSync!get '/vip-user'
+  const vip_user = fireObjectDSL.get '/vip-user'
   /* 
     2
     depends on 1 */
-  $scope.user = new FireSync!get '/users/{{ vip_user.provider }}/{{ vip_user.id }}'
+  const user = fireObjectDSL.get '/users/{{ vip_user.id }}'
   /*
     3
     depends on 2 */
-  $scope.friends_list = new FireSync!get '/friend-list/{{ user.displayName }}'
+  const friends_list = fireObjectDSL.get '/friend-list/{{ user.displayName }}'
 
+  autoInjectDSL $scope .resolve {vip_user, user, friends_list}

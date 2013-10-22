@@ -1,4 +1,4 @@
-div(fb-sync="users")
+div(ng-controller="UsersCtrl")
   ul
     li(ng-repeat="user in users | orderBy:'$index':true")
       a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")

@@ -33,9 +33,13 @@ module.exports = function(grunt) {
       '* Copyright (c) <%= grunt.template.today("yyyy") %> [<%= pkg.author.name %>](<%= pkg.author.url %>);\n' +
       ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
     // Task configuration.
-    concat: { 
+    concat: {
+      components: {
+        src: ['<%= fdr.lib %>header.ls', '<%= fdr.lib %>components/*.ls', '<%= fdr.lib %>footer.ls'],
+        dest: '<%= fdr.lib %><%= pkg.name %>.ls'
+      },
       ls: {
-        src: ['<%= fdr.lib %>**/*.ls',  '<%= fdr.src %>index.ls', '<%= fdr.src %>**/*.ls'],
+        src: ['<%= fdr.lib %><%= pkg.name %>.ls',  '<%= fdr.src %>index.ls', '<%= fdr.src %>**/*.ls'],
         dest: '<%= fdr.tmp %>.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       },
@@ -184,7 +188,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-connect');
   // 
-  grunt.registerTask('ls:compile', ['concat:ls', 'livescript:compile']);
+  grunt.registerTask('ls:compile', ['concat:components', 'concat:ls', 'livescript:compile']);
   grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
   grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
@@ -210,5 +214,5 @@ module.exports = function(grunt) {
     readme = grunt.template.process(readme, {data: grunt});
     grunt.file.write('README.md', readme);
   });
-  grunt.registerTask('release', ['default', 'livescript:release', 'uglify:release', 'template:readme']);
+  grunt.registerTask('release', ['default', 'concat:components', 'livescript:release', 'uglify:release', 'template:readme']);
 };
