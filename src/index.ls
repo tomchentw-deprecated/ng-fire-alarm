@@ -1,3 +1,8 @@
+# async...
+ga 'create', 'UA-41104589-6', 'tomchentw.com'
+ga 'send', 'pageview'
+
+prettyPrint!
 /* declare as app module dependency. */
 @demo = angular.module \demo <[ui.bootstrap angular-on-fire]>
 .value {FirebaseUrl: \https://angular-on-fire.firebaseio.com}

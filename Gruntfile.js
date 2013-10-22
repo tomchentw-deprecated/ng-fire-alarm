@@ -33,6 +33,26 @@ module.exports = function(grunt) {
       '* Copyright (c) <%= grunt.template.today("yyyy") %> [<%= pkg.author.name %>](<%= pkg.author.url %>);\n' +
       ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
     // Task configuration.
+    'curl-dir': {
+      scripts: {
+        src: [
+          // In order ...
+          'https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.js',
+          'https://cdn.firebase.com/v0/firebase.js',
+          'https://cdn.firebase.com/v0/firebase-simple-login.js',
+          // no order ...
+          'http://getbootstrap.com/2.3.2/assets/js/google-code-prettify/prettify.js',
+          'http://www.google-analytics.com/analytics.js',
+          'https://raw.github.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.6.0.min.js'
+        ],
+        dest: '<%= fdr.vendor %>scripts/'
+      }, styles: {
+        src: [
+          'http://getbootstrap.com/2.3.2/assets/js/google-code-prettify/prettify.css'
+        ],
+        dest: '<%= fdr.vendor %>styles/'
+      }
+    },
     concat: {
       components: {
         src: ['<%= fdr.lib %>header.ls', '<%= fdr.lib %>components/*.ls', '<%= fdr.lib %>footer.ls'],
@@ -44,7 +64,13 @@ module.exports = function(grunt) {
         options: { process: indentToLet }
       },
       js: {
-        src: ['<%= fdr.vendor %>**/*.js', '<%= livescript.compile.dest %>'],
+        src: [
+          '<%= fdr.vendor %>scripts/angular.js',
+          '<%= fdr.vendor %>scripts/firebase.js',
+          '<%= fdr.vendor %>scripts/firebase-simple-login.js',
+          '<%= fdr.vendor %>**/*.js',
+          '<%= livescript.compile.dest %>'
+        ],
         dest: '<%= fdr.dest %>script.js',
         options: { process: jsWrapper }
       },
@@ -181,6 +207,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   // grunt.loadNpmTasks('grunt-contrib-qunit');
   //
+  grunt.loadNpmTasks('grunt-curl');
   grunt.loadNpmTasks('grunt-livescript');
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-sass');
@@ -189,8 +216,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   // 
   grunt.registerTask('ls:compile', ['concat:components', 'concat:ls', 'livescript:compile']);
-  grunt.registerTask('js:compile', ['ls:compile', 'concat:js']);
-  grunt.registerTask('css:compile', ['sass:compile', 'concat:css', 'cssmin:compile']);
+  grunt.registerTask('js:compile', ['curl-dir:scripts', 'ls:compile', 'concat:js']);
+  grunt.registerTask('css:compile', ['curl-dir:styles', 'sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
   grunt.registerTask('template:jade', function () {
     var file = grunt.file.read(grunt.config.get('jade.compile.template'));

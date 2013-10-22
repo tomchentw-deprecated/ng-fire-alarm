@@ -1,11 +1,12 @@
-.nav-collapse(collapse="isCollapse")
+.nav-collapse.collapse(collapse="isCollapse")
   ul.nav.pull-right
     li
       a(ng-href="{{ user.profileUrl }}", target="_blank")
         img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
         | {{ user.displayName }}
-    li
-      a(ng-if="!auth.id", ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
-        | Facebook Login 
-      a(ng-if="auth.id", ng-click="auth.logout()")
+    li(ng-if="!auth.id")
+      a(ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})")
+        | Facebook Login
+    li(ng-if="auth.id")
+      a(ng-click="auth.logout()")
         | Logout

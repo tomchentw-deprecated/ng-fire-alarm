@@ -5,13 +5,8 @@ html(ng-app="demo", fb-sync="root, user")
     base(href="/")
     title angular-on-fire
     meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
-    link(rel="stylesheet", href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css")
     link(rel="stylesheet", href="style.min.css")      
-    script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
-    script(type="text/javascript", src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.6.0/ui-bootstrap-tpls.min.js")
-    script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase.js")
-    script(type="text/javascript", src="https://cdn.firebase.com/v0/firebase-simple-login.js")
-    script(src="script.js")
+    script(async, src="script.js")
   body
     .navbar.navbar-inverse.navbar-fixed-top
       .navbar-inner
@@ -147,7 +142,7 @@ html(ng-app="demo", fb-sync="root, user")
               tabset
                 tab(heading="8.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '\n&lt;div collapse=&quot;isCollapse&quot; class=&quot;nav-collapse&quot;&gt;\n  &lt;ul class=&quot;nav pull-right&quot;&gt;\n    &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li&gt;&lt;a ng-if=&quot;!auth.id&quot; ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login &lt;&#x2F;a&gt;&lt;a ng-if=&quot;auth.id&quot; ng-click=&quot;auth.logout()&quot;&gt;Logout&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n&lt;&#x2F;div&gt;'
+                    != '\n&lt;div collapse=&quot;isCollapse&quot; class=&quot;nav-collapse collapse&quot;&gt;\n  &lt;ul class=&quot;nav pull-right&quot;&gt;\n    &lt;li&gt;&lt;a ng-href=&quot;{{ user.profileUrl }}&quot; target=&quot;_blank&quot;&gt;&lt;img ng-src=&quot;https:&#x2F;&#x2F;graph.facebook.com&#x2F;{{ user.id }}&#x2F;picture?type=normal&quot; class=&quot;img-rounded&quot;&#x2F;&gt;{{ user.displayName }}&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li ng-if=&quot;!auth.id&quot;&gt;&lt;a ng-click=&quot;auth.login(&#39;facebook&#39;, {rememberMe: true, scope: &#39;email&#39;})&quot;&gt;Facebook Login&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n    &lt;li ng-if=&quot;auth.id&quot;&gt;&lt;a ng-click=&quot;auth.logout()&quot;&gt;Logout&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;\n  &lt;&#x2F;ul&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="8.js")
                   pre.prettyprint.linenums(ng-non-bindable)
                     != "this.demo.run(['$log', '$rootScope', 'fireAuthDSL', 'fireObjectDSL', 'autoInjectDSL', 'Firebase', 'FirebaseUrl'].concat(function($log, $rootScope, fireAuthDSL, fireObjectDSL, autoInjectDSL, Firebase, FirebaseUrl){\n  var auth, root, user;\n  auth = fireAuthDSL.root(FirebaseUrl);\n  root = fireObjectDSL.get('/');\n  user = fireObjectDSL.get('/users/{{ auth.id }}');\n  $rootScope.$watch('!!auth.id && !!user.$name', function(it){\n    var ref$;\n    if (!it) {\n      return;\n    }\n    $log.log('logined! update user!', $rootScope.user);\n    /* We need this to store user auth (like session) into database */\n    $rootScope.user.$setWithPriority({\n      id: (ref$ = $rootScope.auth).id,\n      displayName: ref$.displayName,\n      profileUrl: ref$.profileUrl,\n      bio: ref$.bio\n    }, Math.round(Math.random() * Math.pow(2, 16)));\n  });\n  autoInjectDSL($rootScope).resolve({\n    auth: auth,\n    root: root,\n    user: user\n  });\n}));"
@@ -185,13 +180,3 @@ html(ng-app="demo", fb-sync="root, user")
             | ·
           li
             a(href="https://www.facebook.com/tomchentw", target="_blank") Facebook
-    script.
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-41104589-6', 'tomchentw.com');
-      ga('send', 'pageview');
-
-      prettyPrint();
