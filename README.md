@@ -277,10 +277,11 @@ this.demo.run(['$log', '$rootScope', 'fireAuthDSL', 'fireObjectDSL', 'autoInject
 and then, in your `/partials/auth.html`:
 ```HTML
 
-<div collapse="isCollapse" class="nav-collapse">
+<div collapse="isCollapse" class="nav-collapse collapse">
   <ul class="nav pull-right">
     <li><a ng-href="{{ user.profileUrl }}" target="_blank"><img ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal" class="img-rounded"/>{{ user.displayName }}</a></li>
-    <li><a ng-if="!auth.id" ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login </a><a ng-if="auth.id" ng-click="auth.logout()">Logout</a></li>
+    <li ng-if="!auth.id"><a ng-click="auth.login('facebook', {rememberMe: true, scope: 'email'})">Facebook Login</a></li>
+    <li ng-if="auth.id"><a ng-click="auth.logout()">Logout</a></li>
   </ul>
 </div>
 ```
