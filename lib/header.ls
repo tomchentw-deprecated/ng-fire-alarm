@@ -1,4 +1,4 @@
-const {noop, identity, bind, forEach, copy, isObject, isFunction, isString, equals} = angular
+const {noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals} = angular
 
 const noopNode = 
   on: noop
@@ -15,11 +15,12 @@ const createUrlGetter = ($scope, $parse, interpolateUrl) ->
     url = ''
     for urlGetter, index in urlGetters
       if index % 2
-        str = urlGetter $scope or urlGetter result
-        return void unless isString str and str.length
+        value = urlGetter $scope or urlGetter result
+        value = "#value" if isNumber value
+        return void unless isString value and value.length
       else
-        str = urlGetter
-      url += str
+        value = urlGetter
+      url += value
     url
 
 const DSLs = {}

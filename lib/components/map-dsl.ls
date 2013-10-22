@@ -31,7 +31,6 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
     #
     const valueRetrieved = !(index, childSnap) -->
       snaps[index] = childSnap
-      console.log childSnap.name!, childSnap.val!
       for i from 0 til snaps.length when not snaps[i]
         return
       const values = FireCollectionDSL.regularize snaps

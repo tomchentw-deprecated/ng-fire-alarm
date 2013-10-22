@@ -6,9 +6,10 @@ DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
     firenode = noopNode
     #
     const watchAction = !(firebaseUrl) ->
-      return next void unless isString firebaseUrl# cleanup
       return if firenode.toString! is firebaseUrl
       destroyListener!
+      return next void unless isString firebaseUrl# cleanup
+      #
       firenode := createFirebaseFrom firebaseUrl
       firenode.on 'value' noop, void, noopNode # cache!
       firenode.on 'value' valueRetrieved, void, firenode

@@ -39,7 +39,7 @@ html(ng-app="demo", fb-sync="root, user")
                     != '\n&lt;div ng-controller=&quot;HeroCtrl&quot; class=&quot;hero-unit&quot;&gt;\n  &lt;h1&gt;angular-on-fire&lt;small&gt; counter : &lt;span ng-bind=&quot;counter.$value&quot;&gt;&lt;&#x2F;span&gt; &lt;a href=&quot;&quot; ng-click=&quot;counter.$increase()&quot;&gt;&lt;i class=&quot;icon-plus&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;a&gt; &lt;a href=&quot;&quot; ng-click=&quot;counter.$decrease()&quot;&gt;&lt;i class=&quot;icon-minus&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;a&gt;&lt;&#x2F;small&gt;&lt;&#x2F;h1&gt;\n  &lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;angularjs.org&#x2F;&quot;&gt;angularjs&lt;&#x2F;a&gt;, binding, &lt;a href=&quot;https:&#x2F;&#x2F;www.firebase.com&#x2F;&quot;&gt;firebase&lt;&#x2F;a&gt;&lt;br&#x2F;&gt;The greatest way to use Firebase with AngularJS!&lt;&#x2F;p&gt;\n&lt;&#x2F;div&gt;'
                 tab(heading="hero-unit.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'fireObjectDSL', 'autoInjectDSL'].concat(function($log, $scope, fireObjectDSL, autoInjectDSL){\n  var counter;\n  counter = fireObjectDSL.get('/click-count');\n  $log.log(fireObjectDSL);\n  autoInjectDSL($scope).resolve({\n    counter: counter\n  });\n}));"
+                    != "this.demo.controller('HeroCtrl', ['$log', '$scope', 'fireObjectDSL', 'autoInjectDSL'].concat(function($log, $scope, fireObjectDSL, autoInjectDSL){\n  var counter;\n  counter = fireObjectDSL.get('/click-count');\n  autoInjectDSL($scope).resolve({\n    counter: counter\n  });\n}));"
           .row-fluid
             include partials/social-buttons
           .row-fluid

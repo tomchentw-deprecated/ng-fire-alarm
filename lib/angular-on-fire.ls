@@ -1,4 +1,4 @@
-const {noop, identity, bind, forEach, copy, isObject, isFunction, isString, equals} = angular
+const {noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals} = angular
 
 const noopNode = 
   on: noop
@@ -15,11 +15,12 @@ const createUrlGetter = ($scope, $parse, interpolateUrl) ->
     url = ''
     for urlGetter, index in urlGetters
       if index % 2
-        str = urlGetter $scope or urlGetter result
-        return void unless isString str and str.length
+        value = urlGetter $scope or urlGetter result
+        value = "#value" if isNumber value
+        return void unless isString value and value.length
       else
-        str = urlGetter
-      url += str
+        value = urlGetter
+      url += value
     url
 
 const DSLs = {}
@@ -110,9 +111,10 @@ DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
     firenode = noopNode
     #
     const watchAction = !(firebaseUrl) ->
-      return next void unless isString firebaseUrl# cleanup
       return if firenode.toString! is firebaseUrl
       destroyListener!
+      return next void unless isString firebaseUrl# cleanup
+      #
       firenode := createFirebaseFrom firebaseUrl
       firenode.on 'value' noop, void, noopNode # cache!
       firenode.on 'value' valueRetrieved, void, firenode
@@ -163,7 +165,6 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
     #
     const valueRetrieved = !(index, childSnap) -->
       snaps[index] = childSnap
-      console.log childSnap.name!, childSnap.val!
       for i from 0 til snaps.length when not snaps[i]
         return
       const values = FireCollectionDSL.regularize snaps
@@ -230,7 +231,6 @@ const autoInjectDSL = <[
   const dslResolved = !($scope, dsls) -->
     (dsl, name) <-! forEach dsls
     dsl._build $scope, !($scope[name]) ->
-      console.log $scope
         
   return ($scope) ->
     const deferred = $q.defer!

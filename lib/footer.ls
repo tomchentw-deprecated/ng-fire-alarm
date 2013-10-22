@@ -13,7 +13,6 @@ const autoInjectDSL = <[
   const dslResolved = !($scope, dsls) -->
     (dsl, name) <-! forEach dsls
     dsl._build $scope, !($scope[name]) ->
-      console.log $scope
         
   return ($scope) ->
     const deferred = $q.defer!
