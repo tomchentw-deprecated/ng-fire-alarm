@@ -252,6 +252,7 @@
         }
       };
       snaps = [];
+      snaps.length = results.length;
       snaps.forEach || (snaps.forEach = bind(snaps, forEach));
       valueRetrieved = curry$(function(index, childSnap){
         var i$, to$, i, values;

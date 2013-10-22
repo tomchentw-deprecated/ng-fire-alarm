@@ -156,6 +156,7 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
         firenode.off 'value' void, firenode
     #
     snaps = []
+    snaps.length = results.length
     snaps.forEach ||= bind snaps, forEach
     #
     const valueRetrieved = !(index, childSnap) -->
