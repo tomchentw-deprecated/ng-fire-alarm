@@ -37,16 +37,13 @@ module.exports = function(grunt) {
       scripts: {
         src: [
           // In order ...
-          'https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.js',
+          'https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js',
           'https://cdn.firebase.com/v0/firebase.js',
           'https://cdn.firebase.com/v0/firebase-simple-login.js',
           // no order ...
           'http://getbootstrap.com/2.3.2/assets/js/google-code-prettify/prettify.js',
           'http://www.google-analytics.com/analytics.js',
-          'https://raw.github.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.6.0.min.js',
-          // social plugins ...
-          'http://platform.twitter.com/widgets.js',
-          'https://apis.google.com/js/plusone.js'
+          'https://raw.github.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-0.6.0.min.js'
         ],
         dest: '<%= fdr.vendor %>scripts/'
       }, styles: {
@@ -62,13 +59,14 @@ module.exports = function(grunt) {
         dest: '<%= fdr.lib %><%= pkg.name %>.ls'
       },
       ls: {
-        src: ['<%= fdr.lib %><%= pkg.name %>.ls',  '<%= fdr.src %>index.ls', '<%= fdr.src %>**/*.ls'],
+        src: ['<%= concat.components.dest %>',  '<%= fdr.src %>index.ls', '<%= fdr.src %>**/*.ls'],
         dest: '<%= fdr.tmp %>.ls-cache/<%= pkg.name %>.ls',
         options: { process: indentToLet }
       },
       js: {
         src: [
-          '<%= fdr.vendor %>scripts/angular.js',
+          '<%= fdr.vendor %>scripts/angular.min.js',
+          '<%= fdr.vendor %>scripts/ui-bootstrap-tpls-0.6.0.min.js',
           '<%= fdr.vendor %>scripts/firebase.js',
           '<%= fdr.vendor %>scripts/firebase-simple-login.js',
           '<%= fdr.vendor %>**/*.js',
@@ -97,7 +95,10 @@ module.exports = function(grunt) {
         dest: 'release/<%= pkg.name %>.js'
       }
     },
-    uglify: { release: {
+    uglify: { compile: {
+        src: '<%= concat.js.dest %>',
+        dest: '<%= grunt.config.get("concat.js.dest").replace(".js", ".min.js") %>'
+      },      release: {
         src: '<%= livescript.release.dest %>',
         dest: '<%= grunt.config.get("livescript.release.dest").replace(".js", ".min.js") %>'
       },
@@ -219,7 +220,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   // 
   grunt.registerTask('ls:compile', ['concat:components', 'concat:ls', 'livescript:compile']);
-  grunt.registerTask('js:compile', ['curl-dir:scripts', 'ls:compile', 'concat:js']);
+  grunt.registerTask('js:compile', ['curl-dir:scripts', 'ls:compile', 'concat:js', 'uglify:compile']);
   grunt.registerTask('css:compile', ['curl-dir:styles', 'sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
   grunt.registerTask('template:jade', function () {

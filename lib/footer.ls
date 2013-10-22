@@ -24,7 +24,7 @@ const autoInjectDSL = <[
 const CompactFirebaseSimpleLogin = FirebaseSimpleLogin || noop
 
 angular.module 'angular-on-fire' <[]>
-.value {FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/', Firebase: Firebase}
+.value {FirebaseUrl: 'https://YOUR_FIREBASE_NAME.firebaseIO.com/', Firebase}
 .service {fireAuthDSL: FireAuthDSL, fireObjectDSL: FireObjectDSL, fireCollectionDSL: FireCollectionDSL}
 .factory {autoInjectDSL} 
 .config <[

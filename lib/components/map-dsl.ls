@@ -4,7 +4,7 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
   return !($scope, {interpolateUrl, results, next}) ->
     const getUrlFrom = createUrlGetter $scope, $parse, interpolateUrl
 
-    const watchListener = (results, $scope) -->
+    const watchListener = ($scope) ->
       for result in results
         getUrlFrom result
     #
@@ -37,6 +37,6 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
       <-! $immediate
       next values
 
-    $scope.$watchCollection watchListener(results), watchAction
+    $scope.$watchCollection watchListener, watchAction
 
     $scope.$on '$destroy' destroyListeners

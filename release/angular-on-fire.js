@@ -207,14 +207,14 @@
       var interpolateUrl, results, next, getUrlFrom, watchListener, firenodes, watchAction, destroyListeners, snaps, valueRetrieved;
       interpolateUrl = arg$.interpolateUrl, results = arg$.results, next = arg$.next;
       getUrlFrom = createUrlGetter($scope, $parse, interpolateUrl);
-      watchListener = curry$(function(results, $scope){
-        var i$, len$, result, results$ = [];
-        for (i$ = 0, len$ = results.length; i$ < len$; ++i$) {
-          result = results[i$];
+      watchListener = function($scope){
+        var i$, ref$, len$, result, results$ = [];
+        for (i$ = 0, len$ = (ref$ = results).length; i$ < len$; ++i$) {
+          result = ref$[i$];
           results$.push(getUrlFrom(result));
         }
         return results$;
-      });
+      };
       firenodes = [noopNode];
       watchAction = function(firebaseUrls){
         var nodeUrls, res$, i$, ref$, len$, firenode;
@@ -267,7 +267,7 @@
           next(values);
         });
       });
-      $scope.$watchCollection(watchListener(results), watchAction);
+      $scope.$watchCollection(watchListener, watchAction);
       $scope.$on('$destroy', destroyListeners);
     };
   };
