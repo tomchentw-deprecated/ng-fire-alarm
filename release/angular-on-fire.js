@@ -363,11 +363,12 @@
       DSLs[type] = DSLs[type]($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom);
     }
     dslResolved = curry$(function($scope, dsls){
-      forEach(dsls, function(dsl, name){
-        dsl._build($scope, function(arg$){
-          $scope[name] = arg$;
-        });
-      });
+      var name, dsl, assign;
+      for (name in dsls) {
+        dsl = dsls[name];
+        assign = $parse(name).assign;
+        dsl._build($scope, bind(void 8, assign, $scope));
+      }
     });
     return function($scope){
       var deferred, promise;

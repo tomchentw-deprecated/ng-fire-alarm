@@ -11,8 +11,9 @@ const autoInjectDSL = <[
     DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
 
   const dslResolved = !($scope, dsls) -->
-    (dsl, name) <-! forEach dsls
-    dsl._build $scope, !($scope[name]) ->
+    for name, dsl of dsls
+      const assign = $parse name .assign
+      dsl._build $scope, bind void, assign, $scope
         
   return ($scope) ->
     const deferred = $q.defer!
