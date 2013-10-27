@@ -3,7 +3,7 @@
     li
       a(ng-href="{{ user.profileUrl }}", target="_blank")
         img.img-rounded(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
-        | {{ user.displayName }}
+        span(ng-bind="user.displayName")
     li(ng-if="!auth.id")
       a(ng-click="auth.$login('facebook', {rememberMe: true, scope: 'email'})")
         | Facebook Login
