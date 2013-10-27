@@ -1,4 +1,4 @@
-DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+DSL.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {interpolateUrl, query, regularize, next}) ->
     const urlGetter = createUrlGetter $scope, $parse, interpolateUrl

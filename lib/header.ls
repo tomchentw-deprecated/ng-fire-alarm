@@ -22,5 +22,3 @@ const createUrlGetter = ($scope, $parse, interpolateUrl) ->
         value = urlGetter
       url += value
     url
-
-const DSLs = {}

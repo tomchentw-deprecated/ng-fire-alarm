@@ -10,13 +10,15 @@ const autoInjectDSL = <[
     else
       FirebaseUrl + url
     for key in FIREBASE_QUERY_KEYS when queryVars[key]
+      continue unless isArray that
       firenode = firenode[key] ...that
     firenode
 
-  for type in [type for type of DSLs]
-    DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
+  for type in [type for type, value of DSL when isFunction value]
+    console.log type
+    DSL[type] = DSL[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
 
-  const dslResolved = !($scope, dsls) -->
+  const dslsResolved = !($scope, dsls) -->
     for name, dsl of dsls
       const assign = $parse name .assign
       dsl._build $scope, bind void, assign, $scope
@@ -25,7 +27,7 @@ const autoInjectDSL = <[
     const deferred = $q.defer!
     const {promise} = deferred
     delete! deferred.promise
-    promise.then dslResolved($scope)
+    promise.then dslsResolved($scope)
     deferred
 
 const CompactFirebaseSimpleLogin = FirebaseSimpleLogin || noop

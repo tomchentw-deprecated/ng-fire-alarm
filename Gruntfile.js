@@ -15,8 +15,36 @@ function jsWrapper (src) {
 }
 /*global module:false*/
 module.exports = function(grunt) {
-  /*jshint scripturl:true*/
   // Project configuration.
+  var _ , templateData;
+  _ = grunt.util._;
+  templateData = {
+    readFile: function (path) {
+      var result = grunt.file.read(path);
+      return result;
+    },
+    escapeJS: function (string) {
+      return string.replace(/\n/g, '\\n');
+    },
+    escapeHTML: (function () {
+      var entityMap = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': '&quot;',
+        "'": '&#39;',
+        "/": '&#x2F;',
+        "\n": "\\n"
+      };
+      function replaceFn (s){ return entityMap[s]; }
+      
+      return function (string) {
+        return string.replace(/[&<>"'\n]/g, replaceFn);
+      };
+    }())
+  };
+
+  /*jshint scripturl:true*/
   grunt.initConfig({
     // Metadata.
     pkg: grunt.file.readJSON('package.json'),
@@ -105,8 +133,27 @@ module.exports = function(grunt) {
       },
       options: { banner: '<%= banner %>' }
     },
+    template: { compile: {
+        src: '<%= fdr.src %>index.jade.template',
+        dest: '<%= fdr.src %>index.jade',
+        options: { data: _.extend({
+            javascript: function () {
+              return 'script(defer, src="/script.js")';
+            }
+          }, templateData)
+        }
+      },        release: {
+        src: '<%= fdr.src %>index.jade.template',
+        dest: '<%= fdr.src %>index.jade',
+        options: { data: _.extend({
+            javascript: function () {
+              return 'script(defer, src="/script.min.js")';
+            }
+          }, templateData)
+        }
+      }
+    },
     jade: { compile: {
-        template: '<%= fdr.src %>index.jade.template',
         src: '<%= fdr.src %>index.jade',
         dest: '<%= fdr.dest %>index.html'
       },     mixins: {
@@ -176,7 +223,7 @@ module.exports = function(grunt) {
       },
       template: {
         files: ['<%= fdr.dest %>mixins/*.html', '<%= fdr.src %>*.jade.template'],
-        tasks: ['template:jade']
+        tasks: ['template:compile']
       },
       jade: {
         files: ['<%= fdr.src %>**/*.jade'],
@@ -204,7 +251,6 @@ module.exports = function(grunt) {
       }
     }
   });
-
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -214,6 +260,7 @@ module.exports = function(grunt) {
   //
   grunt.loadNpmTasks('grunt-curl');
   grunt.loadNpmTasks('grunt-livescript');
+  grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-jade');
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -224,21 +271,7 @@ module.exports = function(grunt) {
   grunt.registerTask('js:compile', ['curl-dir:scripts', 'ls:compile', 'concat:js', 'uglify:compile']);
   grunt.registerTask('css:compile', ['curl-dir:styles', 'sass:compile', 'concat:css', 'cssmin:compile']);
   grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
-  grunt.registerTask('template:jade', function () {
-    var file = grunt.file.read(grunt.config.get('jade.compile.template'));
-    grunt.entityMap = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': '&quot;',
-      "'": '&#39;',
-      "/": '&#x2F;',
-      "\n": "\\n"
-    };
-    file = grunt.template.process(file, {data: grunt});
-    grunt.file.write(grunt.config.get('jade.compile.src'), file);
-  });
-  grunt.registerTask('default', ['clean:release', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:jade', 'jade:compile']);
+  grunt.registerTask('default', ['clean:release', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:compile', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
   //
   grunt.registerTask('template:readme', function () {
@@ -246,5 +279,5 @@ module.exports = function(grunt) {
     readme = grunt.template.process(readme, {data: grunt});
     grunt.file.write('README.md', readme);
   });
-  grunt.registerTask('release', ['default', 'concat:components', 'livescript:release', 'uglify:release', 'template:readme']);
+  grunt.registerTask('release', ['default', 'template:release', 'concat:components', 'livescript:release', 'uglify:release', 'template:readme']);
 };

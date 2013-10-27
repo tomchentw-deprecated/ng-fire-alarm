@@ -5,8 +5,8 @@ html(ng-app="demo")
     base(href="/")
     title angular-on-fire
     meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
-    link(rel="stylesheet", href="style.min.css")      
-    script(defer, src="script.min.js")
+    link(rel="stylesheet", href="style.min.css")
+    <%= javascript() %>
   body
     header
       include partials/header
@@ -20,10 +20,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="hero-unit.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/h.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/h.html")) %>'
                 tab(heading="hero-unit.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/h.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/h.js')) %>"
           .row-fluid
             include partials/social-buttons
           .row-fluid
@@ -49,10 +49,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="1.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/1.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/1.html")) %>'
                 tab(heading="1.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/1.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/1.js')) %>"
             .span6
               include mixins/1
       section
@@ -64,10 +64,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="3.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/3.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/3.html")) %>'
                 tab(heading="3.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/3.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/3.js')) %>"
             .span6
               include mixins/3
       section
@@ -79,10 +79,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="4.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/4.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/4.html")) %>'
                 tab(heading="4.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/4.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/4.js')) %>"
             .span6
               include mixins/4
       section
@@ -96,10 +96,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="5.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/5.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/5.html")) %>'
                 tab(heading="5.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/5.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/5.js')) %>"
             .span6
               include mixins/5
       section
@@ -114,10 +114,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="7.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/7.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/7.html")) %>'
                 tab(heading="7.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/7.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/7.js')) %>"
             .span6
               include mixins/7
       section
@@ -131,10 +131,10 @@ html(ng-app="demo")
               tabset
                 tab(heading="8.html")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= file.read("dest/mixins/8.html").replace(/[&<>"\'/\n]/g, function(s){ return entityMap[s]; }) %>'
+                    != '<%= escapeHTML(readFile("dest/mixins/8.html")) %>'
                 tab(heading="8.js")
                   pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= file.read('dest/mixins/8.js').replace(/\n/g, '\\n') %>"
+                    != "<%= escapeJS(readFile('dest/mixins/8.js')) %>"
             .span6
               h2 
                 | See 'navbar'

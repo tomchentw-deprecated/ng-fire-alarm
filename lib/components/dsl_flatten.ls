@@ -1,4 +1,4 @@
-DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+DSL.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {results, next}) ->
     const values = []

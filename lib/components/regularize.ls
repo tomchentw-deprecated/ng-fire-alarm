@@ -1,7 +1,7 @@
 class FireAuth
 
   (auth, simpleLoginRef) ->
-    @$auth = -> simpleLoginRef
+    @$auth = bind @, identity, simpleLoginRef
     return copy auth, ^^@
 
   $login: !-> @$auth!login ...&
@@ -20,9 +20,13 @@ class FireObject
 
   $set: !-> @$ref!set ...&
   $update: !-> @$ref!update ...&
-  $transaction: !-> @$ref!transaction it
-  $increase: !-> @$transaction -> it+1
-  $decrease: !-> @$transaction -> it-1
+  $transaction: !-> @$ref!transaction ...&
+  $increase: !(...args) ->
+    args.unshift -> it+1
+    @$transaction ...args
+  $decrease: !(...args) ->
+    args.unshift -> it-1
+    @$transaction ...args
   $setPriority: !-> @$ref!setPriority ...&
   $setWithPriority: !-> @$ref!setWithPriority ...&
 
@@ -39,7 +43,7 @@ FireObjectDSL.regularize = regularizeFireObject
 
 class FireCollection extends FireObject
 
-  $push: !-> @$ref!push it
+  $push: !-> @$ref!push ...&
 
 
 FireCollectionDSL.regularize = (snap) ->

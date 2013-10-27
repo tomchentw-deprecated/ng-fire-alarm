@@ -1,13 +1,17 @@
 class DSL
 
-  _cloneThenPush: (step) ->
+  -> @steps = []
+
+  _clone: ->
     const cloned = new @constructor!
-    const steps = []
-    if @steps
-      for s in @steps
-        steps.push copy s, {}
-    steps.push step
-    cloned <<< {steps}
+    const {steps} = cloned
+    for s in @steps
+      steps.push copy s, {}
+    cloned
+
+  _cloneThenPush: (step) ->
+    const cloned = @_clone!
+    cloned.steps.push step
     cloned
 
   _build: !-> delete! @steps
@@ -15,13 +19,14 @@ class DSL
 class FireAuthDSL extends DSL
 
   root: ->
-    @[]steps.{}0.root = it
-    @
+    const cloned = @_clone!
+    cloned.steps.{}0.root = it
+    cloned
 
   _build: !($scope, lastNext) ->
     const step = @steps.0
     step.next = lastNext
-    DSLs.auth $scope, step
+    DSL.auth $scope, step
     super ...
 
 class FireObjectDSL extends DSL
@@ -33,9 +38,9 @@ class FireObjectDSL extends DSL
 
     forEach steps, !(step, index) ->
       const nextStep = steps[index+1] || lastStep
-      step.next = !(results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
+      step.next = !(results) -> DSL[nextStep.type] $scope, nextStep <<< {results}
 
-    DSLs[firstStep.type] $scope, firstStep
+    DSL[firstStep.type] $scope, firstStep
     super ...
 
   get: (interpolateUrl, query) ->

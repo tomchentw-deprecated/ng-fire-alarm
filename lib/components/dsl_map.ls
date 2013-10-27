@@ -1,4 +1,4 @@
-DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+DSL.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
   const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
 
   return !($scope, {interpolateUrl, results, next}) ->

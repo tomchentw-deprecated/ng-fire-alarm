@@ -23,26 +23,20 @@ const createUrlGetter = ($scope, $parse, interpolateUrl) ->
       url += value
     url
 
-const DSLs = {}
-
-DSLs.auth = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
-
-  return !($scope, {root, next}) ->
-    const simpleLoginRef = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
-      auth = {} if error or not auth
-      <~! $immediate
-      next regularizeAuth auth, simpleLoginRef
-
 class DSL
 
-  _cloneThenPush: (step) ->
+  -> @steps = []
+
+  _clone: ->
     const cloned = new @constructor!
-    const steps = []
-    if @steps
-      for s in @steps
-        steps.push copy s, {}
-    steps.push step
-    cloned <<< {steps}
+    const {steps} = cloned
+    for s in @steps
+      steps.push copy s, {}
+    cloned
+
+  _cloneThenPush: (step) ->
+    const cloned = @_clone!
+    cloned.steps.push step
     cloned
 
   _build: !-> delete! @steps
@@ -50,13 +44,14 @@ class DSL
 class FireAuthDSL extends DSL
 
   root: ->
-    @[]steps.{}0.root = it
-    @
+    const cloned = @_clone!
+    cloned.steps.{}0.root = it
+    cloned
 
   _build: !($scope, lastNext) ->
     const step = @steps.0
     step.next = lastNext
-    DSLs.auth $scope, step
+    DSL.auth $scope, step
     super ...
 
 class FireObjectDSL extends DSL
@@ -68,9 +63,9 @@ class FireObjectDSL extends DSL
 
     forEach steps, !(step, index) ->
       const nextStep = steps[index+1] || lastStep
-      step.next = !(results) -> DSLs[nextStep.type] $scope, nextStep <<< {results}
+      step.next = !(results) -> DSL[nextStep.type] $scope, nextStep <<< {results}
 
-    DSLs[firstStep.type] $scope, firstStep
+    DSL[firstStep.type] $scope, firstStep
     super ...
 
   get: (interpolateUrl, query) ->
@@ -85,8 +80,15 @@ class FireCollectionDSL extends FireObjectDSL
     @_cloneThenPush type: 'flatten'
 
 
+DSL.auth = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
-DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+  return !($scope, {root, next}) ->
+    const simpleLoginRef = new FirebaseSimpleLogin new Firebase(root), !(error, auth) ~>
+      auth = {} if error or not auth
+      <~! $immediate
+      next regularizeAuth auth, simpleLoginRef
+
+DSL.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {results, next}) ->
     const values = []
@@ -98,7 +100,7 @@ DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebas
       value.$index = -1+values.push value
 
     $immediate !-> next values
-DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+DSL.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
   return !($scope, {interpolateUrl, query, regularize, next}) ->
     const urlGetter = createUrlGetter $scope, $parse, interpolateUrl
@@ -135,7 +137,7 @@ DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
 
     $scope.$on '$destroy' destroyListener
 
-DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
+DSL.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
   const interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g
 
   return !($scope, {interpolateUrl, results, next}) ->
@@ -182,7 +184,7 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
 class FireAuth
 
   (auth, simpleLoginRef) ->
-    @$auth = -> simpleLoginRef
+    @$auth = bind @, identity, simpleLoginRef
     return copy auth, ^^@
 
   $login: !-> @$auth!login ...&
@@ -201,9 +203,13 @@ class FireObject
 
   $set: !-> @$ref!set ...&
   $update: !-> @$ref!update ...&
-  $transaction: !-> @$ref!transaction it
-  $increase: !-> @$transaction -> it+1
-  $decrease: !-> @$transaction -> it-1
+  $transaction: !-> @$ref!transaction ...&
+  $increase: !(...args) ->
+    args.unshift -> it+1
+    @$transaction ...args
+  $decrease: !(...args) ->
+    args.unshift -> it-1
+    @$transaction ...args
   $setPriority: !-> @$ref!setPriority ...&
   $setWithPriority: !-> @$ref!setWithPriority ...&
 
@@ -220,7 +226,7 @@ FireObjectDSL.regularize = regularizeFireObject
 
 class FireCollection extends FireObject
 
-  $push: !-> @$ref!push it
+  $push: !-> @$ref!push ...&
 
 
 FireCollectionDSL.regularize = (snap) ->
@@ -245,13 +251,15 @@ const autoInjectDSL = <[
     else
       FirebaseUrl + url
     for key in FIREBASE_QUERY_KEYS when queryVars[key]
+      continue unless isArray that
       firenode = firenode[key] ...that
     firenode
 
-  for type in [type for type of DSLs]
-    DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
+  for type in [type for type, value of DSL when isFunction value]
+    console.log type
+    DSL[type] = DSL[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
 
-  const dslResolved = !($scope, dsls) -->
+  const dslsResolved = !($scope, dsls) -->
     for name, dsl of dsls
       const assign = $parse name .assign
       dsl._build $scope, bind void, assign, $scope
@@ -260,7 +268,7 @@ const autoInjectDSL = <[
     const deferred = $q.defer!
     const {promise} = deferred
     delete! deferred.promise
-    promise.then dslResolved($scope)
+    promise.then dslsResolved($scope)
     deferred
 
 const CompactFirebaseSimpleLogin = FirebaseSimpleLogin || noop
