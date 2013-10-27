@@ -107,15 +107,14 @@ DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
     const watchListener = ($scope) ->
       const queryVars = url: urlGetter $scope
       for key in queryKeys
-        queryVars[key] = $scope.$eval query[key]
+        const value = $scope.$eval query[key]
+        return {} unless value # if the query vars not ready, don't trigger get!
+        queryVars[key] = value
       queryVars
     #
     firenode  = noopNode
-    queryVars = void
     #
-    const watchAction = !(result) ->
-      return if equals queryVars, result
-      queryVars := result
+    const watchAction = !(queryVars) ->
       destroyListener!
       return next void unless isString queryVars.url # cleanup
       #
@@ -132,7 +131,7 @@ DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
       <-! $immediate
       snap |> regularize |> next
     
-    $scope.$watch watchListener, watchAction
+    $scope.$watch watchListener, watchAction, true
 
     $scope.$on '$destroy' destroyListener
 

@@ -115,10 +115,11 @@
       DSLs[firstStep.type]($scope, firstStep);
       superclass.prototype._build.apply(this, arguments);
     };
-    prototype.get = function(interpolateUrl){
+    prototype.get = function(interpolateUrl, query){
       return this._cloneThenPush({
         type: 'get',
         interpolateUrl: interpolateUrl,
+        query: query || {},
         regularize: this.constructor.regularize
       });
     };
@@ -169,19 +170,36 @@
   };
   DSLs.get = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
     return function($scope, arg$){
-      var interpolateUrl, regularize, next, watchListener, firenode, watchAction, destroyListener, value, valueRetrieved;
-      interpolateUrl = arg$.interpolateUrl, regularize = arg$.regularize, next = arg$.next;
-      watchListener = createUrlGetter($scope, $parse, interpolateUrl);
-      firenode = noopNode;
-      watchAction = function(firebaseUrl){
-        if (firenode.toString() === firebaseUrl) {
-          return;
+      var interpolateUrl, query, regularize, next, urlGetter, queryKeys, res$, key, watchListener, firenode, watchAction, destroyListener, value, valueRetrieved;
+      interpolateUrl = arg$.interpolateUrl, query = arg$.query, regularize = arg$.regularize, next = arg$.next;
+      urlGetter = createUrlGetter($scope, $parse, interpolateUrl);
+      res$ = [];
+      for (key in query) {
+        res$.push(key);
+      }
+      queryKeys = res$;
+      watchListener = function($scope){
+        var queryVars, i$, ref$, len$, key, value;
+        queryVars = {
+          url: urlGetter($scope)
+        };
+        for (i$ = 0, len$ = (ref$ = queryKeys).length; i$ < len$; ++i$) {
+          key = ref$[i$];
+          value = $scope.$eval(query[key]);
+          if (!value) {
+            return {};
+          }
+          queryVars[key] = value;
         }
+        return queryVars;
+      };
+      firenode = noopNode;
+      watchAction = function(queryVars){
         destroyListener();
-        if (!isString(firebaseUrl)) {
+        if (!isString(queryVars.url)) {
           return next(void 8);
         }
-        firenode = createFirebaseFrom(firebaseUrl);
+        firenode = createFirebaseFrom(queryVars);
         firenode.on('value', noop, void 8, noopNode);
         firenode.on('value', valueRetrieved, void 8, firenode);
       };
@@ -196,7 +214,7 @@
           snap));
         });
       };
-      $scope.$watch(watchListener, watchAction);
+      $scope.$watch(watchListener, watchAction, true);
       $scope.$on('$destroy', destroyListener);
     };
   };
@@ -238,7 +256,9 @@
           if (!firebaseUrl) {
             return noopNode;
           }
-          firenode = createFirebaseFrom(firebaseUrl);
+          firenode = createFirebaseFrom({
+            url: firebaseUrl
+          });
           firenode.on('value', noop, void 8, noopNode);
           firenode.on('value', valueRetrieved(index), void 8, firenode);
           return firenode;
@@ -374,12 +394,21 @@
     return values;
   };
   autoInjectDSL = ['$q', '$parse', '$immediate', 'Firebase', 'FirebaseUrl', 'FirebaseSimpleLogin'].concat(function($q, $parse, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin){
-    var createFirebaseFrom, i$, ref$, type, len$, dslResolved;
-    createFirebaseFrom = function(firebaseUrl){
-      firebaseUrl || (firebaseUrl = '');
-      return new Firebase(firebaseUrl.substr(0, 4) === 'http'
-        ? firebaseUrl
-        : FirebaseUrl + firebaseUrl);
+    var FIREBASE_QUERY_KEYS, createFirebaseFrom, i$, ref$, type, len$, dslResolved;
+    FIREBASE_QUERY_KEYS = ['limit', 'startAt', 'endAt'];
+    createFirebaseFrom = function(queryVars){
+      var url, firenode, i$, ref$, len$, key, that;
+      url = queryVars.url;
+      firenode = new Firebase(url.substr(0, 4) === 'http'
+        ? url
+        : FirebaseUrl + url);
+      for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
+        key = ref$[i$];
+        if (that = queryVars[key]) {
+          firenode = firenode[key].apply(firenode, that);
+        }
+      }
+      return firenode;
     };
     for (i$ = 0, len$ = (ref$ = (fn$())).length; i$ < len$; ++i$) {
       type = ref$[i$];
