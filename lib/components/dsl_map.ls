@@ -29,6 +29,7 @@ DSL.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
     snaps = []
     snaps.length = results.length
     snaps.forEach ||= bind snaps, forEach
+    $immediate(-> next []) unless results.length
     #
     const valueRetrieved = !(index, childSnap) -->
       snaps[index] = childSnap
