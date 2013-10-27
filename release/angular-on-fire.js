@@ -1,5 +1,5 @@
 (function(){
-  var noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals, noopNode, interpolateMatcher, createUrlGetter, DSLs, DSL, FireAuthDSL, FireObjectDSL, FireCollectionDSL, FireAuth, regularizeAuth, FireObject, regularizeObject, regularizeFireObject, FireCollection, autoInjectDSL, CompactFirebaseSimpleLogin, slice$ = [].slice;
+  var noop, identity, bind, forEach, copy, isObject, isFunction, isString, isNumber, equals, noopNode, interpolateMatcher, createUrlGetter, DSL, FireAuthDSL, FireObjectDSL, FireCollectionDSL, FireAuth, regularizeAuth, FireObject, regularizeObject, regularizeFireObject, FireCollection, autoInjectDSL, CompactFirebaseSimpleLogin, slice$ = [].slice;
   noop = angular.noop, identity = angular.identity, bind = angular.bind, forEach = angular.forEach, copy = angular.copy, isObject = angular.isObject, isFunction = angular.isFunction, isString = angular.isString, isNumber = angular.isNumber, equals = angular.equals;
   noopNode = {
     on: noop,
@@ -41,56 +41,46 @@
       return url;
     };
   };
-  DSLs = {};
-  DSLs.auth = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
-    return function($scope, arg$){
-      var root, next, simpleLoginRef, this$ = this;
-      root = arg$.root, next = arg$.next;
-      simpleLoginRef = new FirebaseSimpleLogin(new Firebase(root), function(error, auth){
-        if (error || !auth) {
-          auth = {};
-        }
-        $immediate(function(){
-          next(regularizeAuth(auth, simpleLoginRef));
-        });
-      });
-    };
-  };
   DSL = (function(){
     DSL.displayName = 'DSL';
     var prototype = DSL.prototype, constructor = DSL;
-    prototype._cloneThenPush = function(step){
+    function DSL(){
+      this.steps = [];
+    }
+    prototype._clone = function(){
       var cloned, steps, i$, ref$, len$, s;
       cloned = new this.constructor();
-      steps = [];
-      if (this.steps) {
-        for (i$ = 0, len$ = (ref$ = this.steps).length; i$ < len$; ++i$) {
-          s = ref$[i$];
-          steps.push(copy(s, {}));
-        }
+      steps = cloned.steps;
+      for (i$ = 0, len$ = (ref$ = this.steps).length; i$ < len$; ++i$) {
+        s = ref$[i$];
+        steps.push(copy(s, {}));
       }
-      steps.push(step);
-      cloned.steps = steps;
+      return cloned;
+    };
+    prototype._cloneThenPush = function(step){
+      var cloned;
+      cloned = this._clone();
+      cloned.steps.push(step);
       return cloned;
     };
     prototype._build = function(){
       delete this.steps;
     };
-    function DSL(){}
     return DSL;
   }());
   FireAuthDSL = (function(superclass){
     var prototype = extend$((import$(FireAuthDSL, superclass).displayName = 'FireAuthDSL', FireAuthDSL), superclass).prototype, constructor = FireAuthDSL;
     prototype.root = function(it){
-      var ref$;
-      ((ref$ = this.steps || (this.steps = []))[0] || (ref$[0] = {})).root = it;
-      return this;
+      var cloned, ref$;
+      cloned = this._clone();
+      ((ref$ = cloned.steps)[0] || (ref$[0] = {})).root = it;
+      return cloned;
     };
     prototype._build = function($scope, lastNext){
       var step;
       step = this.steps[0];
       step.next = lastNext;
-      DSLs.auth($scope, step);
+      DSL.auth($scope, step);
       superclass.prototype._build.apply(this, arguments);
     };
     function FireAuthDSL(){
@@ -109,10 +99,10 @@
         var nextStep;
         nextStep = steps[index + 1] || lastStep;
         step.next = function(results){
-          DSLs[nextStep.type]($scope, (nextStep.results = results, nextStep));
+          DSL[nextStep.type]($scope, (nextStep.results = results, nextStep));
         };
       });
-      DSLs[firstStep.type]($scope, firstStep);
+      DSL[firstStep.type]($scope, firstStep);
       superclass.prototype._build.apply(this, arguments);
     };
     prototype.get = function(interpolateUrl, query){
@@ -146,7 +136,21 @@
     }
     return FireCollectionDSL;
   }(FireObjectDSL));
-  DSLs.flatten = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
+  DSL.auth = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
+    return function($scope, arg$){
+      var root, next, simpleLoginRef, this$ = this;
+      root = arg$.root, next = arg$.next;
+      simpleLoginRef = new FirebaseSimpleLogin(new Firebase(root), function(error, auth){
+        if (error || !auth) {
+          auth = {};
+        }
+        $immediate(function(){
+          next(regularizeAuth(auth, simpleLoginRef));
+        });
+      });
+    };
+  };
+  DSL.flatten = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
     return function($scope, arg$){
       var results, next, values, i$, len$, result;
       results = arg$.results, next = arg$.next;
@@ -168,7 +172,7 @@
       }
     };
   };
-  DSLs.get = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
+  DSL.get = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
     return function($scope, arg$){
       var interpolateUrl, query, regularize, next, urlGetter, queryKeys, res$, key, watchListener, firenode, watchAction, destroyListener, value, valueRetrieved;
       interpolateUrl = arg$.interpolateUrl, query = arg$.query, regularize = arg$.regularize, next = arg$.next;
@@ -218,7 +222,7 @@
       $scope.$on('$destroy', destroyListener);
     };
   };
-  DSLs.map = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
+  DSL.map = function($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom){
     var interpolateMatcher;
     interpolateMatcher = /\{\{\s*(\S*)\s*\}\}/g;
     return function($scope, arg$){
@@ -296,9 +300,7 @@
     FireAuth.displayName = 'FireAuth';
     var prototype = FireAuth.prototype, constructor = FireAuth;
     function FireAuth(auth, simpleLoginRef){
-      this.$auth = function(){
-        return simpleLoginRef;
-      };
+      this.$auth = bind(this, identity, simpleLoginRef);
       return copy(auth, clone$(this));
     }
     prototype.$login = function(){
@@ -330,18 +332,25 @@
       var ref$;
       (ref$ = this.$ref()).update.apply(ref$, arguments);
     };
-    prototype.$transaction = function(it){
-      this.$ref().transaction(it);
+    prototype.$transaction = function(){
+      var ref$;
+      (ref$ = this.$ref()).transaction.apply(ref$, arguments);
     };
     prototype.$increase = function(){
-      this.$transaction(function(it){
+      var args;
+      args = slice$.call(arguments);
+      args.unshift(function(it){
         return it + 1;
       });
+      this.$transaction.apply(this, args);
     };
     prototype.$decrease = function(){
-      this.$transaction(function(it){
+      var args;
+      args = slice$.call(arguments);
+      args.unshift(function(it){
         return it - 1;
       });
+      this.$transaction.apply(this, args);
     };
     prototype.$setPriority = function(){
       var ref$;
@@ -371,8 +380,9 @@
   FireObjectDSL.regularize = regularizeFireObject;
   FireCollection = (function(superclass){
     var prototype = extend$((import$(FireCollection, superclass).displayName = 'FireCollection', FireCollection), superclass).prototype, constructor = FireCollection;
-    prototype.$push = function(it){
-      this.$ref().push(it);
+    prototype.$push = function(){
+      var ref$;
+      (ref$ = this.$ref()).push.apply(ref$, arguments);
     };
     function FireCollection(){
       FireCollection.superclass.apply(this, arguments);
@@ -394,7 +404,7 @@
     return values;
   };
   autoInjectDSL = ['$q', '$parse', '$immediate', 'Firebase', 'FirebaseUrl', 'FirebaseSimpleLogin'].concat(function($q, $parse, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin){
-    var FIREBASE_QUERY_KEYS, createFirebaseFrom, i$, ref$, type, len$, dslResolved;
+    var FIREBASE_QUERY_KEYS, createFirebaseFrom, i$, ref$, type, value, len$, dslsResolved;
     FIREBASE_QUERY_KEYS = ['limit', 'startAt', 'endAt'];
     createFirebaseFrom = function(queryVars){
       var url, firenode, i$, ref$, len$, key, that;
@@ -405,6 +415,9 @@
       for (i$ = 0, len$ = (ref$ = FIREBASE_QUERY_KEYS).length; i$ < len$; ++i$) {
         key = ref$[i$];
         if (that = queryVars[key]) {
+          if (!isArray(that)) {
+            continue;
+          }
           firenode = firenode[key].apply(firenode, that);
         }
       }
@@ -412,9 +425,9 @@
     };
     for (i$ = 0, len$ = (ref$ = (fn$())).length; i$ < len$; ++i$) {
       type = ref$[i$];
-      DSLs[type] = DSLs[type]($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom);
+      DSL[type] = DSL[type]($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom);
     }
-    dslResolved = curry$(function($scope, dsls){
+    dslsResolved = curry$(function($scope, dsls){
       var name, dsl, assign;
       for (name in dsls) {
         dsl = dsls[name];
@@ -427,13 +440,16 @@
       deferred = $q.defer();
       promise = deferred.promise;
       delete deferred.promise;
-      promise.then(dslResolved($scope));
+      promise.then(dslsResolved($scope));
       return deferred;
     };
     function fn$(){
-      var results$ = [];
-      for (type in DSLs) {
-        results$.push(type);
+      var ref$, results$ = [];
+      for (type in ref$ = DSL) {
+        value = ref$[type];
+        if (isFunction(value)) {
+          results$.push(type);
+        }
       }
       return results$;
     }

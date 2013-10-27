@@ -20,8 +20,7 @@ module.exports = function(grunt) {
   _ = grunt.util._;
   templateData = {
     readFile: function (path) {
-      var result = grunt.file.read(path);
-      return result;
+      return grunt.file.read(path);
     },
     escapeJS: function (string) {
       return string.replace(/\n/g, '\\n');
@@ -151,6 +150,12 @@ module.exports = function(grunt) {
             }
           }, templateData)
         }
+      },        readme: {
+        src: 'misc/README.md.template',
+        dest: 'README.md',
+        options: {
+          data: templateData
+        }
       }
     },
     jade: { compile: {
@@ -273,11 +278,7 @@ module.exports = function(grunt) {
   grunt.registerTask('mixins:compile', ['livescript:mixins', 'jade:mixins']);
   grunt.registerTask('default', ['clean:release', 'jshint', 'js:compile', 'css:compile', 'mixins:compile', 'template:compile', 'jade:compile']);
   grunt.registerTask('dev', ['default', 'connect', 'watch']);
+  grunt.registerTask('server', ['connect', 'watch']);
   //
-  grunt.registerTask('template:readme', function () {
-    var readme = grunt.file.read('misc/README.md.template');
-    readme = grunt.template.process(readme, {data: grunt});
-    grunt.file.write('README.md', readme);
-  });
-  grunt.registerTask('release', ['default', 'template:release', 'concat:components', 'livescript:release', 'uglify:release', 'template:readme']);
+  grunt.registerTask('release', ['default', 'template:release', 'jade:compile', 'concat:components', 'livescript:release', 'uglify:release', 'template:readme']);
 };

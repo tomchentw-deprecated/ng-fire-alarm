@@ -43,23 +43,23 @@ this.demo = angular.module('demo', ['ui.bootstrap', 'angular-on-fire']).value({
 ### `FireSync` service
 Then, let's use `FireSync` :
 ```JavaScript 
-<%= file.read('dest/mixins/1.js') %>
+<%= readFile('dest/mixins/1.js') %>
 ```
 
 In your `/users/show.html` :
 ```HTML
-<%= file.read('dest/mixins/1.html') %>
+<%= readFile('dest/mixins/1.html') %>
 ```
 
 ### Resolving Dynamic Path 
 Yes, the path to `Firebase` resource can be **dynamic**!! Awesome!!
 ```JavaScript
-<%= file.read('dest/mixins/3.js') %>
+<%= readFile('dest/mixins/3.js') %>
 ```
 
 Then in your `/users/show-vip.html` :
 ```HTML
-<%= file.read('dest/mixins/3.html') %>
+<%= readFile('dest/mixins/3.html') %>
 ```
 If executed, it will load `vip_user` first, then `user` next, finally `friends_list`. All paths are automatically resolved.
 
@@ -82,12 +82,12 @@ We expose `set`, `update`, `push`, `transaction`, `remove`, `setPriority`, `setW
 We also add another two common used functions : `$increase`, `$decrease` , which make great use of `transaction`.
 
 ```JavaScript
-<%= file.read('dest/mixins/4.js') %>
+<%= readFile('dest/mixins/4.js') %>
 ```
 
 In your `/users/edit.html` : 
 ```HTML
-<%= file.read('dest/mixins/4.html') %>
+<%= readFile('dest/mixins/4.html') %>
 ```
 
 ### `FireCollection` service
@@ -98,12 +98,12 @@ With `$index`, you can do a reverse order like this : `ng-repeat="user in users 
 
 
 ```JavaScript
-<%= file.read('dest/mixins/5.js') %>
+<%= readFile('dest/mixins/5.js') %>
 ```
 
 In your `/users/list.html` : 
 ```HTML
-<%= file.read('dest/mixins/5.html') %>
+<%= readFile('dest/mixins/5.html') %>
 ```
 
 
@@ -114,12 +114,12 @@ Then `FireCollection` can map these keys to a collection of actual items.
 Moreover, if you need to map indexes twice or above, remember to `flatten` the indexes:
 
 ```JavaScript
-<%= file.read('dest/mixins/7.js') %>
+<%= readFile('dest/mixins/7.js') %>
 ```
 
 In your `/book/authors.html` : 
 ```HTML
-<%= file.read('dest/mixins/7.html') %>
+<%= readFile('dest/mixins/7.html') %>
 ```
 Easy! Right?
 
@@ -131,12 +131,12 @@ Easy! Right?
 
 Then, if I want current `user/auth` be globally accessible via `$rootScope`, use `run` :
 ```JavaScript
-<%= file.read('dest/mixins/8.js') %>
+<%= readFile('dest/mixins/8.js') %>
 ```
 
 and then, in your `/partials/auth.html`:
 ```HTML
-<%= file.read('dest/mixins/8.html') %>
+<%= readFile('dest/mixins/8.html') %>
 ```
 
 

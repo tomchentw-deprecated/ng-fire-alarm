@@ -187,7 +187,7 @@ In your `/users/list.html` :
 
 <div ng-controller="UsersCtrl">
   <ul>
-    <li ng-repeat="user in users | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
+    <li ng-repeat="user in users | orderBy:'-$index'"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
       <p>{{ user.bio | limitTo:100 }}...</p>
     </li>
   </ul>
@@ -226,7 +226,7 @@ In your `/book/authors.html` :
 
 <div ng-controller="BookAuthorsCtrl">
   <ul>
-    <li ng-repeat="user in authors | orderBy:'$index':true"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
+    <li ng-repeat="user in authors | orderBy:'+$index'"><a ng-href="https://wwww.facebook.com/{{ user.$name }}" target="_blank">{{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})</a>
       <p>{{ user.bio | limitTo:100 }}...</p>
     </li>
   </ul>

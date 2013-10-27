@@ -15,7 +15,6 @@ const autoInjectDSL = <[
     firenode
 
   for type in [type for type, value of DSL when isFunction value]
-    console.log type
     DSL[type] = DSL[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
 
   const dslsResolved = !($scope, dsls) -->
