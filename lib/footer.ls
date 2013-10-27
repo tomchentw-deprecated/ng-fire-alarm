@@ -1,11 +1,17 @@
 const autoInjectDSL = <[
        $q  $parse  $immediate  Firebase  FirebaseUrl  FirebaseSimpleLogin
 ]> ++ ($q, $parse, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin) ->
-  const createFirebaseFrom = (firebaseUrl || '') ->
-    new Firebase if firebaseUrl.substr(0, 4) is 'http'
-      firebaseUrl
+  const FIREBASE_QUERY_KEYS = <[limit startAt endAt]>
+
+  const createFirebaseFrom = (queryVars) ->
+    const {url} = queryVars
+    firenode = new Firebase if url.substr(0, 4) is 'http'
+      url
     else
-      FirebaseUrl + firebaseUrl
+      FirebaseUrl + url
+    for key in FIREBASE_QUERY_KEYS when queryVars[key]
+      firenode = firenode[key] ...that
+    firenode
 
   for type in [type for type of DSLs]
     DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom

@@ -1,16 +1,25 @@
 DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
-  return !($scope, {interpolateUrl, regularize, next}) ->
-    const watchListener = createUrlGetter $scope, $parse, interpolateUrl    
+  return !($scope, {interpolateUrl, query, regularize, next}) ->
+    const urlGetter = createUrlGetter $scope, $parse, interpolateUrl
+    const queryKeys = [key for key of query]
+
+    const watchListener = ($scope) ->
+      const queryVars = url: urlGetter $scope
+      for key in queryKeys
+        queryVars[key] = $scope.$eval query[key]
+      queryVars
     #
-    firenode = noopNode
+    firenode  = noopNode
+    queryVars = void
     #
-    const watchAction = !(firebaseUrl) ->
-      return if firenode.toString! is firebaseUrl
+    const watchAction = !(result) ->
+      return if equals queryVars, result
+      queryVars := result
       destroyListener!
-      return next void unless isString firebaseUrl# cleanup
+      return next void unless isString queryVars.url # cleanup
       #
-      firenode := createFirebaseFrom firebaseUrl
+      firenode := createFirebaseFrom queryVars
       firenode.on 'value' noop, void, noopNode # cache!
       firenode.on 'value' valueRetrieved, void, firenode
 

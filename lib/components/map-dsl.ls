@@ -17,7 +17,7 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
       destroyListeners!
       firenodes := for let firebaseUrl, index in firebaseUrls
         return noopNode unless firebaseUrl
-        const firenode = createFirebaseFrom firebaseUrl
+        const firenode = createFirebaseFrom url: firebaseUrl
         firenode.on 'value' noop, void, noopNode # cache!
         firenode.on 'value' valueRetrieved(index), void, firenode
         firenode

@@ -73,8 +73,8 @@ class FireObjectDSL extends DSL
     DSLs[firstStep.type] $scope, firstStep
     super ...
 
-  get: (interpolateUrl) ->
-    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, regularize: @constructor.regularize
+  get: (interpolateUrl, query) ->
+    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, query: query || {}, regularize: @constructor.regularize
 
 class FireCollectionDSL extends FireObjectDSL
 
@@ -100,17 +100,26 @@ DSLs.flatten = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebas
     $immediate !-> next values
 DSLs.get = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom) ->
 
-  return !($scope, {interpolateUrl, regularize, next}) ->
-    const watchListener = createUrlGetter $scope, $parse, interpolateUrl    
+  return !($scope, {interpolateUrl, query, regularize, next}) ->
+    const urlGetter = createUrlGetter $scope, $parse, interpolateUrl
+    const queryKeys = [key for key of query]
+
+    const watchListener = ($scope) ->
+      const queryVars = url: urlGetter $scope
+      for key in queryKeys
+        queryVars[key] = $scope.$eval query[key]
+      queryVars
     #
-    firenode = noopNode
+    firenode  = noopNode
+    queryVars = void
     #
-    const watchAction = !(firebaseUrl) ->
-      return if firenode.toString! is firebaseUrl
+    const watchAction = !(result) ->
+      return if equals queryVars, result
+      queryVars := result
       destroyListener!
-      return next void unless isString firebaseUrl# cleanup
+      return next void unless isString queryVars.url # cleanup
       #
-      firenode := createFirebaseFrom firebaseUrl
+      firenode := createFirebaseFrom queryVars
       firenode.on 'value' noop, void, noopNode # cache!
       firenode.on 'value' valueRetrieved, void, firenode
 
@@ -146,7 +155,7 @@ DSLs.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFro
       destroyListeners!
       firenodes := for let firebaseUrl, index in firebaseUrls
         return noopNode unless firebaseUrl
-        const firenode = createFirebaseFrom firebaseUrl
+        const firenode = createFirebaseFrom url: firebaseUrl
         firenode.on 'value' noop, void, noopNode # cache!
         firenode.on 'value' valueRetrieved(index), void, firenode
         firenode
@@ -228,11 +237,17 @@ FireCollectionDSL.regularize = (snap) ->
 const autoInjectDSL = <[
        $q  $parse  $immediate  Firebase  FirebaseUrl  FirebaseSimpleLogin
 ]> ++ ($q, $parse, $immediate, Firebase, FirebaseUrl, FirebaseSimpleLogin) ->
-  const createFirebaseFrom = (firebaseUrl || '') ->
-    new Firebase if firebaseUrl.substr(0, 4) is 'http'
-      firebaseUrl
+  const FIREBASE_QUERY_KEYS = <[limit startAt endAt]>
+
+  const createFirebaseFrom = (queryVars) ->
+    const {url} = queryVars
+    firenode = new Firebase if url.substr(0, 4) is 'http'
+      url
     else
-      FirebaseUrl + firebaseUrl
+      FirebaseUrl + url
+    for key in FIREBASE_QUERY_KEYS when queryVars[key]
+      firenode = firenode[key] ...that
+    firenode
 
   for type in [type for type of DSLs]
     DSLs[type] = DSLs[type] $parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom

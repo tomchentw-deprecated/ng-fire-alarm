@@ -38,8 +38,8 @@ class FireObjectDSL extends DSL
     DSLs[firstStep.type] $scope, firstStep
     super ...
 
-  get: (interpolateUrl) ->
-    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, regularize: @constructor.regularize
+  get: (interpolateUrl, query) ->
+    @_cloneThenPush type: 'get', interpolateUrl: interpolateUrl, query: query || {}, regularize: @constructor.regularize
 
 class FireCollectionDSL extends FireObjectDSL
 
