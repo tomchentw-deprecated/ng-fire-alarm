@@ -137,6 +137,12 @@ pre.demo {
   }
 }
 
+.chat-author-image {
+  $size: 64px;
+  width: $size;
+  height: $size;
+}
+
 .footer {
   @extend .text-center;
   padding: 30px 0;

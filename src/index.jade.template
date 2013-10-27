@@ -42,103 +42,11 @@ html(ng-app="demo")
         .container-fluid
           .page-header
             h1
-              pre.demo FireSync
-              | service
-          .row-fluid
+              | ChatRoom!
+          .row-fluid(ng-controller="RoomsCtrl")
             .span6
-              tabset
-                tab(heading="1.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/1.html")) %>'
-                tab(heading="1.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/1.js')) %>"
+              include partials/rooms
             .span6
-              include mixins/1
-      section
-        .container-fluid
-          .page-header
-            h1 Resolving Dynamic Path
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="3.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/3.html")) %>'
-                tab(heading="3.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/3.js')) %>"
-            .span6
-              include mixins/3
-      section
-        .container-fluid
-          .page-header
-            h1 prototype methods
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="4.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/4.html")) %>'
-                tab(heading="4.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/4.js')) %>"
-            .span6
-              include mixins/4
-      section
-        .container-fluid
-          .page-header
-            h1
-              pre.demo FireCollection
-              | service
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="5.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/5.html")) %>'
-                tab(heading="5.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/5.js')) %>"
-            .span6
-              include mixins/5
-      section
-        .container-fluid
-          .page-header
-            h1
-              | Eager Loading on 
-              pre.demo FireCollection
-              | with Multiple Indexes
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="7.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/7.html")) %>'
-                tab(heading="7.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/7.js')) %>"
-            .span6
-              include mixins/7
-      section
-        .container-fluid
-          .page-header
-            h1
-              pre.demo FireAuth
-              | service
-          .row-fluid
-            .span6
-              tabset
-                tab(heading="8.html")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != '<%= escapeHTML(readFile("dest/mixins/8.html")) %>'
-                tab(heading="8.js")
-                  pre.prettyprint.linenums(ng-non-bindable)
-                    != "<%= escapeJS(readFile('dest/mixins/8.js')) %>"
-            .span6
-              h2 
-                | See 'navbar'
-              h2
-                small Click 'Facebook Login' for demo!
+              include partials/chats
     footer
       include partials/footer

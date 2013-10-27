@@ -23,3 +23,61 @@ prettyPrint!
     else
       extend {}, getPrototypeOf(it), it, extendRef
     , null, 2
+
+const RoomsCtrl = <[
+        $scope  fireCollectionDSL  autoInjectDSL  Firebase
+]> ++ !($scope, fireCollectionDSL, autoInjectDSL, Firebase) ->
+
+  const rooms = fireCollectionDSL.get '/rooms'
+
+  autoInjectDSL $scope .resolve {rooms}
+
+  $scope.createRoom = !->
+    @newRoom.createdAt = Firebase.ServerValue.TIMESTAMP
+    @newRoom.updatedAt = Firebase.ServerValue.TIMESTAMP
+    console.log @newRoom
+    @roomId = @rooms.$push @newRoom .name!
+    @newRoom = {}
+
+  $scope.orderList = <[$name title createdAt updatedAt]>
+  $scope.order = $scope.orderList[*-1]
+
+  $scope.isActive = -> @room.$name is $scope.roomId
+
+  $scope.activate = !-> $scope.roomId = @room.$name
+
+const ChatsCtrl = <[
+        $scope  fireCollectionDSL  autoInjectDSL  Firebase  FirebaseUrl
+]> ++ !($scope, fireCollectionDSL, autoInjectDSL, Firebase, FirebaseUrl) ->
+
+  const chatsRef = new Firebase FirebaseUrl .child '/chats'
+
+  const chats = do
+    fireCollectionDSL
+    .get '/rooms/{{ roomId }}/chatIds'
+    .map '/chats/{{ $name }}'
+
+  autoInjectDSL $scope .resolve {chats}
+
+  $scope.chatCtrl = <[$scope fireObjectDSL]> ++ !($scope, fireObjectDSL) ->
+    const author = fireObjectDSL.get '/users/{{ chat.authorId }}'
+
+    autoInjectDSL $scope .resolve {author}
+
+  $scope.createChat = !->
+    @newChat.roomId = @roomId
+    @newChat.authorId = @user.$name
+    const chatId = chatsRef.push @newChat .name!
+    @rooms.$ref!child @roomId 
+      ..child 'chatIds' .update "#chatId": true
+      ..child 'updatedAt' .set Firebase.ServerValue.TIMESTAMP
+
+    @newChat = {}
+
+  $scope.removeChat = !->
+    @rooms.$ref!child @chat.roomId 
+      ..child 'chatIds' .child @chat.$name .remove!
+      ..child 'updatedAt' .set Firebase.ServerValue.TIMESTAMP
+    @chat.$remove!
+
+@demo.controller {RoomsCtrl, ChatsCtrl}

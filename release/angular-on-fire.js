@@ -278,6 +278,11 @@
       snaps = [];
       snaps.length = results.length;
       snaps.forEach || (snaps.forEach = bind(snaps, forEach));
+      if (!results.length) {
+        $immediate(function(){
+          return next([]);
+        });
+      }
       valueRetrieved = curry$(function(index, childSnap){
         var i$, to$, i, values;
         snaps[index] = childSnap;
@@ -326,15 +331,15 @@
     }
     prototype.$set = function(){
       var ref$;
-      (ref$ = this.$ref()).set.apply(ref$, arguments);
+      return (ref$ = this.$ref()).set.apply(ref$, arguments);
     };
     prototype.$update = function(){
       var ref$;
-      (ref$ = this.$ref()).update.apply(ref$, arguments);
+      return (ref$ = this.$ref()).update.apply(ref$, arguments);
     };
     prototype.$transaction = function(){
       var ref$;
-      (ref$ = this.$ref()).transaction.apply(ref$, arguments);
+      return (ref$ = this.$ref()).transaction.apply(ref$, arguments);
     };
     prototype.$increase = function(){
       var args;
@@ -342,7 +347,7 @@
       args.unshift(function(it){
         return it + 1;
       });
-      this.$transaction.apply(this, args);
+      return this.$transaction.apply(this, args);
     };
     prototype.$decrease = function(){
       var args;
@@ -350,15 +355,19 @@
       args.unshift(function(it){
         return it - 1;
       });
-      this.$transaction.apply(this, args);
+      return this.$transaction.apply(this, args);
     };
     prototype.$setPriority = function(){
       var ref$;
-      (ref$ = this.$ref()).setPriority.apply(ref$, arguments);
+      return (ref$ = this.$ref()).setPriority.apply(ref$, arguments);
     };
     prototype.$setWithPriority = function(){
       var ref$;
-      (ref$ = this.$ref()).setWithPriority.apply(ref$, arguments);
+      return (ref$ = this.$ref()).setWithPriority.apply(ref$, arguments);
+    };
+    prototype.$remove = function(){
+      var ref$;
+      return (ref$ = this.$ref()).remove.apply(ref$, arguments);
     };
     return FireObject;
   }());
@@ -382,7 +391,7 @@
     var prototype = extend$((import$(FireCollection, superclass).displayName = 'FireCollection', FireCollection), superclass).prototype, constructor = FireCollection;
     prototype.$push = function(){
       var ref$;
-      (ref$ = this.$ref()).push.apply(ref$, arguments);
+      return (ref$ = this.$ref()).push.apply(ref$, arguments);
     };
     function FireCollection(){
       FireCollection.superclass.apply(this, arguments);

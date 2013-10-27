@@ -168,6 +168,7 @@ DSL.map = ($parse, $immediate, Firebase, FirebaseSimpleLogin, createFirebaseFrom
     snaps = []
     snaps.length = results.length
     snaps.forEach ||= bind snaps, forEach
+    $immediate(-> next []) unless results.length
     #
     const valueRetrieved = !(index, childSnap) -->
       snaps[index] = childSnap
@@ -201,18 +202,18 @@ class FireObject
     value.$name = snap.ref!name!
     value.$priority = snap.getPriority!
 
-  $set: !-> @$ref!set ...&
-  $update: !-> @$ref!update ...&
-  $transaction: !-> @$ref!transaction ...&
-  $increase: !(...args) ->
+  $set: -> @$ref!set ...&
+  $update: -> @$ref!update ...&
+  $transaction: -> @$ref!transaction ...&
+  $increase: (...args) ->
     args.unshift -> it+1
     @$transaction ...args
-  $decrease: !(...args) ->
+  $decrease: (...args) ->
     args.unshift -> it-1
     @$transaction ...args
-  $setPriority: !-> @$ref!setPriority ...&
-  $setWithPriority: !-> @$ref!setWithPriority ...&
-
+  $setPriority: -> @$ref!setPriority ...&
+  $setWithPriority: -> @$ref!setWithPriority ...&
+  $remove: -> @$ref!remove ...&
 
 const regularizeObject = (val) ->
   if isObject val then val else {$value: val}
@@ -226,8 +227,7 @@ FireObjectDSL.regularize = regularizeFireObject
 
 class FireCollection extends FireObject
 
-  $push: !-> @$ref!push ...&
-
+  $push: -> @$ref!push ...&
 
 FireCollectionDSL.regularize = (snap) ->
   const values = []
