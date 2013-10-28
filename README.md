@@ -261,10 +261,7 @@ this.demo.run(['$log', '$rootScope', 'fireAuthDSL', 'fireObjectDSL', 'autoInject
     /* We need this to store user auth (like session) into database */
     $rootScope.user.$setWithPriority({
       id: (ref$ = $rootScope.auth).id,
-      displayName: ref$.displayName,
-      profileUrl: ref$.profileUrl,
-      bio: ref$.bio,
-      updated_time: ref$.updated_time
+      displayName: ref$.displayName
     }, Math.round(Math.random() * Math.pow(2, 16)));
   });
   autoInjectDSL($rootScope).resolve({
