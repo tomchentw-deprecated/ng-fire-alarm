@@ -33,16 +33,16 @@ const RoomsCtrl = <[
   autoInjectDSL $scope .resolve {rooms}
 
   $scope.createRoom = !->
-    @newRoom.createdAt = Firebase.ServerValue.TIMESTAMP
-    @newRoom.updatedAt = Firebase.ServerValue.TIMESTAMP
-    console.log @newRoom
+    @newRoom
+      ..createdAt = Firebase.ServerValue.TIMESTAMP
+      ..updatedAt = Firebase.ServerValue.TIMESTAMP
     @roomId = @rooms.$push @newRoom .name!
     @newRoom = {}
 
   $scope.orderList = <[$name title createdAt updatedAt]>
   $scope.order = $scope.orderList[*-1]
 
-  $scope.isActive = -> @room.$name is $scope.roomId
+  $scope.isActive = -> $scope.roomId is @room.$name
 
   $scope.activate = !-> $scope.roomId = @room.$name
 
@@ -65,8 +65,9 @@ const ChatsCtrl = <[
     autoInjectDSL $scope .resolve {author}
 
   $scope.createChat = !->
-    @newChat.roomId = @roomId
-    @newChat.authorId = @user.$name
+    @newChat
+      ..roomId = @roomId
+      ..authorId = @user.$name
     const chatId = chatsRef.push @newChat .name!
     @rooms.$ref!child @roomId 
       ..child 'chatIds' .update "#chatId": true
