@@ -1,3 +1,12 @@
+<a name="0.3.3"></a>
+### 0.3.3 (2014-01-17)
+
+
+#### Bug Fixes
+
+* **gulpfile:** add release-git task with `git push`, `--tags` ([cdee4e314d2e3404be3ec3ac53957cc050894934](git://github.com/tomchentw/ng-fire-alarm.git/commit/cdee4e314d2e3404be3ec3ac53957cc050894934))
+
+
 <a name="0.3.2"></a>
 ### 0.3.2 (2014-01-17)
 

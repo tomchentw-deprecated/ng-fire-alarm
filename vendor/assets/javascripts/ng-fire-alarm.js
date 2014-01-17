@@ -1,4 +1,4 @@
-/*! ng-fire-alarm - v 0.3.2 - Fri Jan 17 2014 17:14:22 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.3.3 - Fri Jan 17 2014 18:58:52 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
  * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
  * Licensed [MIT](http://tomchentw.mit-license.org/)
