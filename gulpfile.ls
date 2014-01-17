@@ -85,7 +85,11 @@ gulp.task 'before-release' <[ uglify ]> ->
     .pipe gulp-exec('git add -A')
     .pipe gulp-exec("git commit -m '#{ commitMsg }'")
     .pipe gulp-exec("git tag -a v#{ jsonFile.version } -m '#{ commitMsg }'")
+
+gulp.task 'release-git' <[ before-release ]> ->
+  return gulp.src 'package.json'
     .pipe gulp-exec('git push')
+    .pipe gulp-exec('git push --tags')
 
 gulp.task 'release-gem' <[ before-release ]> ->
   return gulp.src 'package.json'
@@ -110,7 +114,7 @@ gulp.task 'watch' ->
   gulp.watch 'src/*.ls' !->
     gulp.run 'test' # optimize ...
 
-gulp.task 'release' <[ release-gem  release-npm ]>
+gulp.task 'release' <[ release-git release-gem  release-npm ]>
 /*
  * Public tasks end 
  *
