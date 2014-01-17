@@ -1,48 +1,56 @@
 {
-  "name": "angular-on-fire",
-  "version": "0.2.0",
-  "description": "angularjs binding with Firebase.com",
-  "main": "angular-on-fire.js",
+  "name": "ng-fire-alarm",
+  "version": "0.3.0",
+  "description": "Firebase binding use $q in AngularJS",
+  "longDescription": "Firebase and AngularJS two-way binding that use the new notify API from $q",
+  "main": "ng-fire-alarm.js",
   "scripts": {
-    "deploy": "lsc -c misc/gh-pages.ls && node misc/gh-pages.js"
+    "test": "gulp test --require LiveScript",
+    "build": "gulp build --require LiveScript",
+    "watch": "gulp watch --require LiveScript",
+    "release": "gulp release --require LiveScript"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/tomchentw/angular-on-fire.git"
+    "url": "git://github.com/tomchentw/ng-fire-alarm.git"
   },
+  "keywords": [
+    "Firebase",
+    "AngularJS",
+    "two-way binding",
+    "deferred",
+    "notify",
+    "promise"
+  ],
   "author": {
     "name": "tomchentw",
     "email": "developer@tomchentw.com",
     "url": "https://github.com/tomchentw/"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://tomchentw.mit-license.org/"
-    }
-  ],
+  "license": {
+    "type": "MIT",
+    "url": "http://tomchentw.mit-license.org/"
+  },
   "bugs": {
-    "url": "https://github.com/tomchentw/angular-on-fire/issues"
+    "url": "https://github.com/tomchentw/ng-fire-alarm/issues"
   },
+  "homepage": "https://github.com/tomchentw/ng-fire-alarm",
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-uglify": "~0.2.4",
-    "grunt-contrib-qunit": "~0.2.2",
-    "grunt-contrib-jshint": "~0.6.4",
-    "grunt-contrib-watch": "~0.5.3",
-    "grunt-contrib-connect": "~0.5.0",
-    "grunt-contrib-jade": "~0.8.0",
-    "grunt-contrib-sass": "~0.5.0",
-    "grunt-contrib-cssmin": "~0.6.2",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-livescript": "~0.5.1",
-    "grunt-curl": "~1.1.1",
-    "grunt-template": "~0.2.1"
-  },
-  "dependencies": {
     "LiveScript": "~1.2.0",
-    "jade": "~0.35.0",
-    "shelljs": "~0.2.6"
+    "event-stream": "~3.1.0",
+    "gulp": "~3.3.4",
+    "gulp-livescript": "0.0.12",
+    "gulp-header": "~1.0.2",
+    "gulp-uglify": "~0.1.0",
+    "gulp-rename": "~0.2.2",
+    "gulp-bump": "~0.1.0",
+    "gulp-exec": "~1.0.3",
+    "gulp-conventional-changelog": "0.0.8",
+    "karma-script-launcher": "~0.1.0",
+    "karma-chrome-launcher": "~0.1.2",
+    "karma-firefox-launcher": "~0.1.3",
+    "karma-jasmine": "~0.1.5",
+    "karma-phantomjs-launcher": "~0.1.1",
+    "karma": "~0.10.9"
   }
 }

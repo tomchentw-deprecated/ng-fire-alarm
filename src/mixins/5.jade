@@ -1,7 +1,0 @@
-div(ng-controller="UsersCtrl")
-  ul
-    li(ng-repeat="user in users | orderBy:'-$index'")
-      a(ng-href="https://wwww.facebook.com/{{ user.$name }}", target="_blank")
-        {{ user.$name }} : {{ user.displayName }} (priority: {{ user.$priority }})
-      p {{ user.bio | limitTo:100 }}...
-  pre users: {{ users | njson }}

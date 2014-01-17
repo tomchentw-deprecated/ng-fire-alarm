@@ -1,23 +1,12 @@
 # Created by bundle gem [NAME]
 
 ### Bundler ###
-*.gem
-*.rbc
-.bundle
-.config
-.yardoc
-Gemfile.lock
-InstalledFiles
-_yardoc
-coverage
-doc/
-lib/bundler/man
+lib
 pkg
-rdoc
-spec/reports
-test/tmp
-test/version_tmp
-tmp
+vendor
+Gemfile
+Rakefile
+ng-fire-alarm.gemspec
 ### Bundler End ###
 
 # Created by http://gitignore.io
@@ -44,4 +33,15 @@ node_modules
 
 ### Bower ###
 bower_components
+bower.json
 ### Bower End ###
+
+### gulp ###
+example
+src
+test
+tmp
+.travis.yml
+gulpfile.ls
+ng-fire-alarm.min.js
+### gulp end ###
