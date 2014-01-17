@@ -1,4 +1,4 @@
-/*! ng-fire-alarm - v 0.3.0 - Fri Jan 17 2014 15:39:56 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.3.1 - Fri Jan 17 2014 17:09:39 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
  * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
  * Licensed [MIT](http://tomchentw.mit-license.org/)
@@ -6,12 +6,13 @@
 (function(){
   var FirebaseNotifier, FireResourceNotifier, QUERY_METHODS, $fireAlarm, toString$ = {}.toString;
   function buildNgObject(childSnap){
-    var val, that;
+    var val, priority;
     val = childSnap.val();
     if ('object' === typeof val) {
       val.$name = childSnap.name();
-      if (that = childSnap.getPriority()) {
-        val.$priority = that;
+      priority = childSnap.getPriority();
+      if (angular.isDefined(priority)) {
+        val.$priority = priority;
       }
     }
     return val;
@@ -135,7 +136,7 @@
   }
   $fireAlarm = ['$q', 'Firebase'].concat(function($q, Firebase){
     var WRITE_METHODS, deferAdapterCb;
-    WRITE_METHODS = ['update', 'set', 'push'];
+    WRITE_METHODS = ['push', 'update', 'set', 'setPriority'];
     deferAdapterCb = function(error){
       this[error ? 'reject' : 'resolve'](error);
     };
@@ -168,6 +169,12 @@
         name = ref$[i$];
         bindWriteMethods(refSpec, refObject, name);
       }
+      refObject.$setWithPriority = function(value, priority){
+        var deferred;
+        deferred = $q.defer();
+        refSpec.setWithPriority(value, priority, angular.bind(deferred, deferAdapterCb));
+        return deferred.promise;
+      };
       refObject.$remove = function(){
         var deferred;
         deferred = $q.defer();
