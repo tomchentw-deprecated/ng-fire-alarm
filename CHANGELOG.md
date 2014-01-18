@@ -1,3 +1,12 @@
+<a name="0.3.4"></a>
+### 0.3.4 (2014-01-18)
+
+
+#### Bug Fixes
+
+* **$fireAlarm:** second argument should be Array or something else ([57adeb03e58820855c1ed2c13fb1326a37fbd116](git://github.com/tomchentw/ng-fire-alarm.git/commit/57adeb03e58820855c1ed2c13fb1326a37fbd116))
+
+
 <a name="0.3.3"></a>
 ### 0.3.3 (2014-01-17)
 

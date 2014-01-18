@@ -1,4 +1,4 @@
-/*! ng-fire-alarm - v 0.3.3 - Fri Jan 17 2014 18:58:52 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.3.4 - Sat Jan 18 2014 15:47:47 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
  * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
  * Licensed [MIT](http://tomchentw.mit-license.org/)
@@ -155,7 +155,7 @@
       }
       deferred = $q.defer();
       promise = deferred.promise;
-      Notifier = angular.isArray(objectSpec) ? FireResourceNotifier : FirebaseNotifier;
+      Notifier = Array === objectSpec ? FireResourceNotifier : FirebaseNotifier;
       notifier = new Notifier(refSpec, deferred, singlecton);
       refObject = {
         $promise: promise,
