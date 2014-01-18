@@ -70,6 +70,31 @@ _Notice_: will enable signlecton mode when `objectSpec` is `Array`.
   - `Falsy` value: will naively use `DataShapshot::val()` everytime to get value  
   - `Truthy` value: will preserve instance from the first call to `DataShapshot::val()`, and then update that instance everytime when value are changed. We've optimize this for `scope::$watchCollection`.  
 
+```javascript
+
+var UsersCtrl = ['$scope', '$fireAlarm', function ($scope, $fireAlarm) {
+  var usersRef = new Firebase('/users').limit(10);
+
+  $scope.usersRef = $fireAlarm(usersRef, Array);
+
+  usersRef.$thenNotify(function (usersList) {
+    $scope.users = usersList;
+  });
+}]
+```
+
+```HTML
+<div ng-controller="UsersCtrl">
+  <div class="btn-group">
+    <button ng-click="usersRef.$limit(users.length + 5)">Increse Limit!</button>
+  </div>
+  <ul>
+    <li ng-repeat="user in users">
+      <a ng-href="{{ user.path }}">{{ user.name }}</a>
+    </li>
+  </ul>
+</div>
+```
 
 #### `Bell` object
 Object that is returned from calling `$fireAlarm(...)`, which have a `$promise` attribute and these methods:

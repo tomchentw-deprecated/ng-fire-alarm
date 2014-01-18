@@ -125,7 +125,7 @@ const $fireAlarm = <[
     refSpec = new Firebase refSpec if angular.isString refSpec
     const deferred = $q.defer!
     const promise = deferred.promise
-    const Notifier = if angular.isArray objectSpec then FireResourceNotifier else FirebaseNotifier
+    const Notifier = if Array is objectSpec then FireResourceNotifier else FirebaseNotifier
     const notifier = new Notifier refSpec, deferred, singlecton
 
     const refObject = do 
