@@ -19,6 +19,9 @@ We use newly introduced api: [`deferred.notify`](https://github.com/angular/angu
 We know that you want to make use of collection in `Firebase`, but still want to preserve the right order, or order by any properties in each item. You can use the second argument of `$fireAlarm` service to enable this transformation for you.
 
 
+### Seperation of Concerns
+`ng-fire-alarm` follows seperation of concerns by seperating control object and data source to `Bell` object and `Fire` object(s). So a `ng-change`, `ng-submit`, `ng-click` can be directly bound to [`Bell`](https://github.com/tomchentw/ng-fire-alarm#bell-object) object, while your [`Fire`](https://github.com/tomchentw/ng-fire-alarm#fire-objects) object(s) are clean and just like what you see in Firebase dashboard.
+
 ## Installation
 
 ### Just use it
@@ -57,21 +60,24 @@ The only entry point for your `Firebase` data. The `$fireAlarm` take one paramet
 
 #### `$fireAlarm(refSpec, objectSpec, isSinglecton)`:
 **refSpec**: The `Firebase` endpoint, which can be  
-  - a `String` url, eg. `http://ng-fire-alarm.firebaseio.com/alarm`  
-  - a `Firebase` ref instance, eg. `new Firebase(ROOT_URL).child('alarm')`  
+
+  - a `String`   : url. eg. `http://ng-fire-alarm.firebaseio.com/alarm`  
+  - a `Firebase` : ref instance. eg. `new Firebase(ROOT_URL).child('alarm')`  
 
 **objectSpec**: do `Firebase` list transformation, can be:  
-  - `Array`: to make it explicitly, pass the `Array` constructor function to enable transformation  
-  - *any other value: will treat it naively just calling `DataShapshot::val()`  
+
+  - `Array`         : to make it explicitly, pass the `Array` constructor function to enable transformation  
+  - _anything else_ : will treat it naively just calling `DataShapshot::val()`  
 
 **isSinglecton**: decide the argument passed in to `notify` callbacks.  
 _Notice_: will enable signlecton mode when `objectSpec` is `Array`.  
 
-  - `Falsy` value: will naively use `DataShapshot::val()` everytime to get value  
+  - `Falsy` value : will naively use `DataShapshot::val()` everytime to get value  
   - `Truthy` value: will preserve instance from the first call to `DataShapshot::val()`, and then update that instance everytime when value are changed. We've optimize this for `scope::$watchCollection`.  
 
-```javascript
 
+```javascript
+// users.js
 var UsersCtrl = ['$scope', '$fireAlarm', function ($scope, $fireAlarm) {
   var usersRef = new Firebase('/users').limit(10);
 
@@ -84,6 +90,7 @@ var UsersCtrl = ['$scope', '$fireAlarm', function ($scope, $fireAlarm) {
 ```
 
 ```HTML
+<!-- users.html -->
 <div ng-controller="UsersCtrl">
   <div class="btn-group">
     <button ng-click="usersRef.$limit(users.length + 5)">Increse Limit!</button>
@@ -97,7 +104,8 @@ var UsersCtrl = ['$scope', '$fireAlarm', function ($scope, $fireAlarm) {
 ```
 
 #### `Bell` object
-Object that is returned from calling `$fireAlarm(...)`, which have a `$promise` attribute and these methods:
+Object that is returned from calling `$fireAlarm(...)`. You can think it's a wrapped instance of `Firebase` to make angularjs happy.  
+For your convenience, it has a `$promise` attribute and these methods (just bind it to your `ng-change` or something):
 
 * `$thenNotify`: register a callback that notify you each time alarm rings:
 ```javascript
@@ -119,22 +127,27 @@ They're wrapper for `Firebase::update/set/push` function, but it'll return a `pr
 * [`$set`](https://www.firebase.com/docs/javascript/firebase/set.html)
 * [`$setPriority`](https://www.firebase.com/docs/javascript/firebase/setpriority.html)
 * [`$setWithPriority`](https://www.firebase.com/docs/javascript/firebase/setwithpriority.)html
-* `$remove](https://www.firebase.com/docs/javascript/firebase/remove.html)
+* [`$remove`](https://www.firebase.com/docs/javascript/firebase/remove.html)
 
 #### `Fire` object(s)
-Object that is passed in to callbacks registered via `$thenNotify`, they can be primitive, object, or array:
+Object that is passed in to callbacks registered via `$thenNotify`, they can be **primitive, object, or array**:
 
-* primitive: we do NOT wrap them in `{$value: primitive}`. Primitive is just primitive.
+_primitive_ : we do **NOT** wrap them in `{$value: primitive}`. Primitive is just js primitive.
+
 ```javascript
 bell.$thenNotify(function (aString) { $scope.myName = aString; });
 ```
-* object: we've add two properties on it:
-- `$name`: from `DataSnapshot::name`
-- `$priority`: from `DataSnapshot::getPrioroty`
 
-* array: sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).
-Any object in array will have extra three properties: `$name`, `$priority` and `$index`
-- `$index`: object index in array. Useful for reordering
+_object_ : we've add two properties on it:  
+
+  - [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
+  - [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
+
+_array_ : sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
+**Any** object in array will have extra three properties: `$name`, `$priority` and `$index`.
+
+  - [`$index`](https://www.firebase.com/docs/javascript/datasnapshot/foreach.html): object index in array. Useful for reordering  
+
 ```HTML
 <div ng-repeat="item in array | orderBy:'$index':true"></div>
 ```
