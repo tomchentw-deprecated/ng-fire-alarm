@@ -44,6 +44,8 @@ gulp.task 'karma' <[ bare-build ]> ->
     .pipe gulp-livescript!
     .pipe gulp.dest 'tmp/'
     .pipe gulp-exec('karma start test/karma.conf.js')
+    .pipe gulp-exec('find ./coverage -name lcov.info -follow -type f -print0 | 
+xargs -0 cat | node_modules/.bin/coveralls')
 
 gulp.task 'protractor' <[ build ]> ->
   stream = gulp.src 'src/ng-fire-alarm.scenario.ls'

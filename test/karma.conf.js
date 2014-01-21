@@ -20,7 +20,14 @@ module.exports = function(config) {
     // use dots reporter, as travis terminal does not support escaping sequences
     // possible values: 'dots', 'progress'
     // CLI --reporters progress
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
+
+    preprocessors: {
+      // source files, that you wanna generate coverage for
+      // do not include tests or libraries
+      // (these files will be instrumented by Istanbul)
+      'tmp/ng-fire-alarm.js': ['coverage']
+    },
 
     // web server port
     // CLI --port 9876
@@ -62,10 +69,17 @@ module.exports = function(config) {
     // CLI --report-slower-than 500
     reportSlowerThan: 500,
 
+    // optionally, configure the reporter
+    coverageReporter: {
+      type : 'lcovonly',
+      dir : 'coverage/'
+    },
+
     plugins: [
       'karma-jasmine',
       'karma-chrome-launcher',
-      'karma-firefox-launcher'
+      'karma-firefox-launcher',
+      'karma-coverage'
     ]
   });
 };
