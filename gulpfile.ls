@@ -40,12 +40,15 @@ gulp.task 'bare-build' ->
     .pipe gulp-exec('bower install')
     
 gulp.task 'karma' <[ bare-build ]> ->
-  return gulp.src 'src/ng-fire-alarm.spec.ls'
+  stream = gulp.src 'src/ng-fire-alarm.spec.ls'
     .pipe gulp-livescript!
     .pipe gulp.dest 'tmp/'
     .pipe gulp-exec('karma start test/karma.conf.js')
-    .pipe gulp-exec('find ./coverage -name lcov.info -follow -type f -print0 | 
-xargs -0 cat | node_modules/.bin/coveralls')
+  
+  const TO_COVERALLS = 'find ./coverage -name lcov.info -follow -type f -print0 | xargs -0 cat | node_modules/.bin/coveralls'
+  stream = stream.pipe gulp-exec(TO_COVERALLS) if process.env.TRAVIS
+
+  return stream
 
 gulp.task 'protractor' <[ build ]> ->
   stream = gulp.src 'src/ng-fire-alarm.scenario.ls'
@@ -110,11 +113,8 @@ gulp.task 'test' <[ karma protractor ]>
 
 gulp.task 'build' getBuildStream
 
-gulp.task 'watch' ->
-  gulp.run 'test'
-
-  gulp.watch 'src/*.ls' !->
-    gulp.run 'test' # optimize ...
+gulp.task 'watch' <[ test ]> ->
+  gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
 
 gulp.task 'release' <[ release-git release-gem  release-npm ]>
 /*
