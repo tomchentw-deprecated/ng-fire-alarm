@@ -1,13 +1,15 @@
 const WAITS_TIMEOUT = 'Firebase Timed Out'
+const WAITS_MILLIS = 5000
+
 const FIREURL = 'https://ng-fire-alarm.firebaseio.com/'
 const FIREROOT = new Firebase FIREURL
 FIREROOT.on 'value' !->
 
 $rootScope = void
 
-beforeEach module 'ng.fire.alarm'
+beforeEach module 'ng-fire-alarm'
 beforeEach inject !(_$rootScope_) ->
-  $rootScope := _$rootScope_
+  $rootScope  := _$rootScope_
 
 (...) <-! describe 'module ng-fire-alarm'
 it 'should be defined' !(...) ->
@@ -15,95 +17,232 @@ it 'should be defined' !(...) ->
   expect Firebase .toBeDefined!
   # expect lastVal.spec .toBe 'karma'
 
-describe 'has $fireAlarm service that' !(...) ->
-  $fireAlarm = void
-  beforeEach inject !(_$fireAlarm_) ->
-    $fireAlarm := _$fireAlarm_
+describe 'Helper Functions' !(...) ->
+  describe 'buildNgObject' !(...) ->
+    function mockDataSnapshot (val, name, priority)
+      val: -> val
+      name: -> name
+      getPriority: -> priority
 
-  it 'should be injected' !(...) ->
-    expect $fireAlarm .toBeDefined!
+    it 'should ignore undefined priority' !(...) ->
+      const ngObject = buildNgObject mockDataSnapshot {}, 'hello'
 
-  describe 'will create bell' !(...) ->
-    const BELL_URL = "#{ FIREURL }bell/object"
-    firebaseBell = new Firebase BELL_URL
-    bell = void
+      expect typeof ngObject .toEqual 'object'
+      expect ngObject.$name .toEqual 'hello'
+      expect ngObject.$priority .toBeUndefined!
+
+    it 'should inject $name and $priority to object' !(...) ->
+      const ngObject = buildNgObject mockDataSnapshot {}, 'imobj', 10
+
+      expect typeof ngObject .toEqual 'object'
+      expect ngObject.$name .toEqual 'imobj'
+      expect ngObject.$priority .toEqual 10
+
+    it 'should inject $name and $priority to array' !(...) ->
+      const ngObject = buildNgObject mockDataSnapshot [{hey: 'hello'}], 'imarr', 'stringprior23as'
+
+      expect typeof! ngObject .toEqual 'Array'
+      expect ngObject.$name .toEqual 'imarr'
+      expect ngObject.$priority .toEqual 'stringprior23as'
+
+    it 'should bypass primitive number' !(...) ->
+      const ngObject = buildNgObject mockDataSnapshot 27.53473, 'counter', '21313injisd'
+
+      expect typeof ngObject .toEqual 'number'
+      expect ngObject.$name .toBeUndefined!
+      expect ngObject.$priority .toBeUndefined!
+
+    it 'should bypass primitive string' !(...) ->
+      const ngObject = buildNgObject mockDataSnapshot 'ifthereisastring', 'whatever', 212139.237
+
+      expect typeof ngObject .toEqual 'string'
+      expect ngObject.$name .toBeUndefined!
+      expect ngObject.$priority .toBeUndefined!
+
+  describe 'buildDeferFunctor' !(...) ->
+    defer = void
     beforeEach !(...) ->
-      # firebaseBell.remove!
-      bell := $fireAlarm BELL_URL
+      defer := jasmine.createSpyObj 'defer', <[ resolve reject ]>
 
-    it 'should have promise methods' !(...) ->
-      expect bell.$promise .toBeDefined!
-      expect bell.$thenNotify .toBeDefined!
+    it 'should call resolve' !(...) ->
+      buildDeferFunctor(defer)(void)
 
-    it 'should have query methods' !(...) ->
-      expect bell.$limit .toBeDefined!
-      expect bell.$startAt .toBeDefined!
-      expect bell.$endAt .toBeDefined!
+      expect defer.resolve .toHaveBeenCalled!
+      expect defer.reject .not.toHaveBeenCalled!
 
-    it 'should have write methods' !(...) ->
-      expect bell.$set .toBeDefined!
-      expect bell.$update .toBeDefined!
-      expect bell.$push .toBeDefined!
+    it 'should call reject' !(...) ->
+      buildDeferFunctor(defer)('Error HERE!!')
 
-    describe 'that have $thenNotify method' !(...) ->
-      it 'should notify fireman' !(...) ->
-        object = void
-        bell.$thenNotify !-> object := it
-        expect object .toBeUndefined!
+      expect defer.resolve .not.toHaveBeenCalled!
+      expect defer.reject .toHaveBeenCalled!
 
-        const alarm = createdAt: Date.now!
-        firebaseBell.set alarm
-        $rootScope.$digest!
+describe 'Firebase::$toAlarm' !(...) ->
+  it 'should return a fire alarm' !(...) ->
+    const fireAlarm = FIREROOT.$toAlarm!
+    expect fireAlarm.$limit   .toBeDefined!
+    expect fireAlarm.$startAt .toBeDefined!
+    expect fireAlarm.$endAt   .toBeDefined!
 
-        expect object.createdAt .toBe alarm.createdAt
+    expect fireAlarm.$remove  .toBeDefined!
+    expect fireAlarm.$push    .toBeDefined!
+    expect fireAlarm.$update  .toBeDefined!
+    expect fireAlarm.$set     .toBeDefined!
+    expect fireAlarm.$setPriority     .toBeDefined!
+    expect fireAlarm.$setWithPriority .toBeDefined!
 
-      it 'should notify fireman with primitive' !(...) ->
-        primitive = void
-        bell.$thenNotify !-> primitive := it
-        expect primitive .toBeUndefined!
+    expect fireAlarm.$promise     .toBeDefined!
+    expect fireAlarm.$thenNotify  .toBeDefined!
 
-        const now = Date.now!
-        firebaseBell.set now
-        $rootScope.$digest!
+  bellObjectRef = fireAlarm = void
+  function setupRefAlarm (spec)
+    bellObjectRef := FIREROOT.child spec
+    fireAlarm     := bellObjectRef.$toAlarm!
 
-        expect primitive .toEqual now
+  it 'should trigger change when $update' !(...) ->
+    setupRefAlarm '/bell/update'
+    string = nowStr = void
+    runs !(...) ->
+      bellObjectRef.on 'value' !-> string := it.val!
 
-    describe 'that have $set method' !(...) ->
-      it 'should trigger change' !(...) ->
-        string = nowStr = void
-        runs !(...) ->
-          expect string .toBeUndefined!
-          firebaseBell.on 'value' !-> string := it.val!
+      nowStr := new Date!toString!
+      fireAlarm.$set nowStr
 
-          nowStr := new Date!toString!
-          bell.$set nowStr
+    waitsFor -> string, WAITS_TIMEOUT, WAITS_MILLIS
 
-        waitsFor -> string, WAITS_TIMEOUT, 5000
+    runs !(...) ->
+      expect string .toEqual nowStr
 
-        runs !(...) ->
-          expect string .toEqual nowStr
+  it 'should trigger change when $set' !(...) ->
+    setupRefAlarm '/bell/set'
+    counter = newCount = void
+    runs !(...) ->
+      bellObjectRef.on 'value' !-> counter := it.val!counter
 
-      it 'should return promise' !(...) ->
-        called = void
-        runs !(...) ->
-          const promise = bell.$set new Date!getFullYear!
+      newCount := Math.round Math.random! * 14
+      fireAlarm.$set counter: newCount
 
-          expect promise .toBeDefined
-          expect promise.then .toBeDefined
-          expect called .toBeFalsy!
+    waitsFor -> counter, WAITS_TIMEOUT, WAITS_MILLIS
 
-          const callCb = !-> called := true
-          promise.then callCb, callCb
+    runs !(...) ->
+      expect counter .toEqual newCount
 
-        waitsFor ->
-          $rootScope.$digest!
-          called
-        , WAITS_TIMEOUT, 5000
+  # it 'should trigger change when $setPriority' !(...) ->
+  #   setupRefAlarm '/bell/setPriority'
+  #   priority = newPriority = void
+  #   runs !(...) ->
+  #     bellObjectRef.parent!.on 'child_moved' !->
+  #       return unless 'setPriority' is it.name!
+  #       priority := it.getPriority!
 
-        runs !(...) ->
-          expect called .toBeTruthy!
+  #     newPriority := "#{ Math.random! * 5377 }"
+  #     fireAlarm.$setPriority newPriority
+
+  #   waitsFor -> priority, WAITS_TIMEOUT, WAITS_MILLIS
+
+  #   runs !(...) ->
+  #     expect priority .toEqual newPriority
+
+  # it 'should trigger change when $setWithPriority' !(...) ->
+  #   setupRefAlarm '/bell/setWithPriority'
+  #   value = priority = newPriority = void
+  #   runs !(...) ->
+  #     bellObjectRef.on 'value' !->
+  #       value    := it.val!
+  #       priority := it.getPriority!
+
+  #     newPriority := "#{ Math.random! * 6917 }"
+  #     fireAlarm.$setWithPriority {prior: newPriority}, newPriority
+
+  #   waitsFor -> priority, WAITS_TIMEOUT, WAITS_MILLIS
+
+  #   runs !(...) ->
+  #     expect value.prior .toEqual newPriority
+  #     expect priority .toEqual newPriority
 
 
+  it 'should notify fireman with object' !(...) ->
+    setupRefAlarm '/bell/thenNotify/object'
+    object = alarm = void
+    runs !(...) ->
+      fireAlarm.$thenNotify !-> object := it
+
+      alarm := createdAt: new Date!.toISOString!
+      bellObjectRef.set alarm
+
+    waitsFor ->
+      $rootScope.$digest!
+      object
+    , WAITS_TIMEOUT, WAITS_MILLIS
+
+    runs !(...) ->
+      expect object.createdAt .toBe alarm.createdAt
+
+  it 'should notify fireman with primitive' !(...) ->
+    setupRefAlarm '/bell/thenNotify/primitive'
+    primitive = now = void
+    runs !(...) ->
+      fireAlarm.$thenNotify !-> primitive := it
+      expect primitive .toBeUndefined!
+
+      now := Date.now!
+      bellObjectRef.set now
+    
+    waitsFor ->
+      $rootScope.$digest!
+      primitive
+    , WAITS_TIMEOUT, WAITS_MILLIS
+
+    runs !(...) ->
+      expect primitive .toEqual now
+
+
+describe 'Firebase::$toAlarm({ collection: true })' !(...) ->
+  bellCollectionRef = fireAlarms = void
+  function setupRefAlarm (spec)
+    bellCollectionRef := FIREROOT.child spec
+    fireAlarms        := bellCollectionRef.$toAlarm collection: true
+
+  it 'should notify firemen with array' !(...) ->
+    setupRefAlarm '/bells/thenNotify/collection'
+    array = alarm = void
+    runs !(...) ->
+      bellCollectionRef.remove!
+      fireAlarms.$thenNotify !-> array := it
+
+      alarm := for i from 0 til 5
+        const now = new Date!.toISOString!
+        $name: bellCollectionRef.push createdAt: now .name!
+        $priority: null
+        $index: i
+        createdAt: now
+
+    waitsFor ->
+      $rootScope.$digest!
+      array
+    , WAITS_TIMEOUT, WAITS_MILLIS
+
+    runs !(...) ->
+      expect array .toEqual alarm
+
+  it 'should notify firemen with array' !(...) ->
+    setupRefAlarm '/bells/thenNotify/primitives'
+    array = alarm = void
+    runs !(...) ->
+      bellCollectionRef.remove!
+      fireAlarms.$thenNotify !-> array := it
+
+      alarm := for i from 0 til 5
+        const now = new Date!.toISOString!
+        bellCollectionRef.push now
+        now      
+
+    waitsFor ->
+      $rootScope.$digest!
+      array
+    , WAITS_TIMEOUT, WAITS_MILLIS
+
+    runs !(...) ->
+      expect array .toEqual alarm
 
 
 
