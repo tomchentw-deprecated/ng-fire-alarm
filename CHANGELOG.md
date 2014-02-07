@@ -1,3 +1,13 @@
+<a name="0.4.1"></a>
+### 0.4.1 (2014-02-08)
+
+
+#### Features
+
+* **gulpfile:** adjust for gulp 3.5.0 from tomchentw-boilerplate ([6a7b47dc83ecab12282b150f20ac0e127ec184d8](git://github.com/tomchentw/ng-fire-alarm.git/commit/6a7b47dc83ecab12282b150f20ac0e127ec184d8))
+* **ng-fire-alarm:** cleaner APIs ([3a13c354fea1ad64a171c14a4b9850247b0e8765](git://github.com/tomchentw/ng-fire-alarm.git/commit/3a13c354fea1ad64a171c14a4b9850247b0e8765))
+
+
 <a name="0.3.4"></a>
 ### 0.3.4 (2014-01-18)
 

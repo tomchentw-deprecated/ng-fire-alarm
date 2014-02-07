@@ -1,87 +1,124 @@
-/*! ng-fire-alarm - v 0.3.4 - Sat Jan 18 2014 15:47:47 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.4.1 - Sat Feb 08 2014 02:01:41 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
  * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
  * Licensed [MIT](http://tomchentw.mit-license.org/)
  *//*global angular:false, Firebase:false*/
 (function(){
-  var FirebaseNotifier, FireResourceNotifier, QUERY_METHODS, $fireAlarm, toString$ = {}.toString;
-  function buildNgObject(childSnap){
-    var val, priority;
-    val = childSnap.val();
-    if ('object' === typeof val) {
-      val.$name = childSnap.name();
-      priority = childSnap.getPriority();
-      if (angular.isDefined(priority)) {
-        val.$priority = priority;
-      }
+  var isObject, AlarmReceiver, Fireman, Firemen, FireAlarm, slice$ = [].slice;
+  isObject = angular.isObject;
+  function assignNamePriority(dataSnap, it){
+    if (isObject(it)) {
+      it.$name = dataSnap.name();
+      it.$priority = dataSnap.getPriority();
     }
-    return val;
+    return it;
   }
-  FirebaseNotifier = (function(){
-    FirebaseNotifier.displayName = 'FirebaseNotifier';
-    var prototype = FirebaseNotifier.prototype, constructor = FirebaseNotifier;
-    prototype.updateRef = function(ref){
-      var context, _ref;
-      context = {};
-      _ref = this._ref;
-      _ref.on('value', angular.noop, angular.noop, context);
-      this.stopWatching();
-      this._ref = ref;
-      this.startWatching();
-      _ref.off('value', void 8, context);
+  function buildNgObject(dataSnap, singlecton){
+    var val;
+    val = dataSnap.val();
+    if (null === val) {
+      return assignNamePriority(dataSnap, singlecton);
+    }
+    if (!isObject(val)) {
+      return val;
+    }
+    assignNamePriority(dataSnap, val);
+    if (isObject(singlecton)) {
+      return angular.extend(singlecton, val);
+    } else {
+      return val;
+    }
+  }
+  function buildDeferFunctor(defer){
+    return function(it){
+      if (it) {
+        defer.reject(it);
+      } else {
+        defer.resolve();
+      }
     };
-    function FirebaseNotifier(_ref, _defer, _singlecton){
-      this._ref = _ref;
+  }
+  AlarmReceiver = (function(){
+    AlarmReceiver.displayName = 'AlarmReceiver';
+    var prototype = AlarmReceiver.prototype, constructor = AlarmReceiver;
+    AlarmReceiver.create = function(query, defer, options){
+      var ctor;
+      ctor = true === options.collection ? Firemen : Fireman;
+      return new ctor(query, defer, options);
+    };
+    function AlarmReceiver(_query, _defer, options){
+      this._query = _query;
       this._defer = _defer;
-      this._singlecton = !!_singlecton;
+      this._isSingleton = true === options.singlecton;
+      this._singlecton = void 8;
       this.startWatching();
     }
-    prototype.startWatching = function(){
-      this._ref.on('value', this.onValue, this.onError, this);
+    prototype.update = function(method, it){
+      var _query;
+      _query = this._query;
+      _query.on('value', angular.noop, angular.noop, constructor);
+      this.stopWatching();
+      this._query = _query[method](it);
+      this.startWatching();
+      return _query.off('value', void 8, constructor);
     };
-    prototype.stopWatching = function(){
-      this._ref.off('value', void 8, this);
+    prototype.notify = function(it){
+      this._defer.notify(this._isSingleton ? this._singlecton : it);
     };
     prototype.onError = function(it){
       this._defer.reject(it);
     };
-    prototype.notify = function(val){
-      this._defer.notify(this._singlecton || val);
-    };
-    prototype.onValue = function(dataSnap){
-      var val;
-      val = dataSnap.val();
-      if (this._singlecton === true) {
-        this._singlecton = val;
-      } else if (toString$.call(this._singlecton).slice(8, -1) === toString$.call(val).slice(8, -1)) {
-        angular.extend(this._singlecton, val);
-      }
-      this.notify(this._singlecton || val);
-    };
-    return FirebaseNotifier;
+    return AlarmReceiver;
   }());
-  FireResourceNotifier = (function(superclass){
-    var prototype = extend$((import$(FireResourceNotifier, superclass).displayName = 'FireResourceNotifier', FireResourceNotifier), superclass).prototype, constructor = FireResourceNotifier;
-    prototype.onValue = angular.noop;
+  Fireman = (function(superclass){
+    var prototype = extend$((import$(Fireman, superclass).displayName = 'Fireman', Fireman), superclass).prototype, constructor = Fireman;
     prototype.startWatching = function(){
-      superclass.prototype.startWatching.apply(this, arguments);
-      this._names = {};
-      this._singlecton = [];
-      this._ref.on('child_added', this.onChildChanged, this.onError, this);
-      this._ref.on('child_changed', this.onChildChanged, this.onError, this);
-      this._ref.on('child_moved', this.onChildChanged, this.onError, this);
-      this._ref.on('child_removed', this.onChildRemoved, this.onError, this);
+      this._query.on('value', this.onValue, this.onError, this);
     };
     prototype.stopWatching = function(){
-      this._ref.off('child_added', void 8, this);
-      this._ref.off('child_changed', void 8, this);
-      this._ref.off('child_moved', void 8, this);
-      this._ref.off('child_removed', void 8, this);
-      superclass.prototype.stopWatching.apply(this, arguments);
+      this._query.off('value', void 8, this);
     };
+    prototype.onValue = function(dataSnap){
+      var ngObject;
+      ngObject = buildNgObject(dataSnap, this._singlecton);
+      if (this._isSingleton && !this._singlecton) {
+        this._singlecton = ngObject;
+      }
+      this.notify(ngObject);
+    };
+    function Fireman(){
+      Fireman.superclass.apply(this, arguments);
+    }
+    return Fireman;
+  }(AlarmReceiver));
+  Firemen = (function(superclass){
+    var prototype = extend$((import$(Firemen, superclass).displayName = 'Firemen', Firemen), superclass).prototype, constructor = Firemen;
+    function Firemen(){
+      Firemen.superclass.apply(this, arguments);
+      this._isSingleton = true;
+      this._singlecton = [];
+      this._names = {};
+    }
     prototype.notify = function(){
-      this._singlecton[0] = angular.fromJson(angular.toJson(this._singlecton[0]));
+      var that;
+      if (that = this._singlecton[0]) {
+        this._singlecton[0] = JSON.parse(
+        JSON.stringify(
+        that));
+      }
       superclass.prototype.notify.call(this);
+    };
+    prototype.startWatching = function(){
+      this._query.on('child_added', this.onChildChanged, this.onError, this);
+      this._query.on('child_changed', this.onChildChanged, this.onError, this);
+      this._query.on('child_moved', this.onChildChanged, this.onError, this);
+      this._query.on('child_removed', this.onChildRemoved, this.onError, this);
+    };
+    prototype.stopWatching = function(){
+      this._query.off('child_added', void 8, this);
+      this._query.off('child_changed', void 8, this);
+      this._query.off('child_moved', void 8, this);
+      this._query.off('child_removed', void 8, this);
     };
     prototype.rebuildNameIndex = function(start, end){
       var _singlecton, _names, i$, to$, i, item;
@@ -89,102 +126,103 @@
       for (i$ = start, to$ = end || _singlecton.length; i$ < to$; ++i$) {
         i = i$;
         item = _singlecton[i];
-        if ('object' === typeof item) {
-          _names[item.$name] = i;
-          item.$index = i;
+        if (isObject(item)) {
+          item.$index = _names[item.$name] = i;
         }
       }
     };
-    prototype.indexOf = function(name){
-      if (name in this._names) {
-        return this._names[name];
-      } else {
+    prototype.indexOf = function(name, del){
+      var _names, index;
+      _names = this._names;
+      if (!(name in _names)) {
         return -1;
+      } else {
+        index = _names[name];
+        if (del) {
+          delete _names[name];
+        }
+        return index;
       }
     };
     prototype.onChildChanged = function(childSnap, prevName){
-      var _singlecton, curIndex, ngObject, ngIndex;
+      var _singlecton, name, curIndex, childSinglection, ngIndex;
       _singlecton = this._singlecton;
-      curIndex = this.indexOf(childSnap.name());
+      name = childSnap.name();
+      curIndex = this.indexOf(name, true);
       if (curIndex !== -1) {
-        _singlecton.splice(curIndex, 1);
+        childSinglection = _singlecton.splice(curIndex, 1)[0];
       }
-      ngObject = buildNgObject(childSnap);
-      ngIndex = 1 + this.indexOf(prevName);
-      _singlecton.splice(ngIndex, 0, ngObject);
+      ngIndex = this._names[name] = 1 + this.indexOf(prevName);
+      _singlecton.splice(ngIndex, 0, buildNgObject(childSnap, childSinglection));
       this.rebuildNameIndex(ngIndex);
       this.notify();
     };
     prototype.onChildRemoved = function(oldChildSnap){
       var curIndex;
-      curIndex = this.indexOf(oldChildSnap.name());
+      curIndex = this.indexOf(oldChildSnap.name(), true);
       this._singlecton.splice(curIndex, 1);
       this.rebuildNameIndex(curIndex);
       this.notify();
     };
-    function FireResourceNotifier(){
-      FireResourceNotifier.superclass.apply(this, arguments);
+    return Firemen;
+  }(AlarmReceiver));
+  FireAlarm = (function(){
+    FireAlarm.displayName = 'FireAlarm';
+    var QUERY_METHODS, WRITE_METHODS, prototype = FireAlarm.prototype, constructor = FireAlarm;
+    FireAlarm.$q = void 8;
+    function FireAlarm($promise, _alarmReceiver){
+      this.$promise = $promise;
+      this._alarmReceiver = _alarmReceiver;
     }
-    return FireResourceNotifier;
-  }(FirebaseNotifier));
-  QUERY_METHODS = ['limit', 'startAt', 'endAt'];
-  function bindQueryMethods(notifier, refObject, name){
-    refObject["$" + name] = function(){
-      var ref$;
-      notifier.updateRef((ref$ = notifier._ref)[name].apply(ref$, arguments));
+    prototype.$query = function(){
+      return this._alarmReceiver._query;
     };
-  }
-  $fireAlarm = ['$q', 'Firebase'].concat(function($q, Firebase){
-    var WRITE_METHODS, deferAdapterCb;
-    WRITE_METHODS = ['push', 'update', 'set', 'setPriority'];
-    deferAdapterCb = function(error){
-      this[error ? 'reject' : 'resolve'](error);
+    prototype.$ref = function(){
+      return this.$query().ref();
     };
-    function bindWriteMethods(refSpec, refObject, name){
-      refObject["$" + name] = function(it){
-        var deferred;
-        deferred = $q.defer();
-        refSpec[name](it, angular.bind(deferred, deferAdapterCb));
-        return deferred.promise;
+    QUERY_METHODS = ['limit', 'startAt', 'endAt'];
+    angular.forEach(QUERY_METHODS, function(name){
+      prototype["$" + name] = function(it){
+        this._alarmReceiver.update(name, it);
       };
-    }
-    return function(refSpec, objectSpec, singlecton){
-      var deferred, promise, Notifier, notifier, refObject, i$, ref$, len$, name;
-      if (angular.isString(refSpec)) {
-        refSpec = new Firebase(refSpec);
-      }
-      deferred = $q.defer();
-      promise = deferred.promise;
-      Notifier = Array === objectSpec ? FireResourceNotifier : FirebaseNotifier;
-      notifier = new Notifier(refSpec, deferred, singlecton);
-      refObject = {
-        $promise: promise,
-        $thenNotify: angular.bind(promise, promise.then, void 8, void 8)
+    });
+    WRITE_METHODS = ['remove', 'push', 'update', 'set', 'setPriority', 'setWithPriority'];
+    angular.forEach(WRITE_METHODS, function(name, index){
+      var sliceAt;
+      sliceAt = (function(){
+        switch (index) {
+        case 0:
+          return 0;
+        case 5:
+          return 2;
+        default:
+          return 1;
+        }
+      }());
+      prototype["$" + name] = function(){
+        var args, defer, ref$;
+        args = slice$.call(arguments, 0, sliceAt);
+        defer = constructor.$q.defer();
+        args.push(buildDeferFunctor(defer));
+        (ref$ = this.$ref())[name].apply(ref$, args);
+        return defer.promise;
       };
-      for (i$ = 0, len$ = (ref$ = QUERY_METHODS).length; i$ < len$; ++i$) {
-        name = ref$[i$];
-        bindQueryMethods(notifier, refObject, name);
-      }
-      for (i$ = 0, len$ = (ref$ = WRITE_METHODS).length; i$ < len$; ++i$) {
-        name = ref$[i$];
-        bindWriteMethods(refSpec, refObject, name);
-      }
-      refObject.$setWithPriority = function(value, priority){
-        var deferred;
-        deferred = $q.defer();
-        refSpec.setWithPriority(value, priority, angular.bind(deferred, deferAdapterCb));
-        return deferred.promise;
-      };
-      refObject.$remove = function(){
-        var deferred;
-        deferred = $q.defer();
-        refSpec.remove(angular.bind(deferred, deferAdapterCb));
-        return deferred.promise;
-      };
-      return refObject;
+    });
+    prototype.$thenNotify = function(it){
+      return this.$promise.then(void 8, void 8, it);
     };
-  });
-  angular.module('ng.fire.alarm', []).value('Firebase', Firebase).factory('$fireAlarm', $fireAlarm);
+    return FireAlarm;
+  }());
+  angular.module('ng-fire-alarm', []).value('Firebase', Firebase).run(['$q', 'Firebase'].concat(function($q, Firebase){
+    FireAlarm.$q = $q;
+    return Firebase.prototype.$toAlarm = function(options){
+      var defer, alarmReceiver;
+      options || (options = {});
+      defer = $q.defer();
+      alarmReceiver = AlarmReceiver.create(this, defer, options);
+      return new FireAlarm(defer.promise, alarmReceiver, options);
+    };
+  }));
   function extend$(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;
