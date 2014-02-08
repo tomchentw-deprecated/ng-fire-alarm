@@ -93,7 +93,7 @@ Examples:
 ```JavaScript
 var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
 
-function($scope) {
+function UsersListCtrl ($scope) {
   $scope.users = [];
 
   $scope.usersAlarm = ROOT.child('users').$toAlarm({collection: true});
@@ -107,7 +107,7 @@ function($scope) {
 Fast prototyping!
 
 ```HTML
-<ul infinite-scroll="usersAlarm.$limit(users.length + 25)">
+<ul ng-controller="UsersListCtrl" infinite-scroll="usersAlarm.$limit(users.length + 25)">
   <li ng-repeat="user in users">
     {{ user.name }}
   </li>
@@ -122,14 +122,14 @@ They're wrapper for `Firebase.prototype.remove/push/update/set/setPriority/setWi
 * [$update](https://www.firebase.com/docs/javascript/firebase/update.html)
 * [$set](https://www.firebase.com/docs/javascript/firebase/set.html)
 * [$setPriority](https://www.firebase.com/docs/javascript/firebase/setpriority.html)
-* [$setWithPriority](https://www.firebase.com/docs/javascript/firebase/setwithpriority.)html
+* [$setWithPriority](https://www.firebase.com/docs/javascript/firebase/setwithpriority.html)
 
 Examples:
 
 ```JavaScript
 var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
 
-function($scope) {
+function UserEditCtrl ($scope) {
   $scope.userAlarm = ROOT.child('users/`').$toAlarm();
 
   $scope.userAlarm.$thenNotify(function(user) {
@@ -141,7 +141,7 @@ function($scope) {
 Fast prototyping!
 
 ```HTML
-<form>
+<form ng-controller="UserEditCtrl">
   <input type="text" ng-model="user.name" ng-change="userAlarm.$update(user)">
 </form>
 ```
@@ -151,22 +151,28 @@ Fast prototyping!
 Object that is passed in to callbacks registered via `$thenNotify`, they can be **primitive, object, or array**:
 
 * primitive
-  **NO**!**NO**!**NO**! wrapper around primitive `{$value: primitive}`. Primitive is just js primitive.
+
+Primitive is just js primitive. There's **NO** **NO** **NO** wrapper around primitive <del>`{$value: primitive}`</del>.
 
 ```JavaScript
-bell.$thenNotify(function (aString) { $scope.myName = aString; });
+bell.$thenNotify(function (aStringOrANumber) { $scope.myVar = aStringOrANumber; });
 ```
 
 * object
-  we've add two properties on it:  
+  
+we've add two properties on it:  
 
   1. [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
   2. [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
 
 * array
-  sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
-**Any** object in array will have extra three properties: `$name`, `$priority` and `$index`.
 
+sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
+
+  Each item in array, if they're object, will have these properties:
+
+  1. [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
+  2. [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
   3. [`$index`](https://www.firebase.com/docs/javascript/datasnapshot/foreach.html): object index in array. Useful for reverse ordering  
 
 ```HTML
