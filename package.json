@@ -38,11 +38,11 @@
   "devDependencies": {
     "LiveScript": "~1.2.0",
     "event-stream": "~3.1.0",
-    "gulp": "~3.5.0",
+    "gulp": "~3.5.2",
     "gulp-livescript": "0.1.1",
     "gulp-header": "~1.0.2",
     "gulp-uglify": "~0.2.0",
-    "gulp-rename": "~0.2.2",
+    "gulp-rename": "~1.0.0",
     "gulp-bump": "~0.1.0",
     "gulp-exec": "~1.0.3",
     "gulp-conventional-changelog": "0.1.1",
@@ -53,6 +53,6 @@
     "karma-phantomjs-launcher": "~0.1.1",
     "karma-coverage": "~0.1.4",
     "karma": "~0.10.9",
-    "coveralls": "~2.6.1"
+    "coveralls": "~2.7.1"
   }
 }
