@@ -7,9 +7,6 @@
 
 [![Build Status](https://secure.travis-ci.org/tomchentw/ng-fire-alarm.png)](http://travis-ci.org/tomchentw/ng-fire-alarm) [![Coverage Status](https://coveralls.io/repos/tomchentw/ng-fire-alarm/badge.png)](https://coveralls.io/r/tomchentw/ng-fire-alarm) [![Code Climate](https://codeclimate.com/github/tomchentw/ng-fire-alarm.png)](https://codeclimate.com/github/tomchentw/ng-fire-alarm)  [![Dependency Status](https://gemnasium.com/tomchentw/ng-fire-alarm.png)](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
-Firebase and AngularJS two-way binding that use the new notify API from $q
-
-
 ## Project philosophy
 
 ### Develop in LiveScript
