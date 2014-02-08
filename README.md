@@ -7,22 +7,22 @@
 
 [![Build Status](https://secure.travis-ci.org/tomchentw/ng-fire-alarm.png)](http://travis-ci.org/tomchentw/ng-fire-alarm) [![Coverage Status](https://coveralls.io/repos/tomchentw/ng-fire-alarm/badge.png)](https://coveralls.io/r/tomchentw/ng-fire-alarm) [![Code Climate](https://codeclimate.com/github/tomchentw/ng-fire-alarm.png)](https://codeclimate.com/github/tomchentw/ng-fire-alarm)  [![Dependency Status](https://gemnasium.com/tomchentw/ng-fire-alarm.png)](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
+
 ## Project philosophy
 
 ### Develop in LiveScript
 [LiveScript](http://livescript.net/) is a compile-to-js language, which provides us more robust way to write JavaScript.  
 It also has great readibility and lots of syntax sugar just like you're writting python/ruby.
 
-
 ### Use new API from $q
-We use newly introduced api: [`deferred.notify`](https://github.com/angular/angular.js/blob/master/CHANGELOG.md#120rc1-spooky-giraffe-2013-08-13) to notify you about the *value/order* changes, we let you decide how you deal with your data.
+We use newly introduced $q API to [`notify`](https://github.com/angular/angular.js/blob/master/CHANGELOG.md#120rc1-spooky-giraffe-2013-08-13) you about the *value/order* changes, we let you decide how you deal with your data with `$scope`.
 
 ### Firebase Collection support
-We know that you want to make use of collection in `Firebase`, but still want to preserve the right order, or order by any properties in each item. You can use the second argument of `$fireAlarm` service to enable this transformation for you.
-
+We know that you want to take advantage of collection in `Firebase`, but still want to preserve the right order, or order by any properties in each item. `ng-fire-alarm` allows to transform collection **object** into native js array for you.
 
 ### Seperation of Concerns
-`ng-fire-alarm` follows seperation of concerns by seperating control object and data source to `Bell` object and `Fire` object(s). So a `ng-change`, `ng-submit`, `ng-click` can be directly bound to [`Bell`](https://github.com/tomchentw/ng-fire-alarm#bell-object) object, while your [`Fire`](https://github.com/tomchentw/ng-fire-alarm#fire-objects) object(s) are clean and just like what you see in Firebase dashboard.
+We follow seperation of concerns by seperating control(reference) object and data source to [`Alarm`](https://github.com/tomchentw/ng-fire-alarm#alarm-object) object and [`Fire`](https://github.com/tomchentw/ng-fire-alarm#fire-objects) object(s). So a `ng-change`, `ng-submit`, `ng-click` can be directly bound to Alarm object, while your Fire object(s) are clean and just like what you see in Firebase dashboard.
+
 
 ## Installation
 
@@ -51,104 +51,123 @@ Then add these lines to the top of your `app/assets/javascripts/application.js` 
 
 And include in your `angular` module definition:
      
-    var module = angular.module('my-awesome-project', ['ng.fire.alarm']).
+    var module = angular.module('my-awesome-project', ['ng-fire-alarm']).
 
 
 ## Usage
 
-### `$fireAlarm` Service
+We add a new method to `Firebase.prototype`:
 
-The only entry point for your `Firebase` data. The `$fireAlarm` take one parameter (optional upto three):
+### $toAlarm
 
-#### `$fireAlarm(refSpec, objectSpec, isSinglecton)`:
-**refSpec**: The `Firebase` endpoint, which can be  
+The key to transform your `Firebase` reference into a `AngularJS` powered alarm obhect, it take one parameter:
 
-  - a `String`   : url. eg. `http://ng-fire-alarm.firebaseio.com/alarm`  
-  - a `Firebase` : ref instance. eg. `new Firebase(ROOT_URL).child('alarm')`  
+#### Options
 
-**objectSpec**: do `Firebase` list transformation, can be:  
+**collection**: true/otherwise.
 
-  - `Array`         : to make it explicitly, pass the `Array` constructor function to enable transformation  
-  - _anything else_ : will treat it naively just calling `DataShapshot::val()`  
+Pass true will transform collection object into native js array for you.
 
-**isSinglecton**: decide the argument passed in to `notify` callbacks.  
-_Notice_: will enable signlecton mode when `objectSpec` is `Array`.  
+#### `Alarm` object
+A wrapped object over Firbease reference that is returned by calling `Firebase.prototype.$toAlarm`. 
 
-  - `Falsy` value : will naively use `DataShapshot::val()` everytime to get value  
-  - `Truthy` value: will preserve instance from the first call to `DataShapshot::val()`, and then update that instance everytime when value are changed. We've optimize this for `scope::$watchCollection`.  
+_Attributes_:
 
+* `$promise`: it will be notified everytime the value/order changes.
 
-```javascript
-// users.js
-var UsersCtrl = ['$scope', '$fireAlarm', function ($scope, $fireAlarm) {
-  var usersRef = new Firebase('/users').limit(10);
+_Convenience Method_:
 
-  $scope.usersRef = $fireAlarm(usersRef, Array);
-
-  usersRef.$thenNotify(function (usersList) {
-    $scope.users = usersList;
-  });
-}]
-```
-
-```HTML
-<!-- users.html -->
-<div ng-controller="UsersCtrl">
-  <div class="btn-group">
-    <button ng-click="usersRef.$limit(users.length + 5)">Increse Limit!</button>
-  </div>
-  <ul>
-    <li ng-repeat="user in users">
-      <a ng-href="{{ user.path }}">{{ user.name }}</a>
-    </li>
-  </ul>
-</div>
-```
-
-#### `Bell` object
-Object that is returned from calling `$fireAlarm(...)`. You can think it's a wrapped instance of `Firebase` to make angularjs happy.  
-For your convenience, it has a `$promise` attribute and these methods (just bind it to your `ng-change` or something):
-
-* `$thenNotify`: register a callback that notify you each time alarm rings:
-```javascript
-bell.$thenNotify(function (object) { $scope.fire = object; });
-```
+* `$thenNotify`: Same as `$promise.then(void, void, callback)`.  
+Register a callback that notify you each time alarm rings. See examples below.
 
 _Query Methods_:
-Ther're wrapper for `Firebase::limit/startAt/endAt` function, but it'll update internal reference and it'll populate new data through your callback registered with `$thenNotify`.
 
-* [`$limit`](https://www.firebase.com/docs/javascript/firebase/limit.html)
-* [`$startAt`](https://www.firebase.com/docs/javascript/firebase/startat.html)
-* [`$endAt`](https://www.firebase.com/docs/javascript/firebase/endat.html)
+Ther're wrapper for `Firebase.prototype.limit/startAt/endAt` function, but it'll update internal Firebase reference and it'll populate new data through your callback registered via `$thenNotify`.
+
+* [$limit](https://www.firebase.com/docs/javascript/firebase/limit.html)
+* [$startAt](https://www.firebase.com/docs/javascript/firebase/startat.html)
+* [$endAt](https://www.firebase.com/docs/javascript/firebase/endat.html)
+
+Examples:
+
+```JavaScript
+var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
+
+function($scope) {
+  $scope.users = [];
+
+  $scope.usersAlarm = ROOT.child('users').$toAlarm({collection: true});
+
+  $scope.usersAlarm.$thenNotify(function(users) {
+    $scope.users = users;
+  });
+}
+```
+
+Fast prototyping!
+
+```HTML
+<ul infinite-scroll="usersAlarm.$limit(users.length + 25)">
+  <li ng-repeat="user in users">
+    {{ user.name }}
+  </li>
+</ul>
+```
 
 _Write Methods_:
-They're wrapper for `Firebase::update/set/push` function, but it'll return a `promise` object instead of passing in a callback function.
+They're wrapper for `Firebase.prototype.remove/push/update/set/setPriority/setWithPriority` function, but it'll return a `promise` object instead of passing in a callback function.
 
-* [`$push`](https://www.firebase.com/docs/javascript/firebase/push.html)
-* [`$update`](https://www.firebase.com/docs/javascript/firebase/update.html)
-* [`$set`](https://www.firebase.com/docs/javascript/firebase/set.html)
-* [`$setPriority`](https://www.firebase.com/docs/javascript/firebase/setpriority.html)
-* [`$setWithPriority`](https://www.firebase.com/docs/javascript/firebase/setwithpriority.)html
-* [`$remove`](https://www.firebase.com/docs/javascript/firebase/remove.html)
+* [$remove](https://www.firebase.com/docs/javascript/firebase/remove.html)
+* [$push](https://www.firebase.com/docs/javascript/firebase/push.html)
+* [$update](https://www.firebase.com/docs/javascript/firebase/update.html)
+* [$set](https://www.firebase.com/docs/javascript/firebase/set.html)
+* [$setPriority](https://www.firebase.com/docs/javascript/firebase/setpriority.html)
+* [$setWithPriority](https://www.firebase.com/docs/javascript/firebase/setwithpriority.)html
+
+Examples:
+
+```JavaScript
+var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
+
+function($scope) {
+  $scope.userAlarm = ROOT.child('users/`').$toAlarm();
+
+  $scope.userAlarm.$thenNotify(function(user) {
+    $scope.user = user;
+  });
+}
+```
+
+Fast prototyping!
+
+```HTML
+<form>
+  <input type="text" ng-model="user.name" ng-change="userAlarm.$update(user)">
+</form>
+```
+
 
 #### `Fire` object(s)
 Object that is passed in to callbacks registered via `$thenNotify`, they can be **primitive, object, or array**:
 
-_primitive_ : we do **NOT** wrap them in `{$value: primitive}`. Primitive is just js primitive.
+* primitive
+  **NO**!**NO**!**NO**! wrapper around primitive `{$value: primitive}`. Primitive is just js primitive.
 
-```javascript
+```JavaScript
 bell.$thenNotify(function (aString) { $scope.myName = aString; });
 ```
 
-_object_ : we've add two properties on it:  
+* object
+  we've add two properties on it:  
 
-  - [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
-  - [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
+  1. [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
+  2. [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
 
-_array_ : sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
+* array
+  sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
 **Any** object in array will have extra three properties: `$name`, `$priority` and `$index`.
 
-  - [`$index`](https://www.firebase.com/docs/javascript/datasnapshot/foreach.html): object index in array. Useful for reordering  
+  3. [`$index`](https://www.firebase.com/docs/javascript/datasnapshot/foreach.html): object index in array. Useful for reverse ordering  
 
 ```HTML
 <div ng-repeat="item in array | orderBy:'$index':true"></div>
