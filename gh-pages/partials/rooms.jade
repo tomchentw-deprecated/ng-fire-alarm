@@ -10,9 +10,9 @@
       button.btn.btn-primary(type="submit") Create
 
   .col-xs-12.col-sm-6
-    h3 Room orderBy : {{order}}
     .btn-group
       button.btn.btn-default(ng-class="{'active': $parent.order == order}" ng-repeat="order in orderList" ng-click="$parent.order = order" ng-bind="order")
+    h3 Room orderBy : {{order}}
     
     ul.nav.nav-pills.nav-stacked
       li(ng-repeat="room in rooms | orderBy:order",

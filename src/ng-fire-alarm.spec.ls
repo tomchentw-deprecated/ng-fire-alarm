@@ -1,7 +1,7 @@
 const WAITS_TIMEOUT = 'Firebase Timed Out'
 const WAITS_MILLIS = 5000
 
-const FIREURL = 'https://ng-fire-alarm.firebaseio.com/spec'
+const FIREURL = 'https://ng-fire-alarm.firebaseio.com/spec/'
 const FIREROOT = new Firebase FIREURL
 FIREROOT.on 'value' !->
 
@@ -243,8 +243,6 @@ describe 'Firebase::$toAlarm({ collection: true })' !(...) ->
 
     runs !(...) ->
       expect array .toEqual alarm
-
-
 
 
 

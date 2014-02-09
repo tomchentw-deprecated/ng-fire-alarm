@@ -13,9 +13,9 @@ angular.module 'demo' <[
         $scope  Room
 ]> ++ !($scope, Room) ->
 
-  $scope.roomsAlarm = Room.$toAlarm collection: true
-
-  $scope.roomsAlarm.$thenNotify !($scope.rooms) ->
+  $scope.roomsAlarm = Room
+    .$toAlarm collection: true
+    .$thenNotify !($scope.rooms) ->
 
   $scope.resetRoom = !-> $scope.newRoom = {}
 
@@ -27,9 +27,15 @@ angular.module 'demo' <[
         $scope  Room
 ]> ++ !($scope, Room) ->
 
-  $scope.$watch 'roomId' !(roomId) ->
-    $scope.chatsAlarm =  Room.child roomId .child 'chat' .$toAlarm collection: true
+  $scope.$watch 'roomId' !->
+    return unless it
+    const room = Room.child it
 
-    $scope.chatsAlarm.$thenNotify !($scope.chats) ->
+    room.$toAlarm!.$thenNotify !($scope.room) ->
+
+    $scope.chatsAlarm = room
+      .child 'chats'
+      .$toAlarm collection: true
+      .$thenNotify !($scope.chats) ->
 
   $scope.resetChat = !-> $scope.newChat = {}
