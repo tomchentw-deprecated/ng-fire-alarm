@@ -1,3 +1,40 @@
 @import "partials/bootstrap";
 
 body { padding-top: 70px; }
+
+#chats {
+  .media-object {
+    $size: 64px;
+    width: $size;
+    height: $size;
+  }
+}
+
+footer {
+  padding: 30px 0;
+  margin-top: 70px;
+  border-top: 1px solid #e5e5e5;
+  background-color: #f5f5f5;
+
+  p {
+    margin-bottom: 0;
+    color: #777;
+    a {
+      padding: 0 4px;
+    }
+  }
+
+  .footer-links {
+    margin: 10px 0;
+    li {
+      &:first-child {
+        padding-left: 0;
+      }
+      display: inline;
+      padding: 0 2px;
+      &:last-child {
+        padding-right: 0;
+      }
+    }
+  }
+}

@@ -8,17 +8,15 @@ html(ng-app="demo")
     link(rel="stylesheet", href="/application.css")
     script(defer, src="/application.js")
   body
-    header
-      include partials/header
-    div(role="main")
+    include partials/header
+    div.container(role="main")
       section
-        .container
-          .page-header
-            h1 ChatRoom!
-          .row
-            .col-xs-6
-              include partials/rooms
-            .col-xs-6
-              include partials/chats
-    footer
-      include partials/footer
+        .page-header
+          h1 ChatRoom!
+        .row
+          .col-xs-4.col-sm-6
+            include partials/rooms
+          .col-xs-8.col-sm-6
+            include partials/chats
+    
+    include partials/footer
