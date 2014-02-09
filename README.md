@@ -78,7 +78,9 @@ _Attributes_:
 _Convenience Method_:
 
 * `$thenNotify`: Same as `$promise.then(void, void, callback)`.  
-Register a callback that notify you each time alarm rings. See examples below.
+Register a callback that notify you each time the alarm rings.  
+Unlike `$promise.then`, this method is self-chained and will return alarm object to allow chaining.  
+See examples below.
 
 _Query Methods_:
 
@@ -130,11 +132,10 @@ Examples:
 var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
 
 function UserEditCtrl ($scope) {
-  $scope.userAlarm = ROOT.child('users/`').$toAlarm();
-
-  $scope.userAlarm.$thenNotify(function(user) {
-    $scope.user = user;
-  });
+  $scope.userAlarm = ROOT
+    .child('users/`')
+    .$toAlarm()
+    .$thenNotify(function(user) {  $scope.user = user;  });
 }
 ```
 
