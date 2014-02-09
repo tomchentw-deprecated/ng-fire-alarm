@@ -34,7 +34,7 @@ class AlarmReceiver
   (@_query, @_defer, options) ->
     @_isSingleton = true is options.singlecton
     @_singlecton = void
-    @startWatching!
+    setTimeout !~> @startWatching!
 
   update: (method, it) ->
     const {_query} = @
@@ -156,7 +156,8 @@ class FireAlarm
       defer.promise
 
   $thenNotify: ->
-    @$promise.then void, void, it
+    @$promise.=then void, void, it
+    @
 #
 #
 #
