@@ -46,6 +46,10 @@
     "angular-mocks": "~1.2.13",
     "firebase-simple-login": "~1.2.5",
     "google-code-prettify": "~1.0.1",
-    "angular-ui-bootstrap-bower": "~0.10.0"
+    "angular-ui-bootstrap-bower": "~0.10.0",
+    "bootstrap-sass": "git://github.com/twbs/bootstrap-sass.git#~3.1.0+2"
+  },
+  "resolutions": {
+    "bootstrap-sass": "~3.1.0+2"
   }
 }

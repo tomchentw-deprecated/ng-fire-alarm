@@ -10,6 +10,7 @@ require! {
   'gulp-exec'
   'gulp-conventional-changelog'
   'gulp-jade'
+  'gulp-ruby-sass'
   'gulp-concat'
   'gulp-livereload'
   'tiny-lr'
@@ -17,10 +18,10 @@ require! {
   'connect-livereload'
 }
 
-const getJsonFile = ->
+function getJsonFile
   fs.readFileSync './package.json', 'utf-8' |> JSON.parse
 
-const getHeaderStream = ->
+function getHeaderStream
   const jsonFile = getJsonFile!
   const date = new Date
 
@@ -32,15 +33,19 @@ const getHeaderStream = ->
  */
 """
 
-const getBuildStream = ->
-  return gulp.src 'src/ng-fire-alarm.ls'
+function getBuildStream (output = true)
+  stream = gulp.src 'src/ng-fire-alarm.ls'
     .pipe gulp-livescript!
     .pipe getHeaderStream!
-    .pipe gulp.dest '.'
-    .pipe gulp.dest 'vendor/assets/javascripts/'
 
-const getUglifyStream = ->
-  return getBuildStream!
+  if output
+    stream = stream
+      .pipe gulp.dest '.'
+      .pipe gulp.dest 'vendor/assets/javascripts/'
+  stream
+
+function getUglifyStream (output)
+  return getBuildStream output
     .pipe gulp-uglify!
     .pipe getHeaderStream!
     .pipe gulp-rename extname: '.min.js'
@@ -86,7 +91,7 @@ gulp.task 'bump' ->
     .pipe gulp.dest '.'
 
 gulp.task 'uglify' <[ bump ]> ->
-  return getUglifyStream!
+  return getUglifyStream true
     .pipe gulp.dest '.'
 
 gulp.task 'before-release' <[ uglify ]> ->
@@ -121,8 +126,17 @@ gulp.task 'gh-pages:html' ->
     .pipe gulp.dest 'build'
     .pipe gulp-livereload(livereload)
 
+gulp.task 'gh-pages:css' ->
+  return gulp.src 'gh-pages/application.scss'
+    .pipe gulp-ruby-sass do
+      loadPath: <[ bower_components/bootstrap-sass/vendor/assets/stylesheets ]>
+      cacheLocation: 'tmp/.sass-cache'
+      style: 'compressed'
+    .pipe gulp.dest 'build'
+    .pipe gulp-livereload(livereload)
+
 gulp.task 'gh-pages:uglify' ->
-  return getUglifyStream!
+  return getUglifyStream false
     .pipe gulp.dest 'tmp'
 
 gulp.task 'gh-pages:prettify' ->
@@ -168,12 +182,13 @@ gulp.task 'build' getBuildStream
 gulp.task 'watch' <[ test ]> ->
   gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
 
-gulp.task 'gh-pages' <[ gh-pages:html gh-pages:js ]> !->
+gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
   server.listen 5000
   livereload.listen 35729
 
   gulp.watch 'gh-pages/**/*.jade' <[ gh-pages:html ]>
   gulp.watch 'gh-pages/*.ls' <[ gh-pages:js ]>
+  gulp.watch 'gh-pages/**/*.scss' <[ gh-pages:css ]>
 
 
 gulp.task 'release' <[ release-git release-gem  release-npm ]>
