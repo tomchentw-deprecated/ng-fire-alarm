@@ -37,6 +37,7 @@ bower.json
 ### Bower End ###
 
 ### gulp ###
+build
 example
 gh-pages
 src

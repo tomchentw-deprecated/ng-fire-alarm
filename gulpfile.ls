@@ -9,6 +9,7 @@ require! {
   'gulp-bump'
   'gulp-exec'
   'gulp-conventional-changelog'
+  'gulp-jade'
 }
 
 const getJsonFile = ->
@@ -104,6 +105,12 @@ gulp.task 'release-npm' <[ before-release ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('npm publish')
 
+gulp.task 'gh-pages:jade' ->
+  return gulp.src 'gh-pages/index.jade'
+    .pipe gulp-jade!
+    .pipe gulp.dest 'build'
+
+
 /*
  * Public tasks: 
  *
@@ -115,6 +122,8 @@ gulp.task 'build' getBuildStream
 
 gulp.task 'watch' <[ test ]> ->
   gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
+
+gulp.task 'gh-pages' <[ gh-pages:jade ]> ->
 
 gulp.task 'release' <[ release-git release-gem  release-npm ]>
 /*

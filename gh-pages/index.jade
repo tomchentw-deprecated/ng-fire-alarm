@@ -1,0 +1,24 @@
+doctype html
+html(ng-app="demo")
+  head
+    meta(charset="utf-8")
+    base(href="/")
+    title ng-fire-alarm
+    meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+    link(rel="stylesheet", href="/style.min.css")
+    script(defer, src="/script.min.js")
+  body
+    header
+      include partials/header
+    div(role="main")
+      section
+        .container
+          .page-header
+            h1 ChatRoom!
+          .row(ng-controller="RoomsCtrl")
+            .col-xs-6
+              include partials/rooms
+            .col-xs-6
+              include partials/chats
+    footer
+      include partials/footer
