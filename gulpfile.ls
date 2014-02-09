@@ -10,6 +10,7 @@ require! {
   'gulp-exec'
   'gulp-conventional-changelog'
   'gulp-jade'
+  'gulp-concat'
 }
 
 const getJsonFile = ->
@@ -33,6 +34,12 @@ const getBuildStream = ->
     .pipe getHeaderStream!
     .pipe gulp.dest '.'
     .pipe gulp.dest 'vendor/assets/javascripts/'
+
+const getUglifyStream = ->
+  return getBuildStream!
+    .pipe gulp-uglify!
+    .pipe getHeaderStream!
+    .pipe gulp-rename extname: '.min.js'
 
 gulp.task 'bare-build' ->
   return gulp.src 'src/ng-fire-alarm.ls'
@@ -75,10 +82,7 @@ gulp.task 'bump' ->
     .pipe gulp.dest '.'
 
 gulp.task 'uglify' <[ bump ]> ->
-  return getBuildStream!
-    .pipe gulp-uglify!
-    .pipe getHeaderStream!
-    .pipe gulp-rename ext: '.min.js'
+  return getUglifyStream!
     .pipe gulp.dest '.'
 
 gulp.task 'before-release' <[ uglify ]> ->
@@ -105,12 +109,38 @@ gulp.task 'release-npm' <[ before-release ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('npm publish')
 
-gulp.task 'gh-pages:jade' ->
+gulp.task 'gh-pages:html' ->
   return gulp.src 'gh-pages/index.jade'
     .pipe gulp-jade!
     .pipe gulp.dest 'build'
 
+gulp.task 'gh-pages:uglify' ->
+  return getUglifyStream!
+    .pipe gulp.dest 'tmp'
 
+gulp.task 'gh-pages:prettify' ->
+  return gulp.src 'bower_components/google-code-prettify/src/prettify.js'
+    .pipe gulp-uglify!
+    .pipe gulp.dest 'tmp'
+
+gulp.task 'gh-pages:ls' ->
+  return gulp.src 'gh-pages/application.ls'
+    .pipe gulp-livescript!
+    .pipe gulp-uglify!
+    .pipe gulp.dest 'tmp'
+
+gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
+  return gulp.src <[
+    bower_components/angular/angular.min.js
+    bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js
+    bower_components/firebase/firbase.js
+    bower_components/firebase-simple-login/firbase-simple-login.js
+    tmp/prettify.js
+    tmp/ng-fire-alarm.min.js
+    tmp/application.js
+  ]>
+    .pipe gulp-concat 'application.js'
+    .pipe gulp.dest 'build'  
 /*
  * Public tasks: 
  *
@@ -123,7 +153,7 @@ gulp.task 'build' getBuildStream
 gulp.task 'watch' <[ test ]> ->
   gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
 
-gulp.task 'gh-pages' <[ gh-pages:jade ]> ->
+gulp.task 'gh-pages' <[ gh-pages:html gh-pages:js ]> ->
 
 gulp.task 'release' <[ release-git release-gem  release-npm ]>
 /*

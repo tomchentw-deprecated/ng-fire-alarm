@@ -39,8 +39,13 @@
     "ng-fire-alarm.gemspec"
   ],
   "dependencies": {
-    "angular": "~1.2.9",
-    "angular-mocks": "~1.2.9",
-    "firebase": "~1.0.2"
+    "angular": "~1.2.13",
+    "firebase": "~1.0.3"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.2.13",
+    "firebase-simple-login": "~1.2.5",
+    "google-code-prettify": "~1.0.1",
+    "angular-ui-bootstrap-bower": "~0.10.0"
   }
 }
