@@ -38,6 +38,7 @@ bower.json
 
 ### gulp ###
 example
+gh-pages
 src
 test
 tmp

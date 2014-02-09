@@ -21,6 +21,7 @@
     "**/.*",
     "bower_components",
     "example",
+    "gh-pages",
     "lib",
     "node_modules",
     "pkg",
