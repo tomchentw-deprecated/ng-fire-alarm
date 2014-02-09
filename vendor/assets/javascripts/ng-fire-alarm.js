@@ -1,4 +1,4 @@
-/*! ng-fire-alarm - v 0.4.1 - Sat Feb 08 2014 02:01:41 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.4.2 - Sun Feb 09 2014 22:01:07 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
  * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
  * Licensed [MIT](http://tomchentw.mit-license.org/)
@@ -47,11 +47,14 @@
       return new ctor(query, defer, options);
     };
     function AlarmReceiver(_query, _defer, options){
+      var this$ = this;
       this._query = _query;
       this._defer = _defer;
       this._isSingleton = true === options.singlecton;
       this._singlecton = void 8;
-      this.startWatching();
+      setTimeout(function(){
+        this$.startWatching();
+      });
     }
     prototype.update = function(method, it){
       var _query;
@@ -170,12 +173,14 @@
     FireAlarm.displayName = 'FireAlarm';
     var QUERY_METHODS, WRITE_METHODS, prototype = FireAlarm.prototype, constructor = FireAlarm;
     FireAlarm.$q = void 8;
-    function FireAlarm($promise, _alarmReceiver){
+    function FireAlarm($promise, _ar){
       this.$promise = $promise;
-      this._alarmReceiver = _alarmReceiver;
+      this._ar = function(){
+        return _ar;
+      };
     }
     prototype.$query = function(){
-      return this._alarmReceiver._query;
+      return this._ar()._query;
     };
     prototype.$ref = function(){
       return this.$query().ref();
@@ -183,7 +188,7 @@
     QUERY_METHODS = ['limit', 'startAt', 'endAt'];
     angular.forEach(QUERY_METHODS, function(name){
       prototype["$" + name] = function(it){
-        this._alarmReceiver.update(name, it);
+        this._ar().update(name, it);
       };
     });
     WRITE_METHODS = ['remove', 'push', 'update', 'set', 'setPriority', 'setWithPriority'];
@@ -209,7 +214,8 @@
       };
     });
     prototype.$thenNotify = function(it){
-      return this.$promise.then(void 8, void 8, it);
+      this.$promise = this.$promise.then(void 8, void 8, it);
+      return this;
     };
     return FireAlarm;
   }());

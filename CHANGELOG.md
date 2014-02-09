@@ -1,3 +1,13 @@
+<a name="0.4.2"></a>
+### 0.4.2 (2014-02-09)
+
+
+#### Bug Fixes
+
+* **AlarmReceiver:** setTimeout before startWatching ([f362c0cc182f0aac4813ac19f5b43f1f8fdd678a](git://github.com/tomchentw/ng-fire-alarm.git/commit/f362c0cc182f0aac4813ac19f5b43f1f8fdd678a))
+* **FireAlarm:** hide _alarmReceiver with closure function ([288700f6a11440517c70629d8ee04ba76768bde8](git://github.com/tomchentw/ng-fire-alarm.git/commit/288700f6a11440517c70629d8ee04ba76768bde8))
+
+
 <a name="0.4.1"></a>
 ### 0.4.1 (2014-02-08)
 
