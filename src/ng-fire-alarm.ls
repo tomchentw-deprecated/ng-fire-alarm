@@ -128,16 +128,17 @@ class Firemen extends AlarmReceiver
 class FireAlarm
   @$q = void
 
-  (@$promise, @_alarmReceiver) ->
+  (@$promise, _ar) ->
+    @_ar = -> _ar
 
-  $query: -> @_alarmReceiver._query
+  $query: -> @_ar!_query
   $ref: -> @$query!ref!
 
   const QUERY_METHODS = <[ limit startAt endAt ]>
 
   angular.forEach QUERY_METHODS, !(name) ->
     ::["$#name"] = !->
-      @_alarmReceiver.update name, it
+      @_ar!update name, it
 
   const WRITE_METHODS = <[ remove push update set setPriority setWithPriority ]>
 
