@@ -4,10 +4,26 @@ angular.module 'demo' <[
 ]>
 .value 'FirebaseUrl' 'https://ng-fire-alarm.firebaseio.com/app'
 
-.service 'Room' <[
+.service 'Root' <[
       Firebase  FirebaseUrl
-]> ++ (Firebase, FirebaseUrl) ->
-  new Firebase FirebaseUrl .child 'rooms'
+]> ++ (Firebase, FirebaseUrl) -> new Firebase FirebaseUrl
+
+.service 'Room' <[
+       Root
+]> ++ (Root) -> Root.child 'rooms'
+
+.service 'User' <[
+       Root
+]> ++ (Root) -> Root.child 'users'
+
+.run <[
+        $rootScope  Root  User
+]> ++ !($rootScope, Root, User) ->
+  $rootScope.auth = new FirebaseSimpleLogin Root, !(error, user) ->
+    
+    $rootScope.currentUser = user
+
+    User.child user.id .update user{displayName, link}
 
 .controller 'RoomsListCtrl' <[
         $scope  Room
@@ -19,9 +35,10 @@ angular.module 'demo' <[
 
   $scope.resetRoom = !-> $scope.newRoom = {}
 
-  $scope.orderList = <[ $name title ]>
+  $scope.orderList = <[ $index $name title ]>
 
-  $scope.order = $scope.orderList[*-1]
+  $scope.order = $scope.orderList.0
+  $scope.reversed = false
 
 .controller 'ChatsListCtrl' <[
         $scope  Room
@@ -31,7 +48,11 @@ angular.module 'demo' <[
     return unless it
     const room = Room.child it
 
-    room.$toAlarm!.$thenNotify !($scope.room) ->
+    room
+      .$toAlarm!
+      .$thenNotify !($scope.room) ->
+
+    $scope.chats = []
 
     $scope.chatsAlarm = room
       .child 'chats'
@@ -39,3 +60,11 @@ angular.module 'demo' <[
       .$thenNotify !($scope.chats) ->
 
   $scope.resetChat = !-> $scope.newChat = {}
+
+  $scope.chatCtrl = <[
+          $scope  User
+  ]> ++ !($scope, User) ->
+    User
+      .child $scope.chat.authorId
+      .$toAlarm!
+      .$thenNotify !($scope.author) ->

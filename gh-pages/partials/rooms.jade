@@ -11,10 +11,9 @@
 
   .col-xs-12.col-sm-6
     .btn-group
-      button.btn.btn-default(ng-class="{'active': $parent.order == order}" ng-repeat="order in orderList" ng-click="$parent.order = order" ng-bind="order")
-    h3 Room orderBy : {{order}}
+      button.btn.btn-default(ng-class="{'active': $parent.order == order}" ng-repeat="order in orderList" ng-click="$parent.order = order; $parent.reversed = !reversed" ng-bind="order")
+    h3 orderBy : {{ reversed ? '-' : '' }}{{order}}
     
     ul.nav.nav-pills.nav-stacked
-      li(ng-repeat="room in rooms | orderBy:order",
-          ng-class="{'active': room.$name == roomId}")
+      li(ng-class="{'active': room.$name == roomId}" ng-repeat="room in rooms | orderBy:order:reversed")
         a(href="" ng-click="$root.roomId = room.$name") {{ room.title }}

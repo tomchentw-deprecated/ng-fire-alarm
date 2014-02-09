@@ -1,29 +1,27 @@
 #chats(ng-controller="ChatsListCtrl")
   h3 Room name : {{room.title}}
-  .media(ng-repeat="chat in chats", ng-controller="chatCtrl")
-    a.pull-left(ng-href="{{ author.profileUrl }}")
-      img.media-object(ng-src="https://graph.facebook.com/{{ author.id }}/picture?type=normal")
+  .media(ng-repeat="chat in chats" ng-controller="chatCtrl")
+    a.pull-left(ng-href="{{ author.link }}" target="_blank")
+      img.media-object(ng-src="https://graph.facebook.com/{{ author.$name }}/picture?type=normal")
     .media-body
       .media-heading
         h4 
           | {{ author.displayName }}
-          a.pull-right(ng-if="chat.authorId == user.$name", ng-click="removeChat()")
-            i.icon-remove
+          a.pull-right(href="#" ng-if="chat.authorId == currentUser.id" ng-click="chatsAlarm.$ref().child(chat.$name).remove()") x
       | {{ chat.message }}
 
   .media
     a.pull-left(href="")
-      img.media-object(ng-src="https://graph.facebook.com/{{ user.id }}/picture?type=normal")
+      img.media-object(ng-src="https://graph.facebook.com/{{ currentUser.id }}/picture?type=normal")
     .media-body
-      form(name="chatForm", ng-submit="chatsAlarm.$push(newChat).then(resetChat)")
-        input(type="text", name="roomId", ng-model="newChat.roomId", required, ng-bind="newChat.roomId = roomId", ng-hide="true")
-        input(type="text", name="authorId", ng-model="newChat.authorId", required, ng-bind="newChat.authorId = user.id", ng-hide="true")
+      form(role="form" novalidate name="chatForm" ng-submit="chatsAlarm.$push(newChat).then(resetChat)")
+        input.ng-hide(type="hidden" name="authorId" ng-model="newChat.authorId" required ng-bind="newChat.authorId = currentUser.id")
         .form-group
-          input.form-control(type="text", name="message", ng-model="newChat.message", required, placeholder="message...")
-          span.help-block(ng-show="chatForm.roomId.$error.required")
+          input.form-control(type="text" name="message" ng-model="newChat.message" required placeholder="message...")
+          span.help-block(ng-hide="roomId")
             | Please select a Room
           span.help-block(ng-show="chatForm.authorId.$error.required")
             | Please login to Chat
           span.help-block(ng-show="chatForm.message.$error.required")
             | Please add your message
-        button.btn.pull-right(type="submit") Send as {{ user.displayName }}
+        button.btn.pull-right(type="submit") Send as {{ currentUser.displayName }}

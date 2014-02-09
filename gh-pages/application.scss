@@ -2,6 +2,12 @@
 
 body { padding-top: 70px; }
 
+nav {
+  .navbar-right {
+    padding-right: 50px;
+  }
+}
+
 #chats {
   .media-object {
     $size: 64px;

@@ -8,5 +8,9 @@ nav.navbar.navbar-inverse.navbar-fixed-top
         span.icon-bar
       a.navbar-brand(href="/") ng-fire-alarm
     .collapse.navbar-collapse
+      ul.nav.navbar-nav.navbar-right
+        li
+          a(href="#" ng-if="!currentUser" ng-click="auth.login('facebook')") Facebook Login
+          a(href="#" ng-if="currentUser" ng-click="auth.logout()") {{ currentUser.displayName }}
       a(href="https://github.com/tomchentw/ng-fire-alarm")
         img(style="position: absolute; z-index: 9999; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub")
