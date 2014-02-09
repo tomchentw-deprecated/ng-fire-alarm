@@ -11,6 +11,10 @@ require! {
   'gulp-conventional-changelog'
   'gulp-jade'
   'gulp-concat'
+  'gulp-livereload'
+  'tiny-lr'
+  express
+  'connect-livereload'
 }
 
 const getJsonFile = ->
@@ -108,11 +112,14 @@ gulp.task 'release-gem' <[ before-release ]> ->
 gulp.task 'release-npm' <[ before-release ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('npm publish')
-
+/*
+ * gh-pages
+ */
 gulp.task 'gh-pages:html' ->
   return gulp.src 'gh-pages/index.jade'
     .pipe gulp-jade!
     .pipe gulp.dest 'build'
+    .pipe gulp-livereload(livereload)
 
 gulp.task 'gh-pages:uglify' ->
   return getUglifyStream!
@@ -133,14 +140,22 @@ gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
   return gulp.src <[
     bower_components/angular/angular.min.js
     bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js
-    bower_components/firebase/firbase.js
-    bower_components/firebase-simple-login/firbase-simple-login.js
+    bower_components/firebase/firebase.js
+    bower_components/firebase-simple-login/firebase-simple-login.js
     tmp/prettify.js
     tmp/ng-fire-alarm.min.js
     tmp/application.js
   ]>
     .pipe gulp-concat 'application.js'
     .pipe gulp.dest 'build'  
+    .pipe gulp-livereload(livereload)
+
+const server = express!
+server.use connect-livereload!
+server.use express.static './build'
+
+const livereload = tiny-lr!
+
 /*
  * Public tasks: 
  *
@@ -153,7 +168,13 @@ gulp.task 'build' getBuildStream
 gulp.task 'watch' <[ test ]> ->
   gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
 
-gulp.task 'gh-pages' <[ gh-pages:html gh-pages:js ]> ->
+gulp.task 'gh-pages' <[ gh-pages:html gh-pages:js ]> !->
+  server.listen 5000
+  livereload.listen 35729
+
+  gulp.watch 'gh-pages/**/*.jade' <[ gh-pages:html ]>
+  gulp.watch 'gh-pages/*.ls' <[ gh-pages:js ]>
+
 
 gulp.task 'release' <[ release-git release-gem  release-npm ]>
 /*

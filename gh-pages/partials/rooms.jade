@@ -1,23 +1,23 @@
-.row-fluid
-  .span6
-    form(name="roomForm", ng-submit="createRoom()")
+.row(ng-controller="RoomsListCtrl")
+  .col-xs-6
+    form(novalidate name="roomForm" ng-submit="roomsAlarm.$push(newRoom).then(resetRoom)")
       fieldset
         legend Create a new Room
         label Room title
-        input(type="text", name="title", ng-model="newRoom.title", required)
-        span.help-block(ng-if="roomForm.title.$error.required")
+        input(type="text" name="title" ng-model="newRoom.title" required)
+        span.help-block(ng-show="roomForm.title.$error.required")
           | Please fill in a new room title
         .btn-group
           button.btn(type="submit") Create
-  .span6
+  .col-xs-6
     .btn-group
       button.btn.dropdown-toggle
-        | Room orderBy {{order}}
+        | Room orderBy : {{order}}
         span.caret
       ul.dropdown-menu
         li(ng-repeat="order in orderList")
-          a(href="", ng-click="$parent.order = order") {{ order }}
+          a(href="" ng-click="$parent.order = order") {{ order }}
     ul.nav.nav-pills.nav-stacked
       li(ng-repeat="room in rooms | orderBy:order",
-          ng-class="{'active': isActive()}")
-        a(href="", ng-click="activate()") {{ room.title }}
+          ng-class="{'active': room.$name == roomId}")
+        a(href="" ng-click="$root.roomId = room.$name") {{ room.title }}

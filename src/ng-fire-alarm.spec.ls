@@ -1,7 +1,7 @@
 const WAITS_TIMEOUT = 'Firebase Timed Out'
 const WAITS_MILLIS = 5000
 
-const FIREURL = 'https://ng-fire-alarm.firebaseio.com/'
+const FIREURL = 'https://ng-fire-alarm.firebaseio.com/spec'
 const FIREROOT = new Firebase FIREURL
 FIREROOT.on 'value' !->
 
