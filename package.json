@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/tomchentw/ng-fire-alarm.git"
+    "url": "https://github.com/tomchentw/ng-fire-alarm"
   },
   "keywords": [
     "Firebase",
@@ -25,11 +25,11 @@
   "author": {
     "name": "tomchentw",
     "email": "developer@tomchentw.com",
-    "url": "https://github.com/tomchentw/"
+    "url": "https://github.com/tomchentw"
   },
   "license": {
     "type": "MIT",
-    "url": "http://tomchentw.mit-license.org/"
+    "url": "http://tomchentw.mit-license.org"
   },
   "bugs": {
     "url": "https://github.com/tomchentw/ng-fire-alarm/issues"
