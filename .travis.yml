@@ -10,4 +10,4 @@ before_script:
 script: npm test
 env:
   global:
-    secure: Mf2dsVS/8eYAmrCJ7XqujZC/rBx6w5mcACfqJ3EZjMp+68+ItCXfKE41BSnziqP7H4nylW4xufz3+79iJCdq5gkogD6Bkg2GLAF3IdZdW3E5dZuarJ9dyPWvX6VQKqrWXPoCxbGBv3zHSag4P5qBHb7/0iGru6N7stOpQ5NQ/vI=
+    secure: YgYFUynbXzplBm8wPX6kUvza/xPPj8MXtzYCWMugrN1qjbIBTZfMzwdCmhIybBITbDMXO76XztzXYk2QU2LdZVzqrcceIRCGBf8CJGzohg74Ce3KUSk+XrH3H3UdGmNKq/2HBe4eDOzVMBgm2QTKHe6hdl7rTARkq3FZ/r5SKOI=
