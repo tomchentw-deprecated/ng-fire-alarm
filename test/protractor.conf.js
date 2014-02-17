@@ -1,3 +1,4 @@
+require('LiveScript');
 // A reference configuration file.
 var baseConfig = exports.config = {
   // ----- How to setup Selenium -----
@@ -53,7 +54,7 @@ var baseConfig = exports.config = {
   //
   // Spec patterns are relative to the location of this config.
   specs: [
-    '../tmp/ng-fire-alarm.scenario.js'
+    '../src/ng-fire-alarm.scenario.ls'
   ],
 
   // ----- Capabilities to be passed to the webdriver instance ----

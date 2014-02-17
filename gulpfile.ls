@@ -33,44 +33,30 @@ function getHeaderStream
  */
 """
 
-function getBuildStream (output = true)
+function getUglifyStream (output)
   stream = gulp.src 'src/ng-fire-alarm.ls'
     .pipe gulp-livescript!
     .pipe getHeaderStream!
-
+  
   if output
     stream = stream
       .pipe gulp.dest '.'
       .pipe gulp.dest 'vendor/assets/javascripts/'
-  stream
 
-function getUglifyStream (output)
-  return getBuildStream output
-    .pipe gulp-uglify!
-    .pipe getHeaderStream!
-    .pipe gulp-rename extname: '.min.js'
+  stream.pipe gulp-uglify preserveComments: 'some'
 
-gulp.task 'bare-build' ->
-  return gulp.src 'src/ng-fire-alarm.ls'
-    .pipe gulp-livescript bare: true
-    .pipe gulp.dest 'tmp/'
-    .pipe gulp-exec('bower install')
-    
-gulp.task 'karma' <[ bare-build ]> ->
-  stream = gulp.src 'src/ng-fire-alarm.spec.ls'
-    .pipe gulp-livescript!
-    .pipe gulp.dest 'tmp/'
+gulp.task 'test:karma' ->
+  stream = gulp.src 'package.json'
     .pipe gulp-exec('karma start test/karma.conf.js')
   
-  const TO_COVERALLS = 'find ./coverage -name lcov.info -follow -type f -print0 | xargs -0 cat | node_modules/.bin/coveralls'
-  stream = stream.pipe gulp-exec(TO_COVERALLS) if process.env.TRAVIS
+  return if process.env.TRAVIS
+    const TO_COVERALLS = 'find ./coverage -name lcov.info -follow -type f -print0 | xargs -0 cat | node_modules/.bin/coveralls'
+    stream.pipe gulp-exec(TO_COVERALLS) 
+  else
+    stream
 
-  return stream
-
-gulp.task 'protractor' <[ build ]> ->
-  stream = gulp.src 'src/ng-fire-alarm.scenario.ls'
-    .pipe gulp-livescript!
-    .pipe gulp.dest 'tmp/'
+gulp.task 'test:protractor' ->
+  stream = gulp.src 'package.json'
   
   # stream = stream.pipe gulp-exec [
   #   'cd test/scenario-rails'
@@ -85,16 +71,17 @@ gulp.task 'protractor' <[ build ]> ->
   
   return stream
 
-gulp.task 'bump' ->
+gulp.task 'release:bump' ->
   return gulp.src <[ package.json bower.json ]>
     .pipe gulp-bump type: 'patch'
     .pipe gulp.dest '.'
 
-gulp.task 'uglify' <[ bump ]> ->
+gulp.task 'release:build' <[ release:bump ]> ->
   return getUglifyStream true
+    .pipe gulp-rename extname: '.min.js'
     .pipe gulp.dest '.'
 
-gulp.task 'before-release' <[ uglify ]> ->
+gulp.task 'release:commit' <[ release:build ]> ->
   const jsonFile = getJsonFile!
   const commitMsg = "chore(release): v#{ jsonFile.version }"
 
@@ -105,16 +92,16 @@ gulp.task 'before-release' <[ uglify ]> ->
     .pipe gulp-exec("git commit -m '#{ commitMsg }'")
     .pipe gulp-exec("git tag -a v#{ jsonFile.version } -m '#{ commitMsg }'")
 
-gulp.task 'release-git' <[ before-release ]> ->
+gulp.task 'publish:git' <[ release:commit ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('git push')
     .pipe gulp-exec('git push --tags')
 
-gulp.task 'release-gem' <[ before-release ]> ->
+gulp.task 'publish:rubygems' <[ release:commit ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('rake build release')
 
-gulp.task 'release-npm' <[ before-release ]> ->
+gulp.task 'publish:npm' <[ release:commit ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('npm publish')
 /*
@@ -157,7 +144,7 @@ gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
     bower_components/firebase/firebase.js
     bower_components/firebase-simple-login/firebase-simple-login.js
     tmp/prettify.js
-    tmp/ng-fire-alarm.min.js
+    tmp/ng-fire-alarm.js
     tmp/application.js
   ]>
     .pipe gulp-concat 'application.js'
@@ -175,12 +162,10 @@ const livereload = tiny-lr!
  *
  * test, watch, release
  */
-gulp.task 'test' <[ karma protractor ]>
-
-gulp.task 'build' getBuildStream
+gulp.task 'test' <[ test:karma test:protractor ]>
 
 gulp.task 'watch' <[ test ]> ->
-  gulp.watch 'src/*.ls' <[ karma ]> # optimize if needed
+  gulp.watch 'src/*.ls' <[ test:karma ]>
 
 gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
   server.listen 5000
@@ -190,8 +175,7 @@ gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
   gulp.watch 'gh-pages/*.ls' <[ gh-pages:js ]>
   gulp.watch 'gh-pages/**/*.scss' <[ gh-pages:css ]>
 
-
-gulp.task 'release' <[ release-git release-gem  release-npm ]>
+gulp.task 'release' <[ publish:git publish:rubygems publish:npm ]>
 /*
  * Public tasks end 
  *

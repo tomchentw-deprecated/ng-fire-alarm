@@ -7,6 +7,7 @@ before_install:
 before_script:
 - npm install --quiet -g bower gulp karma protractor
 - npm install --quiet
+- bower install --quiet
 script: npm test
 env:
   global:

@@ -13,8 +13,8 @@ module.exports = function(config) {
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/firebase/firebase-debug.js',
-      'tmp/ng-fire-alarm.js',
-      'tmp/ng-fire-alarm.spec.js'
+      'src/ng-fire-alarm.ls',
+      'src/ng-fire-alarm.spec.ls'
     ],
 
     // use dots reporter, as travis terminal does not support escaping sequences
@@ -23,6 +23,7 @@ module.exports = function(config) {
     reporters: ['progress', 'coverage'],
 
     preprocessors: {
+      'src/*.ls': ['live'],
       // source files, that you wanna generate coverage for
       // do not include tests or libraries
       // (these files will be instrumented by Istanbul)
@@ -76,6 +77,7 @@ module.exports = function(config) {
     },
 
     plugins: [
+      'karma-live-preprocessor',
       'karma-jasmine',
       'karma-chrome-launcher',
       'karma-firefox-launcher',

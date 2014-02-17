@@ -50,6 +50,7 @@
     "gulp-ruby-sass": "~0.3.0",
     "gulp-concat": "~2.1.7",
     "gulp-livereload": "~1.1.1",
+    "karma-live-preprocessor": "~0.2.2",
     "karma-script-launcher": "~0.1.0",
     "karma-chrome-launcher": "~0.1.2",
     "karma-firefox-launcher": "~0.1.3",
