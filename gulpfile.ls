@@ -14,7 +14,7 @@ require! {
   'gulp-concat'
   'gulp-livereload'
   'tiny-lr'
-  express
+  connect
   'connect-livereload'
 }
 
@@ -164,9 +164,9 @@ gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
     .pipe gulp.dest 'build'  
     .pipe gulp-livereload(livereload)
 
-const server = express!
+const server = connect!
 server.use connect-livereload!
-server.use express.static './build'
+server.use connect.static './build'
 
 const livereload = tiny-lr!
 
