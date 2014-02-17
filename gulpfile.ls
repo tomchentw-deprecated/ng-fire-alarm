@@ -1,6 +1,5 @@
 require! {
   fs
-  'event-stream'
   gulp
   'gulp-livescript'
   'gulp-header'
