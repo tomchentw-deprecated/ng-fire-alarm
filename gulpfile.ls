@@ -99,10 +99,6 @@ gulp.task 'publish:git' <[ release:commit ]> ->
 gulp.task 'publish:rubygems' <[ release:commit ]> ->
   return gulp.src 'package.json'
     .pipe gulp-exec('rake build release')
-
-gulp.task 'publish:npm' <[ release:commit ]> ->
-  return gulp.src 'package.json'
-    .pipe gulp-exec('npm publish')
 /*
  * gh-pages
  */
@@ -174,7 +170,7 @@ gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
   gulp.watch 'gh-pages/*.ls' <[ gh-pages:js ]>
   gulp.watch 'gh-pages/**/*.scss' <[ gh-pages:css ]>
 
-gulp.task 'release' <[ publish:git publish:rubygems publish:npm ]>
+gulp.task 'release' <[ publish:git publish:rubygems ]>
 /*
  * Public tasks end 
  *

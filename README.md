@@ -1,7 +1,7 @@
 # ng-fire-alarm
 > Distributed via
 
-[![Gem Version](https://badge.fury.io/rb/ng-fire-alarm.png)](http://badge.fury.io/rb/ng-fire-alarm) [![Bower version](https://badge.fury.io/bo/ng-fire-alarm.png)](http://badge.fury.io/bo/ng-fire-alarm) [![NPM version](https://badge.fury.io/js/ng-fire-alarm.png)](http://badge.fury.io/js/ng-fire-alarm)
+[![Gem Version](https://badge.fury.io/rb/ng-fire-alarm.png)](http://badge.fury.io/rb/ng-fire-alarm) [![Bower version](https://badge.fury.io/bo/ng-fire-alarm.png)](http://badge.fury.io/bo/ng-fire-alarm)
 
 > Firebase binding use $q in AngularJS
 
