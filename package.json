@@ -6,9 +6,8 @@
   "main": "ng-fire-alarm.js",
   "scripts": {
     "test": "gulp test --require LiveScript",
-    "build": "gulp build --require LiveScript",
-    "watch": "gulp watch --require LiveScript",
-    "release": "gulp release --require LiveScript"
+    "develop": "gulp develop --require LiveScript",
+    "publish": "gulp publish --require LiveScript"
   },
   "repository": {
     "type": "git",
