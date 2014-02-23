@@ -1,5 +1,6 @@
 require! {
   fs
+  temp
   gulp
   'gulp-livescript'
   'gulp-header'
@@ -105,7 +106,7 @@ gulp.task 'publish:rubygems' <[ release:commit ]> ->
 gulp.task 'gh-pages:html' ->
   return gulp.src 'gh-pages/index.jade'
     .pipe gulp-jade!
-    .pipe gulp.dest 'build'
+    .pipe gulp.dest 'public'
     .pipe gulp-livereload(livereload)
 
 gulp.task 'gh-pages:css' ->
@@ -114,7 +115,7 @@ gulp.task 'gh-pages:css' ->
       loadPath: <[ bower_components/bootstrap-sass/vendor/assets/stylesheets ]>
       cacheLocation: 'tmp/.sass-cache'
       style: 'compressed'
-    .pipe gulp.dest 'build'
+    .pipe gulp.dest 'public'
     .pipe gulp-livereload(livereload)
 
 gulp.task 'gh-pages:uglify' ->
@@ -135,6 +136,7 @@ gulp.task 'gh-pages:ls' ->
 gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
   return gulp.src <[
     bower_components/angular/angular.min.js
+    bower_components/angular-sanitize/angular-sanitize.min.js
     bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js
     bower_components/firebase/firebase.js
     bower_components/firebase-simple-login/firebase-simple-login.js
@@ -143,12 +145,12 @@ gulp.task 'gh-pages:js' <[ gh-pages:uglify gh-pages:prettify gh-pages:ls ]> ->
     tmp/application.js
   ]>
     .pipe gulp-concat 'application.js'
-    .pipe gulp.dest 'build'  
+    .pipe gulp.dest 'public'  
     .pipe gulp-livereload(livereload)
 
 const server = connect!
 server.use connect-livereload!
-server.use connect.static './build'
+server.use connect.static './public'
 
 const livereload = tiny-lr!
 
@@ -162,7 +164,9 @@ gulp.task 'test' <[ test:karma test:protractor ]>
 gulp.task 'watch' <[ test ]> ->
   gulp.watch 'src/*.ls' <[ test:karma ]>
 
-gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
+const buildGhPages = <[ gh-pages:html gh-pages:css gh-pages:js ]>
+
+gulp.task 'gh-pages' buildGhPages, !->
   server.listen 5000
   livereload.listen 35729
 
@@ -170,7 +174,18 @@ gulp.task 'gh-pages' <[ gh-pages:html gh-pages:css gh-pages:js ]> !->
   gulp.watch 'gh-pages/*.ls' <[ gh-pages:js ]>
   gulp.watch 'gh-pages/**/*.scss' <[ gh-pages:css ]>
 
-gulp.task 'release' <[ publish:git publish:rubygems ]>
+gulp.task 'release' buildGhPages ++ <[ publish:git publish:rubygems ]> ->
+  (err, dirpath) <-! temp.mkdir 'ng-fire-alarm'
+  gulp.src 'package.json'
+    .pipe gulp-exec "cp -r public/* #{ dirpath }"
+    .pipe gulp-exec 'git checkout master'
+    .pipe gulp-exec 'git clean -f -d'
+    .pipe gulp-exec 'git rm -rf .'
+    .pipe gulp-exec "cp -r #{ path.join dirpath, '*' } ."
+    .pipe gulp-exec "rm -rf #{ dirpath }"
+    .pipe gulp-exec 'git add -A'
+    .pipe gulp-exec "git commit -m 'chore(release): by gulpfile'"
+    .pipe gulp-exec "git push origin master"
 /*
  * Public tasks end 
  *
