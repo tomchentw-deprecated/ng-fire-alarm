@@ -1,11 +1,11 @@
 require! <[ fs path temp ]>
 require! <[ gulp gulp-util gulp-exec gulp-rename gulp-header gulp-concat ]>
 require! <[ gulp-livescript gulp-uglify gulp-ruby-sass gulp-jade ]>
-require! <[ connect connect-livereload tiny-lr ]>
+require! <[ connect connect-livereload tiny-lr  ]>
 require! <[ gulp-livereload gulp-bump gulp-conventional-changelog ]>
 
 function getJsonFile
-  fs.readFileSync './package.json', 'utf-8' |> JSON.parse
+  fs.readFileSync 'package.json', 'utf-8' |> JSON.parse
 
 function getHeaderStream
   const jsonFile = getJsonFile!
@@ -26,9 +26,9 @@ gulp.task 'test:karma' ->
   
   if process.env.TRAVIS
     const TO_COVERALLS = [
-      'find tmp/coverage -name lcov.info -follow -type f -print0'
+      "find #{ path.join ...<[ tmp coverage ]> } -name lcov.info -follow -type f -print0"
       'xargs -0 cat'
-      'node_modules/.bin/coveralls'
+      path.join ...<[ node_modules .bin coveralls ]>
     ].join ' | '
     stream.=pipe gulp-exec(TO_COVERALLS)
   
@@ -45,7 +45,7 @@ gulp.task 'test:protractor' ->
   #   'cd ../..'
   # ].join ' && ' unless process.env.TRAVIS
   
-  stream.=pipe gulp-exec('protractor test/protractor.js')
+  stream.=pipe gulp-exec("protractor #{ path.join ...<[ test protractor.js ]> }")
   # stream = stream.pipe gulp-exec('kill $(lsof -i :2999 -t)') unless process.env.TRAVIS
   
   return stream
@@ -53,56 +53,57 @@ gulp.task 'test:protractor' ->
  * app tasks
  */
 gulp.task 'app:html' ->
-  return gulp.src 'app/views/index.jade'
+  return gulp.src path.join ...<[ app views index.jade ]>
   .pipe gulp-jade!
-  .pipe gulp.dest 'tmp/public'
+  .pipe gulp.dest path.join ...<[ tmp public ]>
   .pipe gulp-livereload(livereload)
 
 gulp.task 'app:css' ->
-  return gulp.src 'app/assets/stylesheets/application.scss'
+  return gulp.src path.join ...<[ app assets stylesheets application.scss ]>
   .pipe gulp-ruby-sass do
-    loadPath: <[ bower_components/bootstrap-sass/vendor/assets/stylesheets ]>
-    cacheLocation: 'tmp/.sass-cache'
+    loadPath: [
+      path.join ...<[ bower_components bootstrap-sass vendor assets stylesheets ]>
+    ]
+    cacheLocation: path.join ...<[ tmp .sass-cache ]>
     style: 'compressed'
-  .pipe gulp.dest 'tmp/public'
+  .pipe gulp.dest path.join ...<[ tmp public ]>
   .pipe gulp-livereload(livereload)
 
 gulp.task 'app:js:gcprettify' ->
-  return gulp.src 'bower_components/google-code-prettify/src/prettify.js'
+  return gulp.src path.join ...<[ bower_components google-code-prettify src prettify.js ]>
   .pipe gulp-uglify!
-  .pipe gulp.dest 'tmp/js'
+  .pipe gulp.dest path.join ...<[ tmp js ]>
 
 gulp.task 'app:js:ls' ->
-  return gulp.src <[
-    lib/assets/javascripts/ng-fire-alarm.ls
-    app/assets/javascripts/application.ls
-  ]>
+  return gulp.src [
+    path.join ...<[ lib assets javascripts ng-fire-alarm.ls ]>
+    path.join ...<[ app assets javascripts application.ls ]>
+  ]
   .pipe gulp-livescript!
   .pipe gulp-concat 'application.js'
   .pipe gulp-uglify!
   .pipe getHeaderStream!
-  .pipe gulp.dest 'tmp/js'
+  .pipe gulp.dest path.join ...<[ tmp js ]>
 
 gulp.task 'app:js' <[ app:js:gcprettify app:js:ls ]> ->
-  return gulp.src <[
-    bower_components/angular/angular.min.js
-    bower_components/angular-sanitize/angular-sanitize.min.js
-    bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.min.js
-    bower_components/firebase/firebase.js
-    bower_components/firebase-simple-login/firebase-simple-login.js
-    vendor/assets/javascripts/ng-fire-alarm.min.js
-    tmp/js/*
-  ]>
-    .pipe gulp-concat 'application.js'
-    .pipe gulp.dest 'tmp/public'  
-    .pipe gulp-livereload(livereload)
+  return gulp.src [
+    path.join ...<[ bower_components angular angular.min.js ]>
+    path.join ...<[ bower_components angular-sanitize angular-sanitize.min.js ]>
+    path.join ...<[ bower_components angular-ui-bootstrap-bower ui-bootstrap-tpls.min.js ]>
+    path.join ...<[ bower_components firebase firebase.js ]>
+    path.join ...<[ bower_components firebase-simple-login firebase-simple-login.js ]>
+    path.join ...<[ tmp js * ]>
+  ]
+  .pipe gulp-concat 'application.js'
+  .pipe gulp.dest path.join ...<[ tmp public ]>  
+  .pipe gulp-livereload(livereload)
 /*
  * server...s
  */
 const server = connect!
 server.use connect-livereload!
-server.use connect.static './public'
-server.use connect.static './tmp/public'
+server.use connect.static 'public'
+server.use connect.static path.join ...<[ tmp public ]>
 
 const livereload = tiny-lr!
 /*
@@ -118,11 +119,11 @@ gulp.task 'develop' appAndTest, !->
   server.listen 5000
   livereload.listen 35729
 
-  gulp.watch 'app/views/**/*' <[ app:html ]>
-  gulp.watch 'app/assets/javascripts/**/*' <[ app:js ]>
-  gulp.watch 'app/assets/stylesheets/**/*' <[ gh-pages:css ]>
+  gulp.watch path.join(...<[ app views ** * ]>), <[ app:html ]>
+  gulp.watch path.join(...<[ app assets javascripts ** * ]>), <[ app:js ]>
+  gulp.watch path.join(...<[ app assets stylesheets ** * ]>), <[ app:css ]>
 
-  gulp.watch 'lib/**/*' <[ test:karma ]>
+  gulp.watch path.join(...<[ lib ** * ]>), <[ test:karma app:js ]>
 
 gulp.task 'release' <[ release:git release:rubygems ]>
 
@@ -142,6 +143,7 @@ gulp.task 'release:app' appAndTest, (cb) ->
   .pipe gulp-exec 'git add -A'
   .pipe gulp-exec "git commit -m 'chore(release): tomchentw/ng-fire-alarm@v#{ version }'"
   .pipe gulp-exec 'git push'
+  .pipe gulp-exec 'git checkout master'
   .on 'end' cb
 /*
  * Public tasks end 
@@ -157,14 +159,14 @@ gulp.task 'release:bump' ->
   .pipe gulp.dest '.'
 
 gulp.task 'release:lib' <[ release:bump ]> ->
-  return gulp.src 'lib/assets/javascripts/ng-fire-alarm.ls'
+  return gulp.src path.join ...<[ lib assets javascripts ng-fire-alarm.ls ]>
   .pipe gulp-livescript!
   .pipe getHeaderStream!
-  .pipe gulp.dest 'vendor/assets/javascripts'
+  .pipe gulp.dest path.join ...<[ vendor assets javascripts ]>
   .pipe gulp.dest '.'
   .pipe gulp-uglify preserveComments: 'some'
   .pipe gulp-rename extname: '.min.js'
-  .pipe gulp.dest 'vendor/assets/javascripts'
+  .pipe gulp.dest path.join ...<[ vendor assets javascripts ]>
   .pipe gulp.dest '.'
 
 gulp.task 'release:commit' <[ release:lib ]> ->
