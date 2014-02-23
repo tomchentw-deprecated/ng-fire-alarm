@@ -43,6 +43,7 @@
     "firebase": "~1.0.3"
   },
   "devDependencies": {
+    "angular-sanitize": "~1.2.13",
     "angular-mocks": "~1.2.13",
     "firebase-simple-login": "~1.2.5",
     "google-code-prettify": "~1.0.1",

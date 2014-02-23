@@ -5,10 +5,9 @@
       img.media-object(ng-src="https://graph.facebook.com/{{ author.$name }}/picture?type=normal")
     .media-body
       .media-heading
-        h4 
-          | {{ author.displayName }}
+        strong {{ author.displayName }}          
           a.pull-right(href="#" ng-if="chat.authorId == currentUser.id" ng-click="chatsAlarm.$ref().child(chat.$name).remove()") x
-      | {{ chat.message }}
+      p(ng-bind-html="chat.message | linky:'_blank'")
 
   .media
     a.pull-left(href="")

@@ -1,4 +1,5 @@
 angular.module 'demo' <[
+  ngSanitize
   ui.bootstrap
   ng-fire-alarm
 ]>
