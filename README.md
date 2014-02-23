@@ -60,29 +60,29 @@ We add a new method to `Firebase.prototype`:
 
 ### $toAlarm
 
-The key to transform your `Firebase` reference into a `AngularJS` powered alarm obhect, it take one parameter:
+The key to transform your `Firebase` reference into a `AngularJS` powered [alarm object](https://github.com/tomchentw/ng-fire-alarm/blob/master/README.md#alarm-object), it take one parameter:
 
 #### Options
 
-**collection**: true/otherwise.
+##### collection: _true/otherwise_.
 
 Pass true will transform collection object into native js array for you.
 
 #### `Alarm` object
 A wrapped object over Firbease reference that is returned by calling `Firebase.prototype.$toAlarm`. 
 
-_Attributes_:
+##### Attributes:
 
 * `$promise`: it will be notified everytime the value/order changes.
 
-_Convenience Method_:
+##### Convenience Method:
 
 * `$thenNotify`: Same as `$promise.then(void, void, callback)`.  
 Register a callback that notify you each time the alarm rings.  
 Unlike `$promise.then`, this method is self-chained and will return alarm object to allow chaining.  
 See examples below.
 
-_Query Methods_:
+##### Query Methods:
 
 Ther're wrapper for `Firebase.prototype.limit/startAt/endAt` function, but it'll update internal Firebase reference and it'll populate new data through your callback registered via `$thenNotify`.
 
@@ -116,7 +116,7 @@ Fast prototyping!
 </ul>
 ```
 
-_Write Methods_:
+##### Write Methods:
 They're wrapper for `Firebase.prototype.remove/push/update/set/setPriority/setWithPriority` function, but it'll return a `promise` object instead of passing in a callback function.
 
 * [$remove](https://www.firebase.com/docs/javascript/firebase/remove.html)
@@ -151,7 +151,7 @@ Fast prototyping!
 #### `Fire` object(s)
 Object that is passed in to callbacks registered via `$thenNotify`, they can be **primitive, object, or array**:
 
-* primitive
+##### primitive
 
 Primitive is just js primitive. There's **NO** **NO** **NO** wrapper around primitive <del>`{$value: primitive}`</del>.
 
@@ -159,14 +159,14 @@ Primitive is just js primitive. There's **NO** **NO** **NO** wrapper around prim
 bell.$thenNotify(function (aStringOrANumber) { $scope.myVar = aStringOrANumber; });
 ```
 
-* object
+##### object
   
 we've add two properties on it:  
 
   1. [`$name`](https://www.firebase.com/docs/javascript/datasnapshot/name.html)
   2. [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
 
-* array
+##### array
 
 sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/firebase/setpriority.html).  
 
