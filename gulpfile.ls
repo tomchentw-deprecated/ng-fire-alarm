@@ -4,6 +4,10 @@ require! <[ gulp-livescript gulp-uglify gulp-ruby-sass gulp-jade ]>
 require! <[ connect connect-livereload tiny-lr  ]>
 require! <[ gulp-livereload gulp-bump gulp-conventional-changelog ]>
 
+const PROJECT_NAME = getJsonFile!name
+
+const LIB_FILE = path.join ...<[ lib assets javascripts ]> "#{ PROJECT_NAME }.ls"
+
 function getJsonFile
   fs.readFileSync 'package.json', 'utf-8' |> JSON.parse
 
@@ -11,7 +15,7 @@ function getHeaderStream
   const jsonFile = getJsonFile!
   const date = new Date
   gulp-header """
-/*! ng-fire-alarm - v #{ jsonFile.version } - #{ date }
+/*! #{ PROJECT_NAME } - v #{ jsonFile.version } - #{ date }
  * #{ jsonFile.homepage }
  * Copyright (c) #{ date.getFullYear! } [#{ jsonFile.author.name }](#{ jsonFile.author.url });
  * Licensed [#{ jsonFile.license.type }](#{ jsonFile.license.url })
@@ -76,7 +80,7 @@ gulp.task 'app:js:gcprettify' ->
 
 gulp.task 'app:js:ls' ->
   return gulp.src [
-    path.join ...<[ lib assets javascripts ng-fire-alarm.ls ]>
+    LIB_FILE
     path.join ...<[ app assets javascripts application.ls ]>
   ]
   .pipe gulp-livescript!
@@ -130,7 +134,7 @@ gulp.task 'release' <[ release:git release:rubygems ]>
 gulp.task 'release:app' appAndTest, (cb) ->
   const {version} = getJsonFile!
 
-  (err, dirpath) <-! temp.mkdir 'ng-fire-alarm'
+  (err, dirpath) <-! temp.mkdir PROJECT_NAME
   return cb err if err
   gulp.src 'package.json'
   .pipe gulp-exec "cp -r #{ path.join 'public', '*' } #{ dirpath }"
@@ -141,7 +145,7 @@ gulp.task 'release:app' appAndTest, (cb) ->
   .pipe gulp-exec "cp -r #{ path.join dirpath, '*' } ."
   .pipe gulp-exec "rm -rf #{ dirpath }"
   .pipe gulp-exec 'git add -A'
-  .pipe gulp-exec "git commit -m 'chore(release): tomchentw/ng-fire-alarm@v#{ version }'"
+  .pipe gulp-exec "git commit -m 'chore(release): tomchentw/#{ PROJECT_NAME }@v#{ version }'"
   .pipe gulp-exec 'git push'
   .pipe gulp-exec 'git checkout master'
   .on 'end' cb
@@ -159,7 +163,7 @@ gulp.task 'release:bump' ->
   .pipe gulp.dest '.'
 
 gulp.task 'release:lib' <[ release:bump ]> ->
-  return gulp.src path.join ...<[ lib assets javascripts ng-fire-alarm.ls ]>
+  return gulp.src LIB_FILE
   .pipe gulp-livescript!
   .pipe getHeaderStream!
   .pipe gulp.dest path.join ...<[ vendor assets javascripts ]>
