@@ -1,7 +1,7 @@
-/*! ng-fire-alarm - v 0.4.2 - Sun Feb 09 2014 22:01:07 GMT+0800 (CST)
+/*! ng-fire-alarm - v 0.4.3 - Sun Feb 23 2014 21:19:53 GMT+0800 (CST)
  * https://github.com/tomchentw/ng-fire-alarm
- * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw/);
- * Licensed [MIT](http://tomchentw.mit-license.org/)
+ * Copyright (c) 2014 [tomchentw](https://github.com/tomchentw);
+ * Licensed [MIT](http://tomchentw.mit-license.org)
  *//*global angular:false, Firebase:false*/
 (function(){
   var isObject, AlarmReceiver, Fireman, Firemen, FireAlarm, slice$ = [].slice;
