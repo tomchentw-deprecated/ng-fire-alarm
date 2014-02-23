@@ -7,7 +7,8 @@
   "scripts": {
     "test": "gulp test --require LiveScript",
     "develop": "gulp develop --require LiveScript",
-    "publish": "gulp publish --require LiveScript"
+    "release": "gulp release --require LiveScript",
+    "release:app": "gulp release:app --require LiveScript"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,9 @@
   "homepage": "https://github.com/tomchentw/ng-fire-alarm",
   "devDependencies": {
     "LiveScript": "~1.2.0",
+    "temp": "~0.6.0",
     "gulp": "~3.5.2",
+    "gulp-util": "~2.2.14",
     "gulp-livescript": "~0.2.0",
     "gulp-header": "~1.0.2",
     "gulp-uglify": "~0.2.0",
@@ -59,7 +62,6 @@
     "coveralls": "~2.8.0",
     "tiny-lr": "~0.0.5",
     "connect": "~2.13.0",
-    "connect-livereload": "~0.3.2",
-    "temp": "~0.6.0"
+    "connect-livereload": "~0.3.2"
   }
 }

@@ -1,19 +1,16 @@
 require! <[ fs path temp ]>
-require! <[ gulp gulp-livescript gulp-header gulp-uglify gulp-rename ]>
-require! <[ gulp-ruby-sass gulp-concat gulp-jade gulp-livereload ]>
+require! <[ gulp gulp-util gulp-exec gulp-rename gulp-header gulp-concat ]>
+require! <[ gulp-livescript gulp-uglify gulp-ruby-sass gulp-jade ]>
 require! <[ connect connect-livereload tiny-lr ]>
-require! <[ gulp-bump gulp-conventional-changelog gulp-exec ]>
+require! <[ gulp-livereload gulp-bump gulp-conventional-changelog ]>
 
 function getJsonFile
-  fs.readFileSync './package.json', 'utf-8' |> JSON.parse  
+  fs.readFileSync './package.json', 'utf-8' |> JSON.parse
 
-function getBuildStream
+function getHeaderStream
   const jsonFile = getJsonFile!
   const date = new Date
-
-  return gulp.src 'lib/assets/javascripts/ng-fire-alarm.ls'
-  .pipe gulp-livescript!
-  .pipe gulp-header """
+  gulp-header """
 /*! ng-fire-alarm - v #{ jsonFile.version } - #{ date }
  * #{ jsonFile.homepage }
  * Copyright (c) #{ date.getFullYear! } [#{ jsonFile.author.name }](#{ jsonFile.author.url });
@@ -81,7 +78,9 @@ gulp.task 'app:js:ls' ->
     app/assets/javascripts/application.ls
   ]>
   .pipe gulp-livescript!
+  .pipe gulp-concat 'application.js'
   .pipe gulp-uglify!
+  .pipe getHeaderStream!
   .pipe gulp.dest 'tmp/js'
 
 gulp.task 'app:js' <[ app:js:gcprettify app:js:ls ]> ->
@@ -115,7 +114,7 @@ const appAndTest = <[ app:html app:css app:js test ]>
 
 gulp.task 'test' <[ test:karma test:protractor ]>
 
-gulp.task 'develop' appAndTest, ->
+gulp.task 'develop' appAndTest, !->
   server.listen 5000
   livereload.listen 35729
 
@@ -124,8 +123,67 @@ gulp.task 'develop' appAndTest, ->
   gulp.watch 'app/assets/stylesheets/**/*' <[ gh-pages:css ]>
 
   gulp.watch 'lib/**/*' <[ test:karma ]>
+
+gulp.task 'release' <[ release:git release:rubygems ]>
+
+gulp.task 'release:app' appAndTest, (cb) ->
+  const {version} = getJsonFile!
+
+  (err, dirpath) <-! temp.mkdir 'ng-fire-alarm'
+  return cb err if err
+  gulp.src 'package.json'
+  .pipe gulp-exec "cp -r #{ path.join 'public', '*' } #{ dirpath }"
+  .pipe gulp-exec "cp -r #{ path.join 'tmp', 'public', '*' } #{ dirpath }"
+  .pipe gulp-exec 'git checkout gh-pages'
+  .pipe gulp-exec 'git clean -f -d'
+  .pipe gulp-exec 'git rm -rf .'
+  .pipe gulp-exec "cp -r #{ path.join dirpath, '*' } ."
+  .pipe gulp-exec "rm -rf #{ dirpath }"
+  .pipe gulp-exec 'git add -A'
+  .pipe gulp-exec "git commit -m 'chore(release): tomchentw/ng-fire-alarm@v#{ version }'"
+  .pipe gulp-exec 'git push'
+  .on 'end' cb
 /*
  * Public tasks end 
  *
- * 
+ * release tasks
  */
+gulp.task 'release:bump' ->
+  return gulp.src <[
+    package.json
+    bower.json
+  ]>
+  .pipe gulp-bump gulp-util.env{type or 'patch'}
+  .pipe gulp.dest '.'
+
+gulp.task 'release:lib' <[ release:bump ]> ->
+  return gulp.src 'lib/assets/javascripts/ng-fire-alarm.ls'
+  .pipe gulp-livescript!
+  .pipe getHeaderStream!
+  .pipe gulp.dest 'vendor/assets/javascripts'
+  .pipe gulp.dest '.'
+  .pipe gulp-uglify preserveComments: 'some'
+  .pipe gulp-rename extname: '.min.js'
+  .pipe gulp.dest 'vendor/assets/javascripts'
+  .pipe gulp.dest '.'
+
+gulp.task 'release:commit' <[ release:lib ]> ->
+  const jsonFile = getJsonFile!
+  const commitMsg = "chore(release): v#{ jsonFile.version }"
+
+  return gulp.src <[ package.json CHANGELOG.md ]>
+  .pipe gulp-conventional-changelog!
+  .pipe gulp.dest '.'
+  .pipe gulp-exec('git add -A')
+  .pipe gulp-exec("git commit -m '#{ commitMsg }'")
+  .pipe gulp-exec("git tag -a v#{ jsonFile.version } -m '#{ commitMsg }'")
+
+gulp.task 'release:git' <[ release:commit ]> ->
+  return gulp.src 'package.json'
+  .pipe gulp-exec('git push')
+  .pipe gulp-exec('git push --tags')
+
+gulp.task 'release:rubygems' <[ release:commit ]> ->
+  return gulp.src 'package.json'
+  .pipe gulp-exec('rake release')
+
