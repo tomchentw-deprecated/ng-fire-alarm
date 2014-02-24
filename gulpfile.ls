@@ -137,8 +137,8 @@ gulp.task 'release:app' appAndTest, (cb) ->
   (err, dirpath) <-! temp.mkdir PROJECT_NAME
   return cb err if err
   gulp.src 'package.json'
-  .pipe gulp-exec "cp -r #{ path.join 'public', '*' } #{ dirpath }"
-  .pipe gulp-exec "cp -r #{ path.join 'tmp', 'public', '*' } #{ dirpath }"
+  .pipe gulp-exec "cp -r #{ path.join ...<[ public * ]> } #{ dirpath }"
+  .pipe gulp-exec "cp -r #{ path.join ...<[ tmp public * ]> } #{ dirpath }"
   .pipe gulp-exec 'git checkout gh-pages'
   .pipe gulp-exec 'git clean -f -d'
   .pipe gulp-exec 'git rm -rf .'
