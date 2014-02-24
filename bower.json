@@ -21,7 +21,6 @@
     "**/.*",
     "app",
     "bower_components",
-    "build",
     "lib",
     "node_modules",
     "pkg",
@@ -44,7 +43,7 @@
     "angular-mocks": "~1.2.13",
     "firebase-simple-login": "~1.2.5",
     "google-code-prettify": "~1.0.1",
-    "angular-ui-bootstrap-bower": "~0.10.0",
+    "angular-bootstrap": "~0.10.0",
     "bootstrap-sass": "git://github.com/twbs/bootstrap-sass.git"
   }
 }

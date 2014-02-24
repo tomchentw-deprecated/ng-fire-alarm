@@ -93,7 +93,7 @@ gulp.task 'app:js' <[ app:js:gcprettify app:js:ls ]> ->
   return gulp.src [
     path.join ...<[ bower_components angular angular.min.js ]>
     path.join ...<[ bower_components angular-sanitize angular-sanitize.min.js ]>
-    path.join ...<[ bower_components angular-ui-bootstrap-bower ui-bootstrap-tpls.min.js ]>
+    path.join ...<[ bower_components angular-bootstrap ui-bootstrap-tpls.min.js ]>
     path.join ...<[ bower_components firebase firebase.js ]>
     path.join ...<[ bower_components firebase-simple-login firebase-simple-login.js ]>
     path.join ...<[ tmp js * ]>
