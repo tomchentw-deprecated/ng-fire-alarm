@@ -33,19 +33,17 @@ ifdef $$TRAVIS
 endif
 
 test.protractor: install
-# ifeq (  ($(HAS_PROTRACTOR_SERVER), true), (  ))
-#   cd test/scenario-rails
-#   bundle install
-#   RAILS_ENV=test rake db:drop db:migrate
-#   rails s -d -e test 2999
-#   cd ../..
+# ifndef $$TRAVIS
+# 	cd test/scenario-rails;\
+# 		bundle install;\
+# 		RAILS_ENV=test rake db:drop db:migrate;\
+# 		rails s -d -e test -p 2999\
+
+# 	$(bin)/webdriver-manager update
 # endif
-ifndef $$TRAVIS
-	$(bin)/webdriver-manager update
-endif
 	$(bin)/protractor test/protractor.js
-# ifndef $$TRAVIS && $HAS_PROTRACTOR_SERVER
-#   kill $(lsof -i :2999 -t)
+# ifndef $$TRAVIS
+# 	kill `lsof -i :2999 -t`
 # endif
 
 test: test.karma test.protractor
