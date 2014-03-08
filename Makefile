@@ -18,7 +18,7 @@ install:
 	$(install)
 
 clean:
-	rm -rf node_modules bower_components tmp
+	rm -rf node_modules bower_components tmp pkg
 
 client: install
 	$(bin)/gulp client $(requireLS)
@@ -38,9 +38,8 @@ test.protractor: install
 # 		bundle install;\
 # 		RAILS_ENV=test rake db:drop db:migrate;\
 # 		rails s -d -e test -p 2999\
-
-# 	$(bin)/webdriver-manager update
 # endif
+	$(bin)/webdriver-manager update
 	$(bin)/protractor test/protractor.js
 # ifndef $$TRAVIS
 # 	kill `lsof -i :2999 -t`
