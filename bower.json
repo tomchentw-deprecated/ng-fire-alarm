@@ -30,6 +30,7 @@
     "vendor",
     "Gemfile",
     "gulpfile.ls",
+    "Makefile",
     "package.json",
     "Rakefile",
     "ng-fire-alarm.gemspec"

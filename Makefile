@@ -63,7 +63,8 @@ release: install
 	rm -rf $(tempFolder)
 
 	git add -A
-	git commit -m $(newReleaseMsg 	git checkout $(developBranch)
+	git commit -m $(newReleaseMsg)
+	git checkout $(developBranch)
 
 	$(install)
 	echo "Release public(s) onto $(releaseBranch) branch but not pushed.\nCheck it out!"
