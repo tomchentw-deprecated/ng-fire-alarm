@@ -8,7 +8,7 @@
 
 [![Travis CI   ](http://img.shields.io/travis/tomchentw/ng-fire-alarm/master.svg)             ](https://travis-ci.org/tomchentw/ng-fire-alarm)
 [![Quality     ](http://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)        ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
-[![Coverage    ](http://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
+[![Coverage    ](http://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://coveralls.io/r/tomchentw/ng-fire-alarm)
 [![Dependencies](http://img.shields.io/gemnasium/tomchentw/ng-fire-alarm.svg)                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
 
