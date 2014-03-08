@@ -54,7 +54,7 @@ var baseConfig = exports.config = {
   //
   // Spec patterns are relative to the location of this config.
   specs: [
-    'assets/javascripts/ng-fire-alarm.scenario.ls'
+    'javascripts/ng-fire-alarm.scenario.ls'
   ],
 
   // ----- Capabilities to be passed to the webdriver instance ----
@@ -123,8 +123,8 @@ if (process.env.TRAVIS) {
 
   baseConfig.capabilities['tunnel-identifier'] = process.env.TRAVIS_JOB_NUMBER;
 } else {// local
-  baseConfig.seleniumServerJar = '/usr/local/lib/node_modules/protractor/selenium/selenium-server-standalone-2.39.0.jar';
-  baseConfig.chromeDriver = '/usr/local/lib/node_modules/protractor/selenium/chromedriver';
+  baseConfig.seleniumServerJar = '../node_modules/protractor/selenium/selenium-server-standalone-2.40.0.jar';
+  baseConfig.chromeDriver = '../node_modules/protractor/selenium/chromedriver';
 }
 
 

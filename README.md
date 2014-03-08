@@ -1,11 +1,15 @@
 # ng-fire-alarm
 > Distributed via
 
-[![Gem Version](https://badge.fury.io/rb/ng-fire-alarm.png)](http://badge.fury.io/rb/ng-fire-alarm) [![Bower version](https://badge.fury.io/bo/ng-fire-alarm.png)](http://badge.fury.io/bo/ng-fire-alarm)
+[![Version     ](http://img.shields.io/gem/v/ng-fire-alarm.svg)                               ](https://rubygems.org/gems/ng-fire-alarm)
+[![Bower Version](https://badge.fury.io/bo/ng-fire-alarm.png)                               ](http://badge.fury.io/bo/ng-fire-alarm)
 
 > Firebase binding use $q in AngularJS
 
-[![Build Status](https://secure.travis-ci.org/tomchentw/ng-fire-alarm.png)](http://travis-ci.org/tomchentw/ng-fire-alarm) [![Coverage Status](https://coveralls.io/repos/tomchentw/ng-fire-alarm/badge.png)](https://coveralls.io/r/tomchentw/ng-fire-alarm) [![Code Climate](https://codeclimate.com/github/tomchentw/ng-fire-alarm.png)](https://codeclimate.com/github/tomchentw/ng-fire-alarm)  [![Dependency Status](https://gemnasium.com/tomchentw/ng-fire-alarm.png)](https://gemnasium.com/tomchentw/ng-fire-alarm)
+[![Travis CI   ](http://img.shields.io/travis/tomchentw/ng-fire-alarm/master.svg)             ](https://travis-ci.org/tomchentw/ng-fire-alarm)
+[![Quality     ](http://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)        ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
+[![Coverage    ](http://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
+[![Dependencies](http://img.shields.io/gemnasium/tomchentw/ng-fire-alarm.svg)                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
 
 ## Project philosophy
@@ -183,7 +187,7 @@ sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/fi
 
 ## Contributing
 
-[![devDependency Status](https://david-dm.org/tomchentw/ng-fire-alarm/dev-status.png?branch=master)](https://david-dm.org/tomchentw/ng-fire-alarm#info=devDependencies)
+[![devDependency Status](https://david-dm.org/tomchentw/ng-fire-alarm/dev-status.svg?theme=shields.io)](https://david-dm.org/tomchentw/ng-fire-alarm#info=devDependencies)
 
 1. Fork it ( http://github.com/tomchentw/ng-fire-alarm/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)

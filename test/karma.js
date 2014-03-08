@@ -13,8 +13,8 @@ module.exports = function(config) {
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/firebase/firebase-debug.js',
-      'lib/assets/javascripts/ng-fire-alarm.ls',
-      'test/assets/javascripts/ng-fire-alarm.spec.ls'
+      'lib/javascripts/ng-fire-alarm.ls',
+      'test/javascripts/ng-fire-alarm.spec.ls'
     ],
 
     // use dots reporter, as travis terminal does not support escaping sequences
@@ -27,7 +27,7 @@ module.exports = function(config) {
       // source files, that you wanna generate coverage for
       // do not include tests or libraries
       // (these files will be instrumented by Istanbul)
-      'lib/assets/javascripts/ng-fire-alarm.ls': ['coverage']
+      'lib/javascripts/ng-fire-alarm.ls': ['coverage']
     },
 
     // web server port
