@@ -1,15 +1,15 @@
 # ng-fire-alarm
 > Distributed via
 
-[![Version     ](http://img.shields.io/gem/v/ng-fire-alarm.svg)                               ](https://rubygems.org/gems/ng-fire-alarm)
-[![Bower Version](https://badge.fury.io/bo/ng-fire-alarm.png)                               ](http://badge.fury.io/bo/ng-fire-alarm)
+[![Version     ](https://img.shields.io/gem/v/ng-fire-alarm.svg)                               ](https://rubygems.org/gems/ng-fire-alarm)
+[![Bower Version](https://badge.fury.io/bo/ng-fire-alarm.png)                               ](https://badge.fury.io/bo/ng-fire-alarm)
 
 > Firebase binding use $q in AngularJS
 
-[![Travis CI   ](http://img.shields.io/travis/tomchentw/ng-fire-alarm/master.svg)             ](https://travis-ci.org/tomchentw/ng-fire-alarm)
-[![Quality     ](http://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)        ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
-[![Coverage    ](http://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://coveralls.io/r/tomchentw/ng-fire-alarm)
-[![Dependencies](http://img.shields.io/gemnasium/tomchentw/ng-fire-alarm.svg)                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
+[![Travis CI   ](https://img.shields.io/travis/tomchentw/ng-fire-alarm/master.svg)             ](https://travis-ci.org/tomchentw/ng-fire-alarm)
+[![Quality     ](https://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)        ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
+[![Coverage    ](https://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://coveralls.io/r/tomchentw/ng-fire-alarm)
+[![Dependencies](https://img.shields.io/gemnasium/tomchentw/ng-fire-alarm.svg)                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
 
 ## Project philosophy
@@ -189,7 +189,7 @@ sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/fi
 
 [![devDependency Status](https://david-dm.org/tomchentw/ng-fire-alarm/dev-status.svg?theme=shields.io)](https://david-dm.org/tomchentw/ng-fire-alarm#info=devDependencies)
 
-1. Fork it ( http://github.com/tomchentw/ng-fire-alarm/fork )
+1. Fork it ( https://github.com/tomchentw/ng-fire-alarm/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
