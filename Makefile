@@ -83,9 +83,8 @@ release: install
 	$(installBower)
 	echo "Release public(s) onto $(releaseBranch) branch but not pushed.\nCheck it out!"
 
-# lib: install
-# 	$(bin)/gulp lib $(requireLS)
-# 	$(bin)/karma start --auto-watch --no-single-run test/karma.js
+lib: install
+	$(bin)/karma start --auto-watch --no-single-run test/karma.js
 
 publish.gulp: test
 	$(bin)/gulp publish $(requireLS)
