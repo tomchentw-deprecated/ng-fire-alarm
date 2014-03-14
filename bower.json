@@ -21,15 +21,18 @@
     "**/.*",
     "app",
     "bower_components",
+    "config",
     "lib",
     "node_modules",
     "pkg",
     "public",
+    "server",
     "test",
     "tmp",
     "vendor",
     "Gemfile",
     "gulpfile.ls",
+    "index.ls",
     "Makefile",
     "package.json",
     "Rakefile",
@@ -45,6 +48,6 @@
     "firebase-simple-login": "~1.2.5",
     "google-code-prettify": "~1.0.1",
     "angular-bootstrap": "~0.10.0",
-    "bootstrap-sass": "git://github.com/twbs/bootstrap-sass.git"
+    "twbs-bootstrap-sass": "~3.1.1"
   }
 }
