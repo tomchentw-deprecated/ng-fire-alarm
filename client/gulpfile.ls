@@ -35,7 +35,7 @@ const livereload = tiny-lr!
  * client tasks
  */
 gulp.task 'client:html' ->
-  return gulp.src 'client/views/**/*.jade'
+  return gulp.src 'client/views/index.jade'
   .pipe gulp-jade pretty: !config.env.is 'production'
   .pipe gulp.dest 'tmp/public'
   .pipe gulp-livereload(livereload)
