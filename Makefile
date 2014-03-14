@@ -28,12 +28,12 @@ server: install
 
 test.karma: install
 	$(bin)/karma start test/karma.js
-ifdef $$TRAVIS
+ifdef $TRAVIS
   find tmp/coverage -name lcov.info -follow -type f -print0 | xargs -0 cat | $(bin)/coveralls
 endif
 
 test.protractor: install
-# ifndef $$TRAVIS
+# ifndef $TRAVIS
 # 	cd test/scenario-rails;\
 # 		bundle install;\
 # 		RAILS_ENV=test rake db:drop db:migrate;\
@@ -41,7 +41,7 @@ test.protractor: install
 # endif
 	$(bin)/webdriver-manager update
 	$(bin)/protractor test/protractor.js
-# ifndef $$TRAVIS
+# ifndef $TRAVIS
 # 	kill `lsof -i :2999 -t`
 # endif
 
