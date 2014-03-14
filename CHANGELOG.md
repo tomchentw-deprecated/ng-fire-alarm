@@ -1,3 +1,13 @@
+<a name="0.4.6"></a>
+### 0.4.6 (2014-03-14)
+
+
+#### Bug Fixes
+
+* typo and exclude Makefile in bower ([1ffa62d4](https://github.com/tomchentw/ng-fire-alarm/commit/1ffa62d435e02f2d45621f37afa3d920a45fa4ab))
+* **README.md:** update coveralls link ([be57bef9](https://github.com/tomchentw/ng-fire-alarm/commit/be57bef90025f1b5baffba33c9b01c6599ee806f))
+
+
 <a name="0.4.5"></a>
 ### 0.4.5 (2014-03-09)
 

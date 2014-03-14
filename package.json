@@ -1,6 +1,6 @@
 {
   "name": "ng-fire-alarm",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Firebase binding use $q in AngularJS",
   "longDescription": "Firebase and AngularJS two-way binding that use the new notify API from $q",
   "main": "ng-fire-alarm.js",
