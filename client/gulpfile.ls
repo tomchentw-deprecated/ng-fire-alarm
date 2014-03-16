@@ -16,6 +16,7 @@ require! {
   gulp
   'gulp-jade'
   'gulp-ruby-sass'
+  'gulp-minify-css'
   'gulp-angular-templatecache'
   'gulp-uglify'
   'gulp-livescript'
@@ -40,7 +41,7 @@ gulp.task 'client:html' ->
   .pipe gulp.dest 'tmp/public'
   .pipe gulp-livereload(livereload)
 
-gulp.task 'client:css' ->
+gulp.task 'client:css:scss' ->
   return gulp.src 'client/stylesheets/application.scss'
   .pipe gulp-ruby-sass do
     loadPath: [
@@ -48,6 +49,16 @@ gulp.task 'client:css' ->
     ]
     cacheLocation: 'tmp/.sass-cache'
     style: if config.env.is 'production' then 'compressed' else 'nested'
+  .pipe gulp.dest 'tmp/.css-cache'
+
+gulp.task 'client:css:angular-csp' ->
+  stream = gulp.src 'bower_components/angular/angular-csp.css'
+  stream.=pipe gulp-minify-css! if config.env.is 'production'
+  return stream.pipe gulp.dest 'tmp/.css-cache'
+
+gulp.task 'client:css' <[ client:css:scss client:css:angular-csp ]> ->
+  return gulp.src 'tmp/.css-cache/*.css'
+  .pipe gulp-concat 'application.css'
   .pipe gulp.dest 'tmp/public'
   .pipe gulp-livereload(livereload)
 
