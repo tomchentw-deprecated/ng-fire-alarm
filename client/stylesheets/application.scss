@@ -3,16 +3,17 @@
 
 body { padding-top: 70px; }
 
-nav {
-  .navbar-right {
-    padding-right: 50px;
+header {
+  #avatar {
+    margin-top: -8px;
+    margin-right: 8px;
+    margin-bottom: -8px;
+    @include square(32px);
   }
 }
 
 #chats {
   .media-object {
-    $size: 50px;
-    width: $size;
-    height: $size;
+    @include square(50px);
   }
 }

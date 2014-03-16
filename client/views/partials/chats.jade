@@ -1,20 +1,22 @@
 #chats(ng-controller="ChatsListCtrl")
-  h3 Room name : {{room.title}}
+  h3
+    | Room name : 
+    span(ng-bind="room.title")
   .media(ng-repeat="chat in chats" ng-controller="chatCtrl")
     a.pull-left(ng-href="{{ author.link }}" target="_blank")
       img.media-object(ng-src="https://graph.facebook.com/{{ author.$name }}/picture?type=normal")
     .media-body
       .media-heading
-        strong {{ author.displayName }}          
-          a.pull-right(href="#" ng-if="chat.authorId == currentUser.id" ng-click="chatsAlarm.$ref().child(chat.$name).remove()") x
+        strong(ng-bind="author.displayName")
+        a.pull-right(href="#" ng-if="chat.authorId == _.id" ng-click="chatsAlarm.$ref().child(chat.$name).remove()") x
       p(ng-bind-html="chat.message | linky:'_blank'")
 
   .media
     a.pull-left(href="")
-      img.media-object(ng-src="https://graph.facebook.com/{{ currentUser.id }}/picture?type=normal")
+      img.media-object(ng-src="https://graph.facebook.com/{{ _.id }}/picture?type=normal")
     .media-body
       form(role="form" novalidate name="chatForm" ng-submit="chatsAlarm.$push(newChat).then(resetChat)")
-        input.ng-hide(type="hidden" name="authorId" ng-model="newChat.authorId" required ng-bind="newChat.authorId = currentUser.id")
+        input.ng-hide(type="hidden" name="authorId" ng-model="newChat.authorId" required ng-bind="newChat.authorId = _.id")
         .form-group
           input.form-control(type="text" name="message" ng-model="newChat.message" required placeholder="message...")
           span.help-block(ng-hide="roomId")
@@ -23,4 +25,6 @@
             | Please login to Chat
           span.help-block(ng-show="chatForm.message.$error.required")
             | Please add your message
-        button.btn.pull-right(type="submit") Send as {{ currentUser.displayName }}
+        button.btn.pull-right(type="submit")
+          | Send as 
+          span(ng-bind="_.displayName")

@@ -21,8 +21,8 @@ angular.module 'demo' <[
         $rootScope  Root  User
 ]> ++ !($rootScope, Root, User) ->
   $rootScope.auth = new FirebaseSimpleLogin Root, !(error, user) ->
-    
-    $rootScope.currentUser = user
+    <-! $rootScope.$apply
+    $rootScope._ = user
 
     User.child user.id .update user{displayName, link}
 
