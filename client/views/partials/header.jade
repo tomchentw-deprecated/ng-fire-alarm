@@ -11,7 +11,7 @@ header.navbar.navbar-inverse.navbar-fixed-top
     nav.collapse.navbar-collapse(collapse="!isCollapse")
       ul.nav.navbar-nav.navbar-right
         li
-          a(href="#" ng-if="!_" ng-click="auth.login('facebook')") Facebook Login
-          a(href="#" ng-if="_" ng-click="auth.logout()")
+          a(href="#" ng-hide="_" ng-click="auth.login('facebook')") Facebook Login
+          a.ng-hide(href="#" ng-show="_" ng-click="auth.logout()")
             img#avatar(ng-src="https://graph.facebook.com/{{ _.id }}/picture")
             span(ng-bind="_.displayName")
