@@ -9,14 +9,14 @@ html(ng-app="demo")
     script(type="text/javascript" defer src="/application.js")
   body
     include partials/header
-    div.container(role="main")
+    div.container-fluid(role="main")
       section
         .page-header
           h1 ChatRoom!
         .row
-          .col-xs-4.col-sm-6
+          .col-xs-12.col-sm-8.col-md-6
             include partials/rooms
-          .col-xs-8.col-sm-6
+          .col-xs-12.col-sm-4.col-md-6
             include partials/chats
     
     include partials/footer
