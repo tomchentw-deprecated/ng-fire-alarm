@@ -6,7 +6,7 @@ angular.module 'demo' <[
 .value 'FirebaseUrl' 'https://ng-fire-alarm.firebaseio.com/app'
 
 .service 'Root' <[
-      Firebase  FirebaseUrl
+       Firebase  FirebaseUrl
 ]> ++ (Firebase, FirebaseUrl) -> new Firebase FirebaseUrl
 
 .service 'Room' <[

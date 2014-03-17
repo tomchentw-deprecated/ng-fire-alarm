@@ -1,6 +1,7 @@
-.row(ng-controller="RoomsListCtrl")
+.row(ng-controller="RoomsListCtrl as roomsList")
   .col-xs-12.col-sm-6
-    form(role="form" novalidate name="roomForm" ng-submit="roomsAlarm.$push(newRoom).then(resetRoom)")
+    form(role="form" novalidate name="roomForm"
+      ng-submit="roomsAlarm.$push(newRoom).then(roomsList.resetRoom)")
       h3 Create a new Room
       .form-group
         label(for="newRoomTitle") Room title
@@ -11,11 +12,14 @@
 
   .col-xs-12.col-sm-6
     .btn-group
-      button.btn.btn-default(ng-class="{'active': $parent.order == order}" ng-repeat="order in orderList" ng-click="$parent.order = order; $parent.reversed = !reversed" ng-bind="order")
+      button.btn.btn-default(ng-repeat="order in roomsList.orders" 
+        ng-class="{'active': roomsList.isActiveOrder(order)}" 
+        ng-click="roomsList.activateOrder(order)" ng-bind="order")
     h3
       | orderBy : 
-      span(ng-bind="(reversed ? '-' : '') + order")
+      span(ng-bind="roomsList.currentOrdering()")
     
     ul.nav.nav-pills.nav-stacked
-      li(ng-class="{'active': room.$name == roomId}" ng-repeat="room in rooms | orderBy:order:reversed")
-        a(ng-click="$root.roomId = room.$name" ng-bind="room.title")
+      li(ng-repeat="room in rooms | orderBy:order:reversed"
+        ng-class="{'active': roomsList.isActiveRoom(room)}")
+        a(ng-click="roomsList.activateRoom(room)" ng-bind="room.title")

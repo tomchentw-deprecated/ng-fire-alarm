@@ -12,6 +12,10 @@ header {
   }
 }
 
+#chats_rooms {
+  margin-bottom: 20px;
+}
+
 #chats {
   .media-object {
     @include square(50px);

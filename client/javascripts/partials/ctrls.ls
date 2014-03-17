@@ -1,44 +1,73 @@
 angular.module 'demo'
-.controller 'RoomsListCtrl' <[
-        $scope  Room
-]> ++ !($scope, Room) ->
+.controller 'RoomsListCtrl' class
+  resetRoom: ->
+    @$scope.newRoom = void
 
-  $scope.roomsAlarm = Room
-    .$toAlarm collection: true
-    .$thenNotify !($scope.rooms) ->
+  orders: <[ $index $name title ]>
 
-  $scope.resetRoom = !-> $scope.newRoom = {}
+  isActiveOrder: (order) ->
+    @$scope.order is order
 
-  $scope.orderList = <[ $index $name title ]>
+  activateOrder: !(order) ->
+    @$scope.order = order
+    @$scope.reversed = !@$scope.reversed
 
-  $scope.order = $scope.orderList.0
-  $scope.reversed = false
+  currentOrdering: ->
+    const {reversed, order} = @$scope
+    "#{ if reversed then '-' else '' }#order"
 
-.controller 'ChatsListCtrl' <[
-        $scope  Room
-]> ++ !($scope, Room) ->
+  isActiveRoom: (room) ->
+    @$scope.$root.room is room
 
-  $scope.$watch 'roomId' !->
-    return unless it
-    const room = Room.child it
+  activateRoom: !(room) ->
+    @$scope.$root.room = room
 
-    room
-      .$toAlarm!
-      .$thenNotify !($scope.room) ->
+  @$inject = <[
+     $scope   Room ]>
+  !(@$scope, @Room) ->
 
-    $scope.chats = []
-
-    $scope.chatsAlarm = room
-      .child 'chats'
+    $scope.roomsAlarm = Room
       .$toAlarm collection: true
-      .$thenNotify !($scope.chats) ->
+      .$thenNotify !($scope.rooms) ->
 
-  $scope.resetChat = !-> $scope.newChat = {}
+    $scope.order = @orders.0
 
-  $scope.chatCtrl = <[
-          $scope  User
-  ]> ++ !($scope, User) ->
+.controller 'ChatsListCtrl' class
+
+  resetChat: !-> 
+    @$scope.newChat = void
+
+  onRoomChanged: !(room) ->
+    @$scope <<< {
+      chats: []
+
+      chatsAlarm: @Room
+        .child room.$name
+        .child 'chats'
+        .$toAlarm collection: true
+        .$thenNotify @onChatsChanged
+    }
+
+  onChatsChanged: !(@$scope.chats) ->
+
+  @$inject = <[
+     $scope   Room ]>
+  !(@$scope, @Room) ->
+    @onRoomChanged = angular.bind @, @onRoomChanged
+    @onChatsChanged = angular.bind @, @onChatsChanged
+
+    $scope.$watch 'room' @onRoomChanged
+
+.controller 'ChatCtrl' class
+
+  onAuthorChanged: (@$scope.author) ->
+
+  @$inject = <[
+     $scope   User ]>
+  !(@$scope, @User) ->
+    @onAuthorChanged = angular.bind @, @onAuthorChanged
+
     User
       .child $scope.chat.authorId
       .$toAlarm!
-      .$thenNotify !($scope.author) ->
+      .$thenNotify @onAuthorChanged

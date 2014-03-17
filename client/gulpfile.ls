@@ -4,7 +4,7 @@
     livereload.listen config.port.livereload
 
     gulp.watch 'client/views/**/*', <[ client:html ]>
-    gulp.watch <[ client/templates/**/* client/javascripts/**/* lib/javascripts/**/* ]>, <[ client:js ]>
+    gulp.watch <[ client/templates/**/* client/javascripts/**/* lib/javascripts/**/* ]>, <[ client:html client:js ]>
     gulp.watch 'client/stylesheets/**/*', <[ client:css ]>
 /*
  * Implementation details

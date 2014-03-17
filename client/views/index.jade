@@ -18,8 +18,12 @@ html(ng-app="demo")
     div.container-fluid(role="main")
       header
         .page-header
-          h1 ChatRoom!
-      section
+          h1
+            | ng-fire-alarm
+            br
+            small Firebase and AngularJS two-way binding that use the new notify API from $q
+
+      section#chats_rooms
         .row
           .col-xs-12.col-sm-8.col-md-6
             include partials/rooms

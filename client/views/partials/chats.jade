@@ -1,8 +1,8 @@
-#chats(ng-controller="ChatsListCtrl")
+#chats(ng-controller="ChatsListCtrl as chatsList")
   h3
     | Room name : 
     span(ng-bind="room.title")
-  .media(ng-repeat="chat in chats" ng-controller="chatCtrl")
+  .media(ng-repeat="chat in chats" ng-controller="ChatCtrl")
     a.pull-left(ng-href="{{ author.link }}" target="_blank")
       img.media-object(ng-src="https://graph.facebook.com/{{ author.$name }}/picture?type=normal")
     .media-body
@@ -15,11 +15,11 @@
     a.pull-left(href="")
       img.media-object(ng-src="https://graph.facebook.com/{{ _.id }}/picture?type=normal")
     .media-body
-      form(role="form" novalidate name="chatForm" ng-submit="chatsAlarm.$push(newChat).then(resetChat)")
+      form(role="form" novalidate name="chatForm" ng-submit="chatsAlarm.$push(newChat).then(chatsList.resetChat)")
         input.ng-hide(type="hidden" name="authorId" ng-model="newChat.authorId" required ng-bind="newChat.authorId = _.id")
         .form-group
           input.form-control(type="text" name="message" ng-model="newChat.message" required placeholder="message...")
-          span.help-block(ng-hide="roomId")
+          span.help-block(ng-hide="room")
             | Please select a Room
           span.help-block(ng-show="chatForm.authorId.$error.required")
             | Please login to Chat
