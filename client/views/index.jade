@@ -16,13 +16,28 @@ html(ng-app="demo")
     include partials/header
 
     div.container-fluid(role="main")
-      section
+      header
         .page-header
           h1 ChatRoom!
+      section
         .row
           .col-xs-12.col-sm-8.col-md-6
             include partials/rooms
           .col-xs-12.col-sm-4.col-md-6
             include partials/chats
+      section
+        .row
+          .col-xs-12.col-md-6
+            pre
+              code.language-html
+                != highlight('tmp/.html-cache/partials/rooms.html')
+            pre
+              code.language-html
+                != highlight('tmp/.html-cache/partials/chats.html')
+
+          .col-xs-12.col-md-6
+            pre
+              code.language-javascript
+                != highlight('tmp/.js-cache/partials/ctrls.js')
 
     include partials/footer
