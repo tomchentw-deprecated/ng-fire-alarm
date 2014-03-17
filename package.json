@@ -32,6 +32,7 @@
   "devDependencies": {
     "LiveScript": "^1.2.0",
     "bower": "^1.2.8",
+    "highlight.js": "^8.0.0",
     "tiny-lr": "^0.0.5",
     "connect": "^2.13.0",
     "connect-livereload": "^0.3.2",

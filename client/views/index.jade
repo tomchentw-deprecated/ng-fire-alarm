@@ -5,10 +5,16 @@ html(ng-app="demo")
     base(href="/")
     title ng-fire-alarm
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+    meta(property="og:type" content="website")
+    meta(property="og:url" content="http://ng-fire-alarm.tomchentw.com")
+    meta(property="og:title" content="Firebase binding use $q in AngularJS")
+    meta(property="og:description" content="Firebase and AngularJS two-way binding that use the new notify API from $q")
+    link(rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/default.min.css")
     link(rel="stylesheet" href="/application.css")
     script(type="text/javascript" defer src="/application.js")
   body
     include partials/header
+
     div.container-fluid(role="main")
       section
         .page-header
@@ -18,5 +24,5 @@ html(ng-app="demo")
             include partials/rooms
           .col-xs-12.col-sm-4.col-md-6
             include partials/chats
-    
+
     include partials/footer
