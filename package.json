@@ -48,7 +48,7 @@
     "gulp-exec": "^1.0.4",
     "gulp-conventional-changelog": "^0.1.2",
     "gulp-jade": "^0.4.1",
-    "gulp-ruby-sass": "^0.3.0",
+    "gulp-ruby-sass": "^0.4.0",
     "gulp-minify-css": "^0.3.0",
     "gulp-angular-templatecache": "^1.1.0",
     "gulp-concat": "^2.1.7",
