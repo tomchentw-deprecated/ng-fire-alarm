@@ -21,6 +21,7 @@
     "**/.*",
     "app",
     "bower_components",
+    "client",
     "config",
     "lib",
     "node_modules",

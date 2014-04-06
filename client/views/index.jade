@@ -10,8 +10,8 @@ html(ng-app="demo")
     meta(property="og:title" content="Firebase binding use $q in AngularJS")
     meta(property="og:description" content="Firebase and AngularJS two-way binding that use the new notify API from $q")
     link(rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/default.min.css")
-    link(rel="stylesheet" href="/application.css")
-    script(type="text/javascript" defer src="/application.js")
+    link(rel="stylesheet" href=stylesheetLinkTag("application.css"))
+    script(type="text/javascript" defer src=javascriptIncludeTag("application.js"))
   body
     include partials/header
 

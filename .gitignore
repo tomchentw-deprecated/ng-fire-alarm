@@ -45,3 +45,7 @@ node_modules
 ### Bower ###
 bower_components
 ### Bower End ###
+
+### Project ###
+tmp
+### Project End ###

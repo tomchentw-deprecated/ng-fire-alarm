@@ -1,30 +1,37 @@
 bin           := ./node_modules/.bin
-requireLS     := --require LiveScript
-installNpm 		:= npm install
-installBower	:= $(bin)/bower install
-clean					:= rm -rf node_modules bower_components tmp pkg
+gulp					:= $(bin)/gulp --require LiveScript --cwd ./
 
-tempFolder    := $(shell mktemp -d -t $(shell basename "$PWD"))
 releaseBranch := gh-pages
 developBranch := master
 
+testDeps			:= test.karma test.protractor# test.mocha
+releaseStatic	:= true
+publishDeps		:= publish.git publish.bower publish.gems# publish.npm
+
+tempFolder    := $(shell mktemp -d -t $(shell basename "$PWD"))
 lastCommit    := $(shell git rev-parse --short=10 HEAD)
 newReleaseMsg := "chore(release): $(lastCommit) by Makefile"
 
-version    		= `ruby -r 'json' -e "puts JSON.parse(File.read('package.json'))['version']"`
+# evaluated at runtime
+version    		= `$(bin)/lsc -e "require './package.json' .version |> console.log"`
 newPublishMsg = "chore(publish): v$(version) by Makefile"
 
 .PHONY: client server lib test
 
 install:
-	$(installNpm)
-	$(installBower)
+	mkdir -p tmp
+	gem query sass --installed || gem install sass
+	npm install
+	$(bin)/bower install
 
-clean:
-	$(clean)
+clean.tmp:
+	rm -rf tmp pkg
+
+clean: clean.tmp
+	rm -rf node_modules bower_components
 
 server: install
-	$(bin)/lsc index
+	$(gulp) --gulpfile ./server/gulpfile.ls server
 
 test.karma: install
 	$(bin)/karma start test/karma.js
@@ -34,64 +41,63 @@ ifdef TRAVIS
 endif
 
 test.protractor: install
-# ifndef TRAVIS
-# 	cd test/scenario-rails;\
-# 		bundle install;\
-# 		RAILS_ENV=test rake db:drop db:migrate;\
-# 		rails s -d -e test -p 2999
-# endif
+	# start
+	$(gulp) --gulpfile ./server/gulpfile.ls server & echo $$! > tmp/pid
+	sleep 10
+	curl -I http://localhost:5000/
+	# run
 	$(bin)/webdriver-manager update
 	$(bin)/protractor test/protractor.js
-# ifndef TRAVIS
-# 	kill `lsof -i :2999 -t`
-# endif
+	# stop
+	kill `cat tmp/pid`
 
 test.mocha: install
 	$(bin)/mocha test/**/*.ls --compilers ls:LiveScript
 
-test: test.karma test.protractor
+test: $(testDeps)
 
-release: install
-	NODE_ENV=production $(bin)/lsc client
+release: clean.tmp install
+	NODE_ENV=production $(gulp) --gulpfile ./client/gulpfile.ls client
 
-	# if it's hosted on github only
-	#
+ifeq (true, $(releaseStatic))
 	cp -r public/* $(tempFolder)
 	cp -r tmp/public/* $(tempFolder)
 	git checkout $(releaseBranch)
-	
-	# else if it's hosted via express
-	#
-	# cp -r public $(tempFolder)
-	# cp -r tmp/public/* $(tempFolder)/public
-	# $(clean)
-	# cp -r . $(tempFolder)
-	# git checkout $(releaseBranch)
-	#
-	# end if
+else
+	cp -r public $(tempFolder)
+	cp -r tmp/public/* $(tempFolder)/public
+	make clean
+	cp -r . $(tempFolder)
+	rm -rf $(tempFolder)/client
+	git checkout $(releaseBranch)
+endif
 
 	git clean -f -d
 	git rm -rf .
 	cp -r $(tempFolder)/* .
 	rm -rf $(tempFolder)
-	rm -rf client
 
 	git add -A
 	git commit -m $(newReleaseMsg)
 	git checkout $(developBranch)
 
-	$(installNpm)
-	$(installBower)
+	make install
 	echo "Release public(s) onto $(releaseBranch) branch but not pushed.\nCheck it out!"
 
 lib: install
 	$(bin)/karma start --auto-watch --no-single-run test/karma.js
 
 publish.gulp: test
-	$(bin)/gulp publish $(requireLS)
+	$(gulp) publish
 	git add -A
 	git commit -m $(newPublishMsg)
 	git tag -a v$(version) -m $(newPublishMsg)
+
+publish.git: publish.gulp
+	git push
+
+publish.bower: publish.gulp
+	git push --tags
 
 publish.gems: publish.gulp
 	rake release
@@ -99,9 +105,4 @@ publish.gems: publish.gulp
 publish.npm: publish.gulp
 	npm publish
 
-publish.git: publish.gulp
-	git push
-	git push --tags
-
-# you may customize yourself (adding npm ...etc)
-publish: publish.git publish.gems
+publish: $(publishDeps)

@@ -1,4 +1,5 @@
 require! {
-  './client/index'
   './server/index'
 }
+
+index!

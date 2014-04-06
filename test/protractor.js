@@ -1,4 +1,5 @@
 require('LiveScript');
+var config = require('../config');
 // A reference configuration file.
 var baseConfig = exports.config = {
   // ----- How to setup Selenium -----
@@ -71,7 +72,7 @@ var baseConfig = exports.config = {
   //
   // A base URL for your application under test. Calls to protractor.get()
   // with relative paths will be prepended with this.
-  baseUrl: 'http://localhost:2999',
+  baseUrl: 'http://localhost:' + config.port.server,
 
   // Selector for the element housing the angular app - this defaults to
   // body, but is necessary if ng-app is on a descendant of <body>  
