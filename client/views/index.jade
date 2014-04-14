@@ -1,17 +1,22 @@
 doctype html
-html(ng-app="demo")
+html(ng-app="application")
   head
     meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
     base(href="/")
     title ng-fire-alarm
+    meta(name="description" content="Firebase and AngularJS two-way binding that use the new notify API from $q")
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
     meta(property="og:type" content="website")
     meta(property="og:url" content="http://ng-fire-alarm.tomchentw.com")
-    meta(property="og:title" content="Firebase binding use $q in AngularJS")
+    meta(property="og:title" content="ng-fire-alarm")
     meta(property="og:description" content="Firebase and AngularJS two-way binding that use the new notify API from $q")
-    link(rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/default.min.css")
+
+    <!-- Place favicon.ico and apple-touch-icon(s) in the root directory -->
+
     link(rel="stylesheet" href=stylesheetLinkTag("application.css"))
-    script(type="text/javascript" defer src=javascriptIncludeTag("application.js"))
+    script(type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.7.1/modernizr.min.js")
+    script(type="text/javascript" src=javascriptIncludeTag("application.js"))
   body
     include partials/header
 

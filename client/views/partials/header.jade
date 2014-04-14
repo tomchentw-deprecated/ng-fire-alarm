@@ -1,4 +1,4 @@
-header.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
+header.navbar.navbar-inverse.navbar-fixed-top(role="navigation")
   .container
     .navbar-header
       button.navbar-toggle(type="button" ng-click="isCollapse = !isCollapse")
@@ -6,12 +6,12 @@ header.navbar.navbar-inverse.navbar-fixed-top(role='navigation')
         span.icon-bar
         span.icon-bar
         span.icon-bar
-      a.navbar-brand(href="https://github.com/tomchentw/ng-fire-alarm" target="_blank") ng-fire-alarm
+      a.navbar-brand(ga href="https://github.com/tomchentw/ng-fire-alarm" target="_blank") ng-fire-alarm
 
     nav.collapse.navbar-collapse(collapse="!isCollapse")
       ul.nav.navbar-nav.navbar-right
         li
-          a(href="#" ng-hide="_" ng-click="auth.login('facebook')") Facebook Login
-          a.ng-hide(href="#" ng-show="_" ng-click="auth.logout()")
+          a(ga href="#" ng-hide="_" ng-click="auth.login('facebook')") Facebook Login
+          a.ng-hide(ga href="#" ng-show="_" ng-click="auth.logout()")
             img#avatar(ng-src="https://graph.facebook.com/{{ _.id }}/picture")
             span(ng-bind="_.displayName")

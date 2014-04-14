@@ -1,15 +1,15 @@
 # ng-fire-alarm
 > Distributed via
 
-[![Version     ](https://img.shields.io/gem/v/ng-fire-alarm.svg)                               ](https://rubygems.org/gems/ng-fire-alarm)
-[![Bower Version](https://badge.fury.io/bo/ng-fire-alarm.png)                               ](https://badge.fury.io/bo/ng-fire-alarm)
+[![Version     ](https://img.shields.io/gem/v/ng-fire-alarm.svg)                                    ](https://rubygems.org/gems/ng-fire-alarm)
+[![Bower Version](https://badge.fury.io/bo/ng-fire-alarm.svg)                                       ](https://badge.fury.io/bo/ng-fire-alarm)
 
 > Firebase binding use $q in AngularJS
 
-[![Travis CI   ](https://img.shields.io/travis/tomchentw/ng-fire-alarm/master.svg)             ](https://travis-ci.org/tomchentw/ng-fire-alarm)
-[![Quality     ](https://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)        ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
-[![Coverage    ](https://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                 ](https://coveralls.io/r/tomchentw/ng-fire-alarm)
-[![Dependencies](https://img.shields.io/gemnasium/tomchentw/ng-fire-alarm.svg)                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
+[![Travis CI   ](https://travis-ci.org/tomchentw/ng-fire-alarm.svg?branch=master)                   ](https://travis-ci.org/tomchentw/ng-fire-alarm)
+[![Quality     ](https://img.shields.io/codeclimate/github/tomchentw/ng-fire-alarm.svg)             ](https://codeclimate.com/github/tomchentw/ng-fire-alarm)
+[![Coverage    ](https://img.shields.io/coveralls/tomchentw/ng-fire-alarm.svg)                      ](https://coveralls.io/r/tomchentw/ng-fire-alarm)
+[![Dependencies](https://gemnasium.com/tomchentw/ng-fire-alarm.svg)                                 ](https://gemnasium.com/tomchentw/ng-fire-alarm)
 
 
 ## Project philosophy
@@ -38,6 +38,7 @@ Then include them through script tag in your HTML.
 
 ### **Rails** projects (Only support 3.1+)
 Add this line to your application's Gemfile:
+
 ```ruby
 gem 'ng-fire-alarm'
 ```
@@ -54,8 +55,10 @@ Then add these lines to the top of your `app/assets/javascripts/application.js` 
 ```
 
 And include in your `angular` module definition:
-     
-    var module = angular.module('my-awesome-project', ['ng-fire-alarm']).
+
+```javascript
+var module = angular.module('my-awesome-project', ['ng-fire-alarm']).
+```
 
 
 ## Usage
@@ -96,7 +99,7 @@ Ther're wrapper for `Firebase.prototype.limit/startAt/endAt` function, but it'll
 
 Examples:
 
-```JavaScript
+```javascript
 var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
 
 function UsersListCtrl ($scope) {
@@ -112,7 +115,7 @@ function UsersListCtrl ($scope) {
 
 Fast prototyping!
 
-```HTML
+```html
 <ul ng-controller="UsersListCtrl" infinite-scroll="usersAlarm.$limit(users.length + 25)">
   <li ng-repeat="user in users">
     {{ user.name }}
@@ -132,7 +135,7 @@ They're wrapper for `Firebase.prototype.remove/push/update/set/setPriority/setWi
 
 Examples:
 
-```JavaScript
+```javascript
 var ROOT = new Firebase('https://ng-fire-alarm.firebaseio.com/');
 
 function UserEditCtrl ($scope) {
@@ -145,7 +148,7 @@ function UserEditCtrl ($scope) {
 
 Fast prototyping!
 
-```HTML
+```html
 <form ng-controller="UserEditCtrl">
   <input type="text" ng-model="user.name" ng-change="userAlarm.$update(user)">
 </form>
@@ -159,7 +162,7 @@ Object that is passed in to callbacks registered via `$thenNotify`, they can be 
 
 Primitive is just js primitive. There's **NO** **NO** **NO** wrapper around primitive <del>`{$value: primitive}`</del>.
 
-```JavaScript
+```javascript
 bell.$thenNotify(function (aStringOrANumber) { $scope.myVar = aStringOrANumber; });
 ```
 
@@ -180,7 +183,7 @@ sorted by native Firebase [ordering](https://www.firebase.com/docs/javascript/fi
   2. [`$priority`](https://www.firebase.com/docs/javascript/datasnapshot/getpriority.html)
   3. [`$index`](https://www.firebase.com/docs/javascript/datasnapshot/foreach.html): object index in array. Useful for reverse ordering  
 
-```HTML
+```html
 <div ng-repeat="item in array | orderBy:'$index':true"></div>
 ```
 

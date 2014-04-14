@@ -13,7 +13,9 @@ module.exports = function(config) {
       'bower_components/angular/angular.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/firebase/firebase-debug.js',
+      'client/javascripts/application.ls',
       'lib/javascripts/ng-fire-alarm.ls',
+      'test/javascripts/application.spec.ls',
       'test/javascripts/ng-fire-alarm.spec.ls'
     ],
 
@@ -27,6 +29,7 @@ module.exports = function(config) {
       // source files, that you wanna generate coverage for
       // do not include tests or libraries
       // (these files will be instrumented by Istanbul)
+      'client/javascripts/application.ls': ['coverage'],
       'lib/javascripts/ng-fire-alarm.ls': ['coverage']
     },
 

@@ -5,7 +5,6 @@ releaseBranch := gh-pages
 developBranch := master
 
 testDeps			:= test.karma test.protractor# test.mocha
-releaseStatic	:= true
 publishDeps		:= publish.git publish.bower publish.gems# publish.npm
 
 tempFolder    := $(shell mktemp -d -t $(shell basename "$PWD"))
@@ -19,8 +18,7 @@ newPublishMsg = "chore(publish): v$(version) by Makefile"
 .PHONY: client server lib test
 
 install:
-	mkdir -p tmp
-	gem query sass --installed || gem install sass
+	mkdir -p tmp/public
 	npm install
 	$(bin)/bower install
 
@@ -30,11 +28,11 @@ clean.tmp:
 clean: clean.tmp
 	rm -rf node_modules bower_components
 
-server: install
+server: clean.tmp install
 	$(gulp) --gulpfile ./server/gulpfile.ls server
 
 test.karma: install
-	$(bin)/karma start test/karma.js
+	./node_modules/karma/bin/karma start test/karma.js
 ifdef TRAVIS
 	find tmp/coverage -name lcov.info -follow -type f -print0 \
 		| xargs -0 cat | $(bin)/coveralls
@@ -54,23 +52,14 @@ test.protractor: install
 test.mocha: install
 	$(bin)/mocha test/**/*.ls --compilers ls:LiveScript
 
-test: $(testDeps)
+test: clean.tmp $(testDeps)
 
 release: clean.tmp install
 	NODE_ENV=production $(gulp) --gulpfile ./client/gulpfile.ls client
 
-ifeq (true, $(releaseStatic))
 	cp -r public/* $(tempFolder)
 	cp -r tmp/public/* $(tempFolder)
 	git checkout $(releaseBranch)
-else
-	cp -r public $(tempFolder)
-	cp -r tmp/public/* $(tempFolder)/public
-	make clean
-	cp -r . $(tempFolder)
-	rm -rf $(tempFolder)/client
-	git checkout $(releaseBranch)
-endif
 
 	git clean -f -d
 	git rm -rf .

@@ -1,6 +1,7 @@
-angular.module 'demo' <[
-  ngSanitize
+angular.module 'application' <[
   ui.bootstrap
+  ga
+  ngSanitize
   ng-fire-alarm
 ]>
 .value 'FirebaseUrl' 'https://ng-fire-alarm.firebaseio.com/app'

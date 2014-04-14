@@ -1,4 +1,4 @@
-angular.module 'demo'
+angular.module 'application'
 .controller 'RoomsListCtrl' class
   resetRoom: ->
     @$scope.newRoom = void

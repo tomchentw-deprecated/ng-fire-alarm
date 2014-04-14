@@ -55,6 +55,7 @@ var baseConfig = exports.config = {
   //
   // Spec patterns are relative to the location of this config.
   specs: [
+    'javascripts/application.scenario.ls',
     'javascripts/ng-fire-alarm.scenario.ls'
   ],
 

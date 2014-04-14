@@ -19,7 +19,6 @@
   "private": false,
   "ignore": [
     "**/.*",
-    "app",
     "bower_components",
     "client",
     "config",
@@ -44,10 +43,11 @@
     "firebase": "~1.0.3"
   },
   "devDependencies": {
-    "firebase-simple-login": "~1.2.5",
-    "angular-sanitize": "~1.2.13",
     "angular-mocks": "~1.2.13",
+    "angular-sanitize": "~1.2.13",
     "angular-bootstrap": "~0.10.0",
+    "angular-ga": "~0.1.0",
+    "firebase-simple-login": "~1.2.5",
     "twbs-bootstrap-sass": "~3.1.1"
   }
 }

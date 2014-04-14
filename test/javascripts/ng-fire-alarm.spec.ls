@@ -5,13 +5,13 @@ const FIREURL = 'https://ng-fire-alarm.firebaseio.com/spec/'
 const FIREROOT = new Firebase FIREURL
 FIREROOT.on 'value' !->
 
+(...) <-! describe 'module ng-fire-alarm'
 $rootScope = void
 
 beforeEach module 'ng-fire-alarm'
 beforeEach inject !(_$rootScope_) ->
   $rootScope  := _$rootScope_
 
-(...) <-! describe 'module ng-fire-alarm'
 it 'should be defined' !(...) ->
   expect angular .toBeDefined!
   expect Firebase .toBeDefined!

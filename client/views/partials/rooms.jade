@@ -5,14 +5,14 @@
       h3 Create a new Room
       .form-group
         label(for="newRoomTitle") Room title
-        input.form-control(id="newRoomTitle" type="text" name="title" ng-model="newRoom.title" required)
+        input.form-control(ga id="newRoomTitle" type="text" name="title" ng-model="newRoom.title" required)
         span.help-block(ng-show="roomForm.title.$error.required")
           | Please fill in a new room title
-      button.btn.btn-primary(type="submit") Create
+      button.btn.btn-primary(ga type="submit") Create
 
   .col-xs-12.col-sm-6
     .btn-group
-      button.btn.btn-default(ng-repeat="order in roomsList.orders" 
+      button.btn.btn-default(ga ng-repeat="order in roomsList.orders"
         ng-class="{'active': roomsList.isActiveOrder(order)}" 
         ng-click="roomsList.activateOrder(order)" ng-bind="order")
     h3
@@ -22,4 +22,4 @@
     ul.nav.nav-pills.nav-stacked
       li(ng-repeat="room in rooms | orderBy:order:reversed"
         ng-class="{'active': roomsList.isActiveRoom(room)}")
-        a(ng-click="roomsList.activateRoom(room)" ng-bind="room.title")
+        a(ga ng-click="roomsList.activateRoom(room)" ng-bind="room.title")

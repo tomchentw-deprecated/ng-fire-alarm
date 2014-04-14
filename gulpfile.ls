@@ -5,7 +5,6 @@
  */
 require! {
   gulp
-  'gulp-util'
   'gulp-uglify'
   'gulp-bump'
   'gulp-rename'
@@ -22,7 +21,7 @@ gulp.task 'publish:bump' ->
     package.json
     bower.json
   ]>
-  .pipe gulp-bump gulp-util.env{type or 'patch'}
+  .pipe gulp-bump process.env{type or 'patch'}
   .pipe gulp.dest '.'
 
 gulp.task 'publish:lib' <[ publish:bump ]> ->
